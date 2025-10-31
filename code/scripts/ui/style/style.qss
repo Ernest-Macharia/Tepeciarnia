@@ -1,0 +1,203 @@
+/* Gradient background and modern rounded look */
+QWidget#centralwidget {
+  background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(59, 130, 246, 255), stop:0.6 rgba(99, 102, 241, 255), stop:1 rgba(99, 102, 241, 255));
+}
+
+QFrame#uploadArea {
+  border: 2px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: transparent;
+}
+
+QFrame#uploadArea:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+QFrame#card {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+QPushButton {
+  border-radius: 12px;
+  padding: 8px 12px;
+
+}
+
+QPushButton.aactive {
+  background: white;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+QPushButton.primary {
+  background: white;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+QPushButton.danger {
+  background: transparent;
+  color: white;
+  font-weight: 600;
+  border: 2px solid  rgb(248, 68, 68);
+}
+QPushButton.danger:hover {
+  background: rgb(248, 68, 68);
+  border: 2px solid  rgb(248, 68, 68);
+}
+
+QPushButton.deactive {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+QPushButton.deactive:hover {
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+QPushButton.ghost:hover {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+QPushButton.ghost {
+  color: white;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+QLineEdit,
+QComboBox,
+QSpinBox {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 6px 8px;
+  color: white;
+}
+
+QLabel {
+  color: white;
+}
+
+QLineEdit:focus {
+  border: 2px solid rgba(255, 255, 255, 0.795);
+}
+
+QLabel#autoLabel {
+  padding-left: 2px;
+}
+
+/* QLineEdit#emailInput,QLineEdit#passwordInput{
+  padding: 12px;
+} */
+
+/* Targets the QLabel acting as the logo container */
+QLabel#logoLabel {
+  /* Set the size of the icon within the QLabel */
+  icon-size: 32px 32px;
+  /* Set the color for the SVG (this overrides fill="currentColor") */
+  color: #f5f6fa;
+  /* Bright white/near-white */
+
+  /* Set the dynamic property defined in Designer as the actual icon source */
+  /* qproperty-icon: url(:/icons/logo_biale.svg);  */
+
+  /* Padding to create breathing room around the logo */
+  padding: 5px;
+  margin-right: 15px;
+}
+
+/* Add a subtle hover effect if the logo is clickable */
+QLabel#appLogoLabel:hover {
+  color: #3498db;
+  /* Change logo color to blue on hover */
+}
+
+/* Load the white icon by default
+QToolButton#timerButton {
+    icon-size: 24px 24px;
+    qproperty-icon: url(assets/timer_white.png);
+    background-color: transparent;
+}
+
+Load the blue icon when hovering
+QToolButton#timerButton:hover {
+    qproperty-icon: url(assets/timer_blue.png);
+    background-color: #34495e;
+    border-radius: 5px;
+} */
+
+
+/* ----------------------------------------------------
+   QCheckBox BASE STYLES
+   ---------------------------------------------------- */
+
+QCheckBox {
+  /* Base text color for the checkbox label */
+  color: #f5f6fa;
+
+  /* Add padding/margin for spacing, especially when used in a layout */
+  padding: 5px;
+  spacing: 8px;
+  /* Space between the box and the text label */
+}
+
+QCheckBox::indicator {
+  /* Define the size of the clickable box area */
+  width: 18px;
+  height: 18px;
+
+  /* Rounded corners for the indicator box */
+  border-radius: 4px;
+
+  /* Default (Unchecked) State */
+  border: 2px solid #7f8c8d;
+  /* Muted gray border */
+  background-color: #34495e;
+  /* Darker fill for the box */
+}
+
+/* ----------------------------------------------------
+   QCheckBox CHECKED STATE
+   ---------------------------------------------------- */
+
+QCheckBox::indicator:checked {
+  /* When checked, change the background and border to the accent color */
+  border: 2px solid #3498db;
+  /* Primary Blue Border */
+  background-color: #3498db;
+  /* Primary Blue Fill */
+
+  /* Set the icon/check mark inside the box */
+  image: url(:/icons/check.png);
+  /* Assumes you have a white checkmark SVG/PNG in your QRC */
+}
+
+
+/* ----------------------------------------------------
+   QCheckBox INTERACTIVE STATES
+   ---------------------------------------------------- */
+
+QCheckBox::indicator:hover {
+  /* Subtle change when hovering over the indicator */
+  border-color: #95a5a6;
+  /* Lighten border slightly */
+}
+
+QCheckBox::indicator:checked:hover {
+  /* Slightly darker blue on checked hover */
+  background-color: #2980b9;
+  border-color: #2980b9;
+}
+
+QCheckBox::indicator:disabled {
+  /* Mute the colors when the checkbox is disabled */
+  background-color: #7f8c8d;
+  border-color: #7f8c8d;
+}
