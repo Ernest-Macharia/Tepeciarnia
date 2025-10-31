@@ -1,0 +1,66 @@
+# Build files
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Office temporary files
+~$*
+*.tmp
+.~lock.*
+
+# Project specific
+download_path.tmp
+*.mp4
+*.jpg
+*.png
+*.mkv
+*.webm
+*.avi
+*.mov
+
+# Executables and binaries
+*.exe
+*.dll
+*.so
+*.au3
+
+# Config files (user-specific)
+config.json

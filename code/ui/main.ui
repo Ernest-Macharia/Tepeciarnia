@@ -1,0 +1,1406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1070</width>
+    <height>900</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>900</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Tapeciarnia</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">/* Gradient background and modern rounded look */
+QWidget#centralwidget {
+  background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(59, 130, 246, 255), stop:0.6 rgba(99, 102, 241, 255), stop:1 rgba(99, 102, 241, 255));
+}
+
+QFrame#uploadArea {
+  border: 2px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: transparent;
+}
+
+QFrame#uploadArea:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+QFrame#card {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+QPushButton {
+  border-radius: 12px;
+  padding: 8px 12px;
+
+}
+
+QPushButton.aactive {
+  background: white;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+QPushButton.primary {
+  background: white;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+QPushButton.danger {
+  background: transparent;
+  color: white;
+  font-weight: 600;
+  border: 2px solid  rgb(248, 68, 68);
+}
+QPushButton.danger:hover {
+  background: rgb(248, 68, 68);
+  border: 2px solid  rgb(248, 68, 68);
+}
+
+QPushButton.deactive {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+QPushButton.deactive:hover {
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+QPushButton.ghost:hover {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+QPushButton.ghost {
+  color: white;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+QLineEdit,
+QComboBox,
+QSpinBox {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 6px 8px;
+  color: white;
+}
+
+QLabel {
+  color: white;
+}
+
+QLineEdit:focus {
+  border: 2px solid rgba(255, 255, 255, 0.795);
+}
+
+QLabel#autoLabel {
+  padding-left: 2px;
+}
+
+/* QLineEdit#emailInput,QLineEdit#passwordInput{
+  padding: 12px;
+} */
+
+/* Targets the QLabel acting as the logo container */
+QLabel#logoLabel {
+  /* Set the size of the icon within the QLabel */
+  icon-size: 32px 32px;
+  /* Set the color for the SVG (this overrides fill=&quot;currentColor&quot;) */
+  color: #f5f6fa;
+  /* Bright white/near-white */
+
+  /* Set the dynamic property defined in Designer as the actual icon source */
+  /* qproperty-icon: url(:/icons/logo_biale.svg);  */
+
+  /* Padding to create breathing room around the logo */
+  padding: 5px;
+  margin-right: 15px;
+}
+
+/* Add a subtle hover effect if the logo is clickable */
+QLabel#appLogoLabel:hover {
+  color: #3498db;
+  /* Change logo color to blue on hover */
+}
+
+/* Load the white icon by default
+QToolButton#timerButton {
+    icon-size: 24px 24px;
+    qproperty-icon: url(assets/timer_white.png);
+    background-color: transparent;
+}
+
+Load the blue icon when hovering
+QToolButton#timerButton:hover {
+    qproperty-icon: url(assets/timer_blue.png);
+    background-color: #34495e;
+    border-radius: 5px;
+} */
+
+
+/* ----------------------------------------------------
+   QCheckBox BASE STYLES
+   ---------------------------------------------------- */
+
+QCheckBox {
+  /* Base text color for the checkbox label */
+  color: #f5f6fa;
+
+  /* Add padding/margin for spacing, especially when used in a layout */
+  padding: 5px;
+  spacing: 8px;
+  /* Space between the box and the text label */
+}
+
+QCheckBox::indicator {
+  /* Define the size of the clickable box area */
+  width: 18px;
+  height: 18px;
+
+  /* Rounded corners for the indicator box */
+  border-radius: 4px;
+
+  /* Default (Unchecked) State */
+  border: 2px solid #7f8c8d;
+  /* Muted gray border */
+  background-color: #34495e;
+  /* Darker fill for the box */
+}
+
+/* ----------------------------------------------------
+   QCheckBox CHECKED STATE
+   ---------------------------------------------------- */
+
+QCheckBox::indicator:checked {
+  /* When checked, change the background and border to the accent color */
+  border: 2px solid #3498db;
+  /* Primary Blue Border */
+  background-color: #3498db;
+  /* Primary Blue Fill */
+
+  /* Set the icon/check mark inside the box */
+  image: url(:/icons/check.png);
+  /* Assumes you have a white checkmark SVG/PNG in your QRC */
+}
+
+
+/* ----------------------------------------------------
+   QCheckBox INTERACTIVE STATES
+   ---------------------------------------------------- */
+
+QCheckBox::indicator:hover {
+  /* Subtle change when hovering over the indicator */
+  border-color: #95a5a6;
+  /* Lighten border slightly */
+}
+
+QCheckBox::indicator:checked:hover {
+  /* Slightly darker blue on checked hover */
+  background-color: #2980b9;
+  border-color: #2980b9;
+}
+
+QCheckBox::indicator:disabled {
+  /* Mute the colors when the checkbox is disabled */
+  background-color: #7f8c8d;
+  border-color: #7f8c8d;
+}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QFrame" name="card">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>900</width>
+        <height>640</height>
+       </size>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::Shape::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Shadow::Raised</enum>
+      </property>
+      <layout class="QVBoxLayout" name="cardLayout">
+       <item>
+        <layout class="QHBoxLayout" name="topBarLayout">
+         <item>
+          <layout class="QHBoxLayout" name="brandingLayout">
+           <item>
+            <layout class="QVBoxLayout" name="titleLayout">
+             <item>
+              <widget class="QLabel" name="logoLabel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>292</width>
+                 <height>83</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QLabel { font-size: 20px; border-radius: 10px; padding: 8px; }</string>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="pixmap">
+                <pixmap resource="../scripts/ui/icons/icons.qrc">:/icons/logo_biale.svg</pixmap>
+               </property>
+               <property name="scaledContents">
+                <bool>true</bool>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+               <property name="icon" stdset="0">
+                <string>&quot;;/icons/llogo_biale.svg&quot;</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <spacer name="hSpacer1">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="loginLayout">
+           <property name="spacing">
+            <number>9</number>
+           </property>
+           <item>
+            <widget class="QPushButton" name="logout_bnt">
+             <property name="font">
+              <font>
+               <pointsize>10</pointsize>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>log out</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="../scripts/ui/icons/icons.qrc">
+               <normaloff>:/icons/log-in.png</normaloff>:/icons/log-in.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>40</width>
+               <height>40</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="emailInput">
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <property name="placeholderText">
+              <string>email</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLineEdit" name="passwordInput">
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <property name="echoMode">
+              <enum>QLineEdit::EchoMode::Password</enum>
+             </property>
+             <property name="placeholderText">
+              <string>password</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="logInBnt">
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+               <fontweight>DemiBold</fontweight>
+              </font>
+             </property>
+             <property name="toolTip">
+              <string>Sign in</string>
+             </property>
+             <property name="text">
+              <string>Log In</string>
+             </property>
+             <property name="class" stdset="0">
+              <string>primary</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="language_icon">
+             <property name="font">
+              <font>
+               <pointsize>8</pointsize>
+              </font>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="pixmap">
+              <pixmap resource="../scripts/ui/icons/icons.qrc">:/icons/languages.png</pixmap>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="langCombo">
+             <property name="font">
+              <font>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
+             <item>
+              <property name="text">
+               <string>EN</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>PL</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>DE</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QFrame" name="controlsFrame">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>70</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::NoFrame</enum>
+         </property>
+         <layout class="QHBoxLayout" name="controlsLayout">
+          <property name="spacing">
+           <number>9</number>
+          </property>
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <item>
+           <widget class="QPushButton" name="randomAnimButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>11</pointsize>
+              <fontweight>DemiBold</fontweight>
+             </font>
+            </property>
+            <property name="text">
+             <string>  Shuffle animated</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../scripts/ui/icons/icons.qrc">
+              <normaloff>:/icons/shuffle_blue.png</normaloff>:/icons/shuffle_blue.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="class" stdset="0">
+             <string>primary</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="randomButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>11</pointsize>
+              <fontweight>DemiBold</fontweight>
+             </font>
+            </property>
+            <property name="text">
+             <string>  Shuffle wallpaper</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../scripts/ui/icons/icons.qrc">
+              <normaloff>:/icons/shuffle_blue.png</normaloff>:/icons/shuffle_blue.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="class" stdset="0">
+             <string>primary</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="browseButton">
+            <property name="font">
+             <font>
+              <pointsize>11</pointsize>
+              <fontweight>DemiBold</fontweight>
+             </font>
+            </property>
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="text">
+             <string>  Browse wallpapers</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../scripts/ui/icons/icons.qrc">
+              <normaloff>:/icons/images_blue.png</normaloff>:/icons/images_blue.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>20</width>
+              <height>20</height>
+             </size>
+            </property>
+            <property name="class" stdset="0">
+             <string>primary</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="add_file_h_layout">
+         <item>
+          <widget class="QLabel" name="add_files_icon">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="pixmap">
+            <pixmap resource="../scripts/ui/icons/icons.qrc">:/icons/upload.png</pixmap>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="add_file_label">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>14</pointsize>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Add files</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QFrame" name="uploadArea">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>160</height>
+          </size>
+         </property>
+         <property name="acceptDrops">
+          <bool>true</bool>
+         </property>
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+         <layout class="QVBoxLayout" name="uploadLayout">
+          <property name="spacing">
+           <number>14</number>
+          </property>
+          <property name="topMargin">
+           <number>9</number>
+          </property>
+          <item>
+           <widget class="QFrame" name="upload_area_empty_frame">
+            <layout class="QVBoxLayout" name="upload_area_empty_v_box">
+             <item>
+              <widget class="QLabel" name="uploadIcon">
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="pixmap">
+                <pixmap resource="../scripts/ui/icons/icons.qrc">:/icons/upload.png</pixmap>
+               </property>
+               <property name="scaledContents">
+                <bool>false</bool>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="uploadText">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Drag &amp; drop a photo or video here, or click to choose a file</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="uploadSupported">
+               <property name="styleSheet">
+                <string notr="true">QLabel { color: rgba(255,255,255,0.72); font-size:11px; }</string>
+               </property>
+               <property name="text">
+                <string>Supported: JPG, PNG, MP4</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+               <property name="margin">
+                <number>0</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="url_loader_qframe">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Plain</enum>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="url_loader_lable_Hbox">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <property name="sizeConstraint">
+             <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+            </property>
+            <item>
+             <widget class="QLabel" name="icon_label">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="pixmap">
+               <pixmap resource="../scripts/ui/icons/icons.qrc">:/icons/link.png</pixmap>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="url_loader_text_label">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>15</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Images or Video URL</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="urlLayout" stretch="0,0">
+            <property name="spacing">
+             <number>9</number>
+            </property>
+            <property name="sizeConstraint">
+             <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+            </property>
+            <item>
+             <widget class="QLineEdit" name="urlInput">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>38</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+               </font>
+              </property>
+              <property name="placeholderText">
+               <string>https://example.com/image.jpg or https://.../video.mp4</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="loadUrlButton">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>92</width>
+                <height>42</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>12</pointsize>
+                <fontweight>DemiBold</fontweight>
+               </font>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Load</string>
+              </property>
+              <property name="class" stdset="0">
+               <string>primary</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="url_helper_text_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="baseSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>7</pointsize>
+              <italic>true</italic>
+              <strikeout>false</strikeout>
+              <kerning>true</kerning>
+             </font>
+            </property>
+            <property name="text">
+             <string>Paete a dirick link to a .jpg/.png or mp4</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="autoFrame">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::NoFrame</enum>
+         </property>
+         <layout class="QVBoxLayout" name="autoLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="sizeConstraint">
+           <enum>QLayout::SizeConstraint::SetNoConstraint</enum>
+          </property>
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="autoTopLayout">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>5</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="auto_change_icon_lable">
+              <property name="font">
+               <font>
+                <bold>false</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="pixmap">
+               <pixmap resource="../scripts/ui/icons/icons.qrc">:/icons/timer.png</pixmap>
+              </property>
+              <property name="scaledContents">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="autoLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>15</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Automatic wallpaper change</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeType">
+               <enum>QSizePolicy::Policy::Expanding</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="enabledCheck">
+              <property name="font">
+               <font>
+                <pointsize>13</pointsize>
+               </font>
+              </property>
+              <property name="text">
+               <string>Enabled</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="source_n_interval_frame">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>80</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <kerning>true</kerning>
+          </font>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Raised</enum>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <property name="spacing">
+           <number>6</number>
+          </property>
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <property name="bottomMargin">
+           <number>3</number>
+          </property>
+          <item>
+           <layout class="QVBoxLayout" name="interval_v_layout">
+            <property name="spacing">
+             <number>3</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="inverval_lable">
+              <property name="font">
+               <font>
+                <pointsize>13</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Interval (minutes)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="interval_spinBox">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>35</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
+              </property>
+              <property name="wrapping">
+               <bool>false</bool>
+              </property>
+              <property name="frame">
+               <bool>false</bool>
+              </property>
+              <property name="maximum">
+               <number>999999</number>
+              </property>
+              <property name="singleStep">
+               <number>5</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="source_v_layout">
+            <property name="spacing">
+             <number>9</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="wallpaper_source_lable">
+              <property name="font">
+               <font>
+                <pointsize>13</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Wallpaper source</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="source_inner_h_loyout">
+              <item>
+               <widget class="QPushButton" name="super_wallpaper_btn">
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                  <fontweight>DemiBold</fontweight>
+                 </font>
+                </property>
+                <property name="layoutDirection">
+                 <enum>Qt::LayoutDirection::LeftToRight</enum>
+                </property>
+                <property name="text">
+                 <string>  Super Wallpaper</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="../scripts/ui/icons/icons.qrc">
+                  <normaloff>:/icons/sparkles_blue.png</normaloff>:/icons/sparkles_blue.png</iconset>
+                </property>
+                <property name="class" stdset="0">
+                 <string>primary</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="fvrt_wallpapers_btn">
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>  Favorite Wallpapers</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="../scripts/ui/icons/icons.qrc">
+                  <normaloff>:/icons/heart.png</normaloff>:/icons/heart.png</iconset>
+                </property>
+                <property name="class" stdset="0">
+                 <string>ghost</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="added_wallpaper_btn">
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>  Added wallpapers</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="../scripts/ui/icons/icons.qrc">
+                  <normaloff>:/icons/circle-plus.png</normaloff>:/icons/circle-plus.png</iconset>
+                </property>
+                <property name="class" stdset="0">
+                 <string>ghost</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="range_frame">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>100</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Raised</enum>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <property name="leftMargin">
+           <number>3</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>3</number>
+          </property>
+          <item>
+           <layout class="QVBoxLayout" name="range_v_layout">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="range_lable">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>13</pointsize>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <property name="text">
+               <string>Range</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="range_inner_h_layout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
+              <item>
+               <widget class="QPushButton" name="range_all_bnt">
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                  <fontweight>DemiBold</fontweight>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>  All</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="../scripts/ui/icons/icons.qrc">
+                  <normaloff>:/icons/wallpaper_blue.png</normaloff>:/icons/wallpaper_blue.png</iconset>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>20</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="class" stdset="0">
+                 <string>primary</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="range_wallpaper_bnt">
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>  Wallpaper</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="../scripts/ui/icons/icons.qrc">
+                  <normaloff>:/icons/film.png</normaloff>:/icons/film.png</iconset>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>20</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="class" stdset="0">
+                 <string>ghost</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="range_mp4_bnt">
+                <property name="font">
+                 <font>
+                  <pointsize>11</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>  Mp4</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="../scripts/ui/icons/icons.qrc">
+                  <normaloff>:/icons/film.png</normaloff>:/icons/film.png</iconset>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>20</width>
+                  <height>20</height>
+                 </size>
+                </property>
+                <property name="class" stdset="0">
+                 <string>ghost</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_5">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="bottomFrame">
+         <layout class="QHBoxLayout" name="bottomLayout">
+          <item>
+           <widget class="QLabel" name="statusLabel">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+              <bold>true</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Status: min ,Status: min ,Status: min ,Status: min</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources>
+  <include location="../scripts/ui/icons/icons.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>urlInput</sender>
+   <signal>returnPressed()</signal>
+   <receiver>loadUrlButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1131</x>
+     <y>497</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1251</x>
+     <y>500</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
