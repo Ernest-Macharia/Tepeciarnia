@@ -1,8 +1,7 @@
 import os
 import re
 import sys
-import subprocess
-import tempfile
+import logging
 import yt_dlp
 
 
@@ -47,18 +46,15 @@ def download_video(url: str, resolution: str = "1080") -> str:
         # Write the downloaded path to temp file
         with open(temp_path, "w", encoding="utf-8") as f:
             f.write(file_path)
-
-        print(f"[OK] Downloaded: {file_path}")
         return file_path
 
     except Exception as e:
-        print(f"[ERROR] Download failed: {e}")
+        logging.error(f"[ERROR] Download failed: {e}")
         return ""
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: downloader.py <url> [-r <resolution>]")
         sys.exit(1)
 
     url = sys.argv[1]
@@ -73,7 +69,6 @@ def main():
             pass
 
     if not is_video_url(url):
-        print("[SKIP] Input is not a video URL")
         sys.exit(0)
 
     result = download_video(url, res)
