@@ -1,5 +1,5 @@
 import subprocess
-import sys
+import logging
 import platform
 import os
 
@@ -22,7 +22,6 @@ def run_blocking_silent_command(command_parts, cwd=None, timeout=None):
                                      Returns None if the platform is not Windows.
     """
     if platform.system() != "Windows":
-        print(f"Warning: Silent execution flags are Windows-specific. Using standard run.")
         return subprocess.run(command_parts, capture_output=True, text=True, cwd=cwd, timeout=timeout)
     
     # --- Windows-Specific Execution (Blocking) ---
@@ -48,14 +47,14 @@ def run_blocking_silent_command(command_parts, cwd=None, timeout=None):
         )
 
     except FileNotFoundError:
-        print(f"Error: Executable not found. Command: {command_parts[0]}")
+        logging.error(f"Error: Executable not found. Command: {command_parts[0]}")
         return None
     except subprocess.TimeoutExpired:
-        print(f"Error: Command timed out after {timeout} seconds.")
+        logging.error(f"Error: Command timed out after {timeout} seconds.")
         process.kill()
         return None
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        logging.error(f"An unexpected error occurred: {e}")
         return None
 
 
@@ -73,7 +72,6 @@ def run_and_forget_silent(command_parts, cwd=None):
         subprocess.Popen or None: The process object if successful, None otherwise.
     """
     if platform.system() != "Windows":
-        print("Warning: Silent execution flags are Windows-specific. Running standard Popen.")
         return subprocess.Popen(command_parts, cwd=cwd)
 
     try:
@@ -83,13 +81,12 @@ def run_and_forget_silent(command_parts, cwd=None):
             creationflags=CREATE_NO_WINDOW,
             cwd=cwd
         )
-        print(f"Successfully launched PID: {process.pid} in the background.")
         return process
     except FileNotFoundError:
-        print(f"Error: Executable not found. Command: {command_parts[0]}")
+        logging.error(f"Error: Executable not found. Command: {command_parts[0]}")
         return None
     except Exception as e:
-        print(f"An unexpected error occurred during silent run: {e}")
+        logging.error(f"An unexpected error occurred during silent run: {e}")
         return None
 
 
