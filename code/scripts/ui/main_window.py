@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QSystemTrayIcon, QMenu
 )
 from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication
 
 current_dir = os.path.dirname(__file__)
 ui_path = os.path.join(current_dir, 'mainUI.py')
@@ -67,12 +67,62 @@ class MP4WallApp(QMainWindow):
         # State
         self.current_range = "all"
         self.previous_wallpaper = get_current_desktop_wallpaper()
+        self.is_minimized_to_tray = False
 
         # Setup
         self._setup_ui()
         self._setup_tray()
         self._load_settings()
         self._handle_cli_args()
+
+    def changeEvent(self, event):
+        """
+        Handle window state changes - ONLY minimize to tray on minimize button
+        """
+        if event.type() == QEvent.WindowStateChange:
+            if self.isMinimized() and not self.is_minimized_to_tray:
+                # User clicked minimize button - hide to system tray
+                event.ignore()  # Ignore the minimize event
+                self.hide_to_tray()
+        super().changeEvent(event)
+
+    def closeEvent(self, event):
+        """
+        Handle window close event - X button should CLOSE the application
+        """
+        # Stop any running processes
+        self._perform_reset()
+        
+        # Hide tray icon and quit application
+        if hasattr(self, 'tray'):
+            self.tray.hide()
+        
+        QCoreApplication.quit()
+        event.accept()
+
+    def hide_to_tray(self):
+        """Hide window to system tray with proper notification"""
+        self.hide()
+        self.is_minimized_to_tray = True
+        
+        if hasattr(self, 'tray'):
+            # Show notification that app is still running
+            self.tray.showMessage(
+                "MP4 Wall",
+                "Application is still running in system tray\nClick the tray icon to show the window",
+                QSystemTrayIcon.Information,
+                3000
+            )
+
+    def show_from_tray(self):
+        """Show window from system tray"""
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        # Ensure window is not minimized when showing from tray
+        if self.isMinimized():
+            self.showNormal()
+        self.is_minimized_to_tray = False
 
     def _setup_ui(self):
         """Setup UI connections and initial state"""
@@ -93,7 +143,7 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "urlInput"):
             self.ui.urlInput.returnPressed.connect(self.on_apply_clicked)
 
-        # Start/Reset buttons
+        # Start/Reset buttons (now in Range section)
         if hasattr(self.ui, "startButton"):
             self.ui.startButton.clicked.connect(self.on_start_clicked)
         
@@ -575,42 +625,101 @@ class MP4WallApp(QMainWindow):
             if enabled and source:
                 self.scheduler.start(source, interval)
 
-    # System tray
+    # System tray - FIXED for Ubuntu compatibility
     def _setup_tray(self):
+        # CRITICAL: Don't quit when last window is closed
         QApplication.setQuitOnLastWindowClosed(False)
         
+        # Check if system tray is available
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            QMessageBox.critical(None, "System Tray", "System tray is not available on this system.")
+            return
+        
+        # Create tray icon with proper visibility
+        self.tray = QSystemTrayIcon(self)
+        
+        # Set a proper icon that will be visible
         icon = QIcon()
         cand = Path(__file__).parent.parent / "ui" / "icons" / "logo_biale.svg"
         if cand.exists():
             icon = QIcon(str(cand))
+        else:
+            # Fallback to a standard icon if custom icon not found
+            icon = self.style().standardIcon(self.style().StandardPixmap.SP_ComputerIcon)
         
-        self.tray = QSystemTrayIcon(icon, parent=self)
-        menu = QMenu()
+        self.tray.setIcon(icon)
+        self.tray.setToolTip("MP4 Wall - Desktop Wallpaper Manager")
         
-        show_action = QAction("Show", self)
-        show_action.triggered.connect(self.show)
+        # Create context menu
+        tray_menu = QMenu()
         
-        hide_action = QAction("Hide", self)
-        hide_action.triggered.connect(self.hide)
+        show_action = QAction("Show Window", self)
+        show_action.triggered.connect(self.show_from_tray)
+        
+        hide_action = QAction("Hide to Tray", self)
+        hide_action.triggered.connect(self.hide_to_tray)
         
         exit_action = QAction("Exit", self)
         exit_action.triggered.connect(self._exit_app)
         
-        menu.addAction(show_action)
-        menu.addAction(hide_action)
-        menu.addSeparator()
-        menu.addAction(exit_action)
+        tray_menu.addAction(show_action)
+        tray_menu.addAction(hide_action)
+        tray_menu.addSeparator()
+        tray_menu.addAction(exit_action)
         
-        self.tray.setContextMenu(menu)
-        self.tray.activated.connect(self._tray_activated)
+        self.tray.setContextMenu(tray_menu)
+        
+        # Connect tray icon activation (click/double-click)
+        self.tray.activated.connect(self._on_tray_activated)
+        
+        # Show the tray icon - this is critical for Ubuntu
         self.tray.show()
+        
+        # Force the icon to be visible
+        self.tray.setVisible(True)
 
-    def _tray_activated(self, reason):
+    def _on_tray_activated(self, reason):
+        """Handle tray icon clicks"""
         if reason == QSystemTrayIcon.DoubleClick:
-            self.show()
+            # Double-click toggles window visibility
+            if self.isVisible():
+                self.hide_to_tray()
+            else:
+                self.show_from_tray()
+        elif reason == QSystemTrayIcon.Trigger:
+            # Single click also toggles window (common on Ubuntu)
+            if self.isVisible():
+                self.hide_to_tray()
+            else:
+                self.show_from_tray()
+
+    def show_from_tray(self):
+        """Show window from system tray"""
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        # Ensure window is properly restored
+        if self.isMinimized():
+            self.showNormal()
+        self.is_minimized_to_tray = False
+
+    def hide_to_tray(self):
+        """Hide window to system tray with proper notification"""
+        self.hide()
+        self.is_minimized_to_tray = True
+        
+        if hasattr(self, 'tray'):
+            # Show notification that app is still running
+            self.tray.showMessage(
+                "MP4 Wall",
+                "Application minimized to system tray\nClick the tray icon to restore the window",
+                QSystemTrayIcon.Information,
+                3000
+            )
 
     def _exit_app(self):
-        self.controller.stop()
-        self.autopause.stop()
-        self.scheduler.stop()
+        """Properly quit the application from tray menu"""
+        self._perform_reset()
+        if hasattr(self, 'tray'):
+            self.tray.hide()
         QApplication.quit()
