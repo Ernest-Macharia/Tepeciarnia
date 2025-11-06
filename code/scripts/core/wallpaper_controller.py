@@ -58,7 +58,7 @@ class WallpaperController:
             self._start_video_fallback(video_path)
 
     def _start_video_windows(self, video_path: str):
-        """Windows-specific video wallpaper implementation using Weepe"""
+        """Windows-specific video wallpaper implementation"""
         # Primary method: Use Weepe for proper wallpaper
         weepe_exe = get_weepe_path()
         if weepe_exe and weepe_exe.exists():
@@ -73,32 +73,46 @@ class WallpaperController:
             except Exception as e:
                 logging.error(f"Weepe failed: {e}")
 
-        # Fallback: MPV with Windows-compatible commands only
+        # Fallback: MPV with Windows-compatible commands ONLY
         mpv_exe = get_mpv_path()
         if mpv_exe and mpv_exe.exists():
             try:
-                # Use only core MPV commands that work on Windows
+                # WINDOWS-COMPATIBLE MPV COMMANDS ONLY
+                # These are the core commands that work reliably on Windows
                 cmd = [
                     str(mpv_exe),
                     video_path,
-                    "--loop",           # Loop the video
-                    "--no-audio",       # Disable audio
-                    "--no-osd-bar",     # Hide on-screen display
-                    "--fullscreen"      # Fullscreen mode
+                    "--loop",                    # Loop the video
+                    "--no-audio",                # Disable audio (safe)
+                    "--no-osd-bar",              # Hide OSD (safe)
+                    "--fullscreen",              # Fullscreen mode (safe)
+                    "--no-border",               # No window border (safe)
+                    "--ontop",                   # Keep on top (safe)
+                    "--no-input-default-bindings", # Disable default key bindings
+                    "--input-ipc-server=\\.\\pipe\\mpvsocket"  # IPC for control
                 ]
                 p = run_and_forget_silent(cmd)
                 if p:
                     self.player_procs.append(p)
-                    logging.info("Video started with MPV fallback (fullscreen)")
+                    logging.info("Video started with MPV (Windows-compatible commands)")
                     return
             except Exception as e:
                 logging.error(f"MPV fallback failed: {e}")
 
-        # Final fallback: ffplay
+        # Final fallback: ffplay with basic commands
         ffplay = which("ffplay")
         if ffplay:
             try:
-                cmd = [ffplay, "-autoexit", "-loop", "0", "-an", "-fs", video_path]
+                # Basic ffplay commands that work on Windows
+                cmd = [
+                    ffplay, 
+                    "-autoexit", 
+                    "-loop", "0", 
+                    "-an",                       # No audio
+                    "-fs",                       # Fullscreen
+                    "-noborder",                 # No border
+                    video_path
+                ]
                 p = run_and_forget_silent(cmd)
                 if p:
                     self.player_procs.append(p)
@@ -117,6 +131,7 @@ class WallpaperController:
         
         if xwinwrap and mpv:
             try:
+                # Linux-specific commands for proper wallpaper
                 cmd = f"{xwinwrap} -ov -fs -- {mpv} --loop --no-audio --no-osd-bar --wid=WID '{video_path}'"
                 p = subprocess.Popen(cmd, shell=True, executable="/bin/bash",
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -126,11 +141,19 @@ class WallpaperController:
             except Exception as e:
                 logging.error(f"xwinwrap failed: {e}")
 
-        # Fallback: mpv fullscreen
+        # Fallback: mpv fullscreen (Linux-compatible commands)
         if mpv:
             try:
-                cmd = [mpv, "--loop", "--no-audio", "--no-osd-bar", 
-                       "--fullscreen", "--no-border", video_path]
+                # Linux-compatible MPV commands
+                cmd = [
+                    mpv, 
+                    "--loop", 
+                    "--no-audio", 
+                    "--no-osd-bar", 
+                    "--fullscreen", 
+                    "--no-border",
+                    video_path
+                ]
                 p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 self.player_procs.append(p)
                 logging.info("Video started with MPV fullscreen")
@@ -145,7 +168,15 @@ class WallpaperController:
         mpv = which("mpv")
         if mpv:
             try:
-                cmd = [mpv, "--loop", "--no-audio", "--fullscreen", "--no-border", video_path]
+                # Universal fallback commands
+                cmd = [
+                    mpv, 
+                    "--loop", 
+                    "--no-audio", 
+                    "--fullscreen", 
+                    "--no-border", 
+                    video_path
+                ]
                 p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 self.player_procs.append(p)
                 logging.info("Video started with MPV fallback")
