@@ -153,37 +153,9 @@ class Ui_MainWindow(object):
         self.controlsLayout.setSpacing(9)
         self.controlsLayout.setObjectName(u"controlsLayout")
         self.controlsLayout.setContentsMargins(3, -1, 3, -1)
+        
+        # Main control buttons (Shuffle, Browse)
         self.randomAnimButton = QPushButton(self.controlsFrame)
-        # Start Button
-        self.startButton = QPushButton(self.controlsFrame)
-        self.startButton.setObjectName(u"startButton")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.startButton.sizePolicy().hasHeightForWidth())
-        self.startButton.setSizePolicy(sizePolicy3)
-        self.startButton.setFont(font2)
-        self.startButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        icon_start = QIcon()
-        icon_start.addFile(u":/icons/play.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.startButton.setIcon(icon_start)
-        self.startButton.setIconSize(QSize(20, 20))
-
-        self.controlsLayout.addWidget(self.startButton)
-
-        # Reset Button
-        self.resetButton = QPushButton(self.controlsFrame)
-        self.resetButton.setObjectName(u"resetButton")
-        sizePolicy3.setHeightForWidth(self.resetButton.sizePolicy().hasHeightForWidth())
-        self.resetButton.setSizePolicy(sizePolicy3)
-        self.resetButton.setFont(font2)
-        self.resetButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        icon_reset = QIcon()
-        icon_reset.addFile(u":/icons/reset.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.resetButton.setIcon(icon_reset)
-        self.resetButton.setIconSize(QSize(20, 20))
-
-        self.controlsLayout.addWidget(self.resetButton)
         self.randomAnimButton.setObjectName(u"randomAnimButton")
         sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy3.setHorizontalStretch(0)
@@ -208,10 +180,6 @@ class Ui_MainWindow(object):
 
         self.controlsLayout.addWidget(self.randomButton)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.controlsLayout.addItem(self.horizontalSpacer)
-
         self.browseButton = QPushButton(self.controlsFrame)
         self.browseButton.setObjectName(u"browseButton")
         self.browseButton.setFont(font2)
@@ -223,6 +191,9 @@ class Ui_MainWindow(object):
 
         self.controlsLayout.addWidget(self.browseButton)
 
+        # Spacer to push buttons to fill space
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.controlsLayout.addItem(self.horizontalSpacer)
 
         self.cardLayout.addWidget(self.controlsFrame)
 
@@ -547,15 +518,15 @@ class Ui_MainWindow(object):
         sizePolicy8.setVerticalStretch(0)
         sizePolicy8.setHeightForWidth(self.range_frame.sizePolicy().hasHeightForWidth())
         self.range_frame.setSizePolicy(sizePolicy8)
-        self.range_frame.setMinimumSize(QSize(0, 100))
+        self.range_frame.setMinimumSize(QSize(0, 140))  # Increased height for Start/Reset buttons
         self.range_frame.setFrameShape(QFrame.Shape.NoFrame)
         self.range_frame.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_6 = QHBoxLayout(self.range_frame)
-        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.horizontalLayout_6.setContentsMargins(3, 0, 3, -1)
-        self.range_v_layout = QVBoxLayout()
-        self.range_v_layout.setSpacing(0)
+        self.range_v_layout = QVBoxLayout(self.range_frame)
+        self.range_v_layout.setSpacing(6)
         self.range_v_layout.setObjectName(u"range_v_layout")
+        self.range_v_layout.setContentsMargins(3, 6, 3, 6)
+        
+        # Range label
         self.range_lable = QLabel(self.range_frame)
         self.range_lable.setObjectName(u"range_lable")
         self.range_lable.setMinimumSize(QSize(0, 0))
@@ -564,6 +535,7 @@ class Ui_MainWindow(object):
 
         self.range_v_layout.addWidget(self.range_lable)
 
+        # Range buttons (All, Wallpaper, MP4)
         self.range_inner_h_layout = QHBoxLayout()
         self.range_inner_h_layout.setSpacing(6)
         self.range_inner_h_layout.setObjectName(u"range_inner_h_layout")
@@ -599,12 +571,46 @@ class Ui_MainWindow(object):
 
         self.range_inner_h_layout.addItem(self.horizontalSpacer_5)
 
-
         self.range_v_layout.addLayout(self.range_inner_h_layout)
 
+        # Start and Reset buttons (now in Range section)
+        self.start_reset_layout = QHBoxLayout()
+        self.start_reset_layout.setSpacing(9)
+        self.start_reset_layout.setObjectName(u"start_reset_layout")
+        
+        # Spacer to push Start/Reset to the right
+        self.start_reset_spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.start_reset_layout.addItem(self.start_reset_spacer)
+        
+        self.startButton = QPushButton(self.range_frame)
+        self.startButton.setObjectName(u"startButton")
+        sizePolicy3.setHeightForWidth(self.startButton.sizePolicy().hasHeightForWidth())
+        self.startButton.setSizePolicy(sizePolicy3)
+        self.startButton.setFont(font2)
+        self.startButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        icon_start = QIcon()
+        icon_start.addFile(u":/icons/play.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.startButton.setIcon(icon_start)
+        self.startButton.setIconSize(QSize(20, 20))
+        self.startButton.setMinimumSize(QSize(80, 30))
 
-        self.horizontalLayout_6.addLayout(self.range_v_layout)
+        self.start_reset_layout.addWidget(self.startButton)
 
+        self.resetButton = QPushButton(self.range_frame)
+        self.resetButton.setObjectName(u"resetButton")
+        sizePolicy3.setHeightForWidth(self.resetButton.sizePolicy().hasHeightForWidth())
+        self.resetButton.setSizePolicy(sizePolicy3)
+        self.resetButton.setFont(font2)
+        self.resetButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        icon_reset = QIcon()
+        icon_reset.addFile(u":/icons/reset.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.resetButton.setIcon(icon_reset)
+        self.resetButton.setIconSize(QSize(20, 20))
+        self.resetButton.setMinimumSize(QSize(80, 30))
+
+        self.start_reset_layout.addWidget(self.resetButton)
+
+        self.range_v_layout.addLayout(self.start_reset_layout)
 
         self.cardLayout.addWidget(self.range_frame)
 
