@@ -19,7 +19,6 @@ def load_stylesheet(app_instance, filepath):
         with open(filepath, "r") as f:
             stylesheet = f.read()
             app_instance.setStyleSheet(stylesheet)
-            print(f"Successfully loaded stylesheet from: {filepath}")
     except FileNotFoundError:
         print(f"Error: Stylesheet file not found at {filepath}")
 

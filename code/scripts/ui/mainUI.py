@@ -9,8 +9,8 @@
 ################################################################################
 
 from PySide6.QtCore import (QCoreApplication, QMetaObject, QSize, Qt)
-from PySide6.QtGui import (QCursor, QFont, QIcon,)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
+from PySide6.QtGui import (QCursor, QFont, QIcon, QPixmap)
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QFrame,
     QHBoxLayout, QLabel, QLayout, QLineEdit,QPushButton, QSizePolicy, QSpacerItem,
     QSpinBox, QVBoxLayout, QWidget)
 
