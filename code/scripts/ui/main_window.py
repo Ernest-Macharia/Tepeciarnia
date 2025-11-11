@@ -5,7 +5,6 @@ import random
 import shutil
 import logging
 from pathlib import Path
-from typing import Optional
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QMessageBox, 
@@ -31,7 +30,7 @@ except ImportError as e:
 
 # Import core modules
 from core.wallpaper_controller import WallpaperController
-from core.autopause_controller import AutoPauseController
+# from core.autopause_controller import AutoPauseController
 from core.download_manager import DownloaderThread
 from core.scheduler import WallpaperScheduler
 
@@ -256,7 +255,7 @@ class MP4WallApp(QMainWindow):
 
         # Initialize controllers
         self.controller = WallpaperController()
-        self.autopause = AutoPauseController()
+        # self.autopause = AutoPauseController()
         self.scheduler = WallpaperScheduler()
         self.scheduler.set_change_callback(self._apply_wallpaper_from_path)
         self.config = Config()
@@ -576,11 +575,31 @@ class MP4WallApp(QMainWindow):
         super().changeEvent(event)
 
     def closeEvent(self, event):
-        self.cleanup()
-        if hasattr(self, 'tray'):
-            self.tray.hide()
-        QCoreApplication.quit()
-        event.accept()
+        """
+        Handle window close event - Show confirmation dialog before closing
+        """
+        reply = QMessageBox.question(
+            self,
+            "Confirm Exit",
+            "Are you sure you want to exit Tapeciarnia?\n\nThis will stop all wallpapers and background processes.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            # Stop any running processes WITHOUT reset confirmation
+            self._perform_reset()  # Use the version WITHOUT confirmation
+            
+            # Hide tray icon
+            if hasattr(self, 'tray'):
+                self.tray.hide()
+            
+            # Since we set quitOnLastWindowClosed to False, we MUST call quit()
+            QApplication.quit()
+            
+            event.accept()
+        else:
+            event.ignore()
 
     def hide_to_tray(self):
         self.hide()
@@ -654,8 +673,15 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "startButton"):
             self.ui.startButton.clicked.connect(self.on_start_clicked)
         
+        # if hasattr(self.ui, "resetButton"):
+        #     self.ui.resetButton.clicked.connect(self.on_reset_clicked)
+
+        # if hasattr(self.ui, "resetButton"):
+        #     self.ui.resetButton.clicked.connect(self._perform_reset)
+
         if hasattr(self.ui, "resetButton"):
-            self.ui.resetButton.clicked.connect(self.on_reset_clicked)
+            # Use the version WITH confirmation
+            self.ui.resetButton.clicked.connect(self._perform_reset_with_confirmation)
 
         # Browse button
         if hasattr(self.ui, "browseButton"):
@@ -1126,14 +1152,24 @@ class MP4WallApp(QMainWindow):
             range_buttons[active_range].style().polish(range_buttons[active_range])
 
     def _perform_reset(self):
-        """Reset to default wallpaper - NOW USES ENHANCED DRAG DROP WIDGET"""
+        """Reset to default wallpaper WITHOUT confirmation"""
         self.controller.stop()
         self.autopause.stop()
         self.scheduler.stop()
         
-        # Reset shuffle state
-        self.current_shuffle_type = None
-        self._update_shuffle_button_states(None)
+        # Stop autoPause process only on reset
+        self.stop_auto_pause_process()
+        
+        # Reset enhanced state
+        self.current_wallpaper_type = None
+        self.last_wallpaper_path = None
+        self.current_shuffle_mode = None
+        
+        # Reset shuffle button states
+        if hasattr(self.ui, 'randomButton'):
+            self.ui.randomButton.setChecked(False)
+        if hasattr(self.ui, 'randomAnimButton'):
+            self.ui.randomAnimButton.setChecked(False)
         
         # Use the enhanced drag drop widget to restore original wallpaper
         if hasattr(self, 'drag_drop_widget'):
@@ -1143,6 +1179,28 @@ class MP4WallApp(QMainWindow):
             self._set_status("Restored previous wallpaper")
         else:
             self._set_status("Reset complete (no previous wallpaper)")
+        
+        # Clear URL input
+        if hasattr(self.ui, 'urlInput'):
+            self.ui.urlInput.clear()
+        
+        self._set_status("Reset completed")
+
+    def _perform_reset_with_confirmation(self):
+        """Reset to default wallpaper WITH confirmation"""
+        reply = QMessageBox.question(
+            self,
+            "Confirm Reset",
+            "Are you sure you want to reset?\n\nThis will stop all current wallpapers and restore the original wallpaper.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self._perform_reset()
+            self._set_status("Reset completed successfully")
+        else:
+            self._set_status("Reset cancelled")
 
     def _on_download_error(self, error_msg: str):
         """Handle download errors"""
@@ -1272,8 +1330,19 @@ class MP4WallApp(QMainWindow):
                 self.show_from_tray()
 
     def _exit_app(self):
-        """Properly quit the application from tray menu"""
-        self._perform_reset()
-        if hasattr(self, 'tray'):
-            self.tray.hide()
-        QApplication.quit()
+        """Properly quit the application from tray menu with confirmation"""
+        reply = QMessageBox.question(
+            self,
+            "Confirm Exit",
+            "Are you sure you want to exit Tapeciarnia?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            # Stop any running processes WITHOUT reset confirmation
+            self._perform_reset()  # Use the version WITHOUT confirmation
+            
+            if hasattr(self, 'tray'):
+                self.tray.hide()
+            QApplication.quit()

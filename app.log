@@ -1,0 +1,13 @@
+[2025-11-11 21:50:50][DEBUG]->Logging setup successful
+[2025-11-11 21:50:50][INFO]->Scheduler started: /home/ernest/Pictures/Tapeciarnia/Favorites, interval: 30min
+[2025-11-11 21:50:55][INFO]->Scheduler stopped
+[2025-11-11 21:50:57][INFO]->Scheduler started: /home/ernest/Pictures/Tapeciarnia/Favorites, interval: 30min
+[2025-11-11 21:51:38][INFO]->Stopping all wallpaper processes...
+[2025-11-11 21:51:38][INFO]->All wallpaper processes stopped
+[2025-11-11 21:51:38][INFO]->Starting video wallpaper: /home/ernest/Pictures/Tapeciarnia/Videos/Kenyan Nurse Shares His Inspiring Journey to Becoming a USRN!.mp4
+[2025-11-11 21:51:38][INFO]->Video started with MPV fullscreen
+[2025-11-11 21:52:18][INFO]->Stopping all wallpaper processes...
+[2025-11-11 21:52:18][INFO]->All wallpaper processes stopped
+[2025-11-11 21:52:18][INFO]->Scheduler stopped
+[2025-11-11 21:52:23][DEBUG]->Logging setup successful
+[2025-11-11 21:52:23][INFO]->Scheduler started: /home/ernest/Pictures/Tapeciarnia/Favorites, interval: 30min
