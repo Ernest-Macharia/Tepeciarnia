@@ -5,7 +5,7 @@ import colorlog # Import colorlog for colored console output
 
 
 class InitLogging:
-    def _init_(self):
+    def __init__(self):
         """
         Sets up the Python logging module, integrating configuration from a ConfigModel.
         This function configures logging to send messages to the QListWidget,
