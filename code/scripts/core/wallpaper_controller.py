@@ -13,6 +13,7 @@ class WallpaperController:
     def __init__(self):
         self.player_procs = []
         self.current_is_video = False
+        self.current_wallpaper_path = None
 
     def stop(self):
         """Stop all wallpaper processes"""
@@ -44,8 +45,8 @@ class WallpaperController:
 
     def start_video(self, video_path_or_url: str):
         """Starts a video as wallpaper using platform-specific tools."""
-        self.stop()
         self.current_is_video = True
+        self.current_wallpaper_path = video_path_or_url
         
         video_path = str(video_path_or_url)
         logging.info(f"Starting video wallpaper: {video_path}")
@@ -78,7 +79,6 @@ class WallpaperController:
         if mpv_exe and mpv_exe.exists():
             try:
                 # WINDOWS-COMPATIBLE MPV COMMANDS ONLY
-                # These are the core commands that work reliably on Windows
                 cmd = [
                     str(mpv_exe),
                     video_path,
@@ -187,13 +187,13 @@ class WallpaperController:
         raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
     def start_image(self, image_path: str):
-        """Set static wallpaper"""
-        self.stop()
+        """Set static wallpaper with proper error handling"""
         self.current_is_video = False
+        self.current_wallpaper_path = image_path
         logging.info(f"Setting static wallpaper: {image_path}")
         try:
             set_static_desktop_wallpaper(image_path)
             logging.info("Static wallpaper set successfully")
         except Exception as e:
             logging.error(f"Failed to set static wallpaper: {e}")
-            raise
+            raise RuntimeError(f"Failed to set static wallpaper: {e}") from e

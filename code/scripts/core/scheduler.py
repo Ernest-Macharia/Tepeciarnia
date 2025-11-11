@@ -1,67 +1,106 @@
+import time
 import random
+import logging
 from pathlib import Path
-from typing import Optional
-
-from PySide6.QtCore import QTimer
+from threading import Thread, Event
+from typing import Optional, Callable
 
 from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR
 
 
 class WallpaperScheduler:
     def __init__(self):
-        self.timer = QTimer()
-        self.source: Optional[str] = None
-        self.interval_minutes: int = 30
-        self.current_range: str = "all"
-        self.change_callback = None
+        self.interval_minutes = 30
+        self.source = str(COLLECTION_DIR)
+        self.range_type = "all"
+        self.is_running = False
+        self.thread = None
+        self.stop_event = Event()
+        self.change_callback: Optional[Callable] = None
+        self.last_wallpaper = None
 
-    def set_change_callback(self, callback):
-        """Set the callback function to be called when wallpaper should change"""
+    def set_change_callback(self, callback: Callable):
+        """Set callback for when wallpaper should change"""
         self.change_callback = callback
-        self.timer.timeout.connect(self._on_tick)
+
+    def set_range(self, range_type: str):
+        """Set range type: all, wallpaper, or mp4"""
+        self.range_type = range_type
 
     def start(self, source: str, interval_minutes: int):
         """Start the scheduler"""
+        if self.is_running:
+            self.stop()
+        
         self.source = source
-        self.interval_minutes = max(1, interval_minutes)
-        self.timer.start(self.interval_minutes * 60 * 1000)
+        self.interval_minutes = interval_minutes
+        self.is_running = True
+        self.stop_event.clear()
+        
+        self.thread = Thread(target=self._scheduler_loop, daemon=True)
+        self.thread.start()
+        logging.info(f"Scheduler started: {source}, interval: {interval_minutes}min")
 
     def stop(self):
         """Stop the scheduler"""
-        self.timer.stop()
-        self.source = None
+        self.is_running = False
+        self.stop_event.set()
+        if self.thread and self.thread.is_alive():
+            self.thread.join(timeout=5)
+        logging.info("Scheduler stopped")
 
-    def is_active(self) -> bool:
-        return self.timer.isActive()
+    def is_active(self):
+        """Check if scheduler is running"""
+        return self.is_running
 
-    def set_range(self, range_type: str):
-        """Set the current range (all, wallpaper, mp4)"""
-        self.current_range = range_type
+    def _scheduler_loop(self):
+        """Main scheduler loop"""
+        while self.is_running and not self.stop_event.is_set():
+            try:
+                # Wait for the interval
+                self.stop_event.wait(self.interval_minutes * 60)
+                
+                if self.stop_event.is_set():
+                    break
+                
+                if self.is_running and self.change_callback:
+                    # Get a random wallpaper that's different from the current one
+                    wallpaper = self._get_random_wallpaper()
+                    if wallpaper and wallpaper != self.last_wallpaper:
+                        self.last_wallpaper = wallpaper
+                        self.change_callback(wallpaper)
+                    elif wallpaper:
+                        logging.info("Skipping same wallpaper selection")
+                        
+            except Exception as e:
+                logging.error(f"Scheduler error: {e}")
+                time.sleep(60)  # Wait a minute before retrying
 
-    def _on_tick(self):
-        """Called when scheduler timer ticks"""
-        if not self.source or not self.change_callback:
-            return
-
-        src = Path(self.source)
-        if src.exists() and src.is_dir():
-            files = self._get_media_files()
-            if files:
-                chosen = str(random.choice(files))
-                self.change_callback(chosen)
+    def _get_random_wallpaper(self):
+        """Get a random wallpaper file"""
+        files = self._get_media_files()
+        if files:
+            return random.choice(files)
+        return None
 
     def _get_media_files(self):
-        """Get media files based on current range selection"""
+        """Get media files based on current range"""
         files = []
         
-        if self.current_range == "mp4":  # Videos only
-            search_folders = [VIDEOS_DIR, FAVS_DIR]
-            extensions = ('.mp4', '.mkv', '.webm', '.avi', '.mov')
-        elif self.current_range == "wallpaper":  # Images only  
-            search_folders = [IMAGES_DIR, FAVS_DIR]
-            extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif')
-        else:  # All media types
+        # Define search folders based on source
+        if self.source == str(FAVS_DIR):
+            search_folders = [FAVS_DIR]
+        elif self.source == str(COLLECTION_DIR):
             search_folders = [VIDEOS_DIR, IMAGES_DIR, FAVS_DIR]
+        else:
+            search_folders = [Path(self.source)]
+        
+        # Define extensions based on range type
+        if self.range_type == "mp4":
+            extensions = ('.mp4', '.mkv', '.webm', '.avi', '.mov')
+        elif self.range_type == "wallpaper":
+            extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif')
+        else:  # "all"
             extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.mp4', '.mkv', '.webm', '.avi', '.mov')
         
         for folder in search_folders:

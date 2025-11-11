@@ -1,4 +1,5 @@
 import os
+import subprocess
 import sys
 import random
 import shutil
@@ -8,7 +9,8 @@ from typing import Optional
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QMessageBox, 
-    QSystemTrayIcon, QMenu
+    QSystemTrayIcon, QMenu, QWidget, QVBoxLayout, QHBoxLayout,
+    QLabel, QPushButton, QStyle
 )
 from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
 from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication
@@ -21,7 +23,6 @@ try:
     from ui.mainUI import Ui_MainWindow
 except ImportError as e:
     logging.error(f"UI import error: {e}")
-    # Try alternative import path
     try:
         sys.path.append(current_dir)
         from mainUI import Ui_MainWindow
@@ -48,6 +49,154 @@ from .widgets import FadeOverlay
 from .dialogs import DownloadProgressDialog
 
 
+
+class EnhancedDragDropWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.dropped_file_path = None
+        self.original_wallpaper = None
+        self.parent_app = parent
+        self.setup_ui()
+        
+    def setup_ui(self):
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Drag & drop area
+        self.drop_area = QLabel("Drag & drop a photo or video here, or click to choose a file")
+        self.drop_area.setAlignment(Qt.AlignCenter)
+        self.drop_area.setMinimumHeight(120)
+        self.drop_area.setAcceptDrops(True)
+        self.drop_area.dragEnterEvent = self.dragEnterEvent
+        self.drop_area.dropEvent = self.dropEvent
+        
+        # Supported formats label
+        self.supported_label = QLabel("Supported: JPG, PNG, MP4")
+        self.supported_label.setAlignment(Qt.AlignCenter)
+        
+        # Action buttons (initially hidden)
+        self.buttons_widget = QWidget()
+        buttons_layout = QHBoxLayout()
+        buttons_layout.setContentsMargins(10, 0, 10, 0)
+        
+        self.upload_btn = QPushButton("Set as Wallpaper")
+        self.upload_btn.clicked.connect(self.set_as_wallpaper)
+        
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.clicked.connect(self.reset_selection)
+        
+        buttons_layout.addWidget(self.upload_btn)
+        buttons_layout.addStretch()
+        buttons_layout.addWidget(self.reset_btn)
+        self.buttons_widget.setLayout(buttons_layout)
+        self.buttons_widget.hide()
+        
+        layout.addWidget(self.drop_area)
+        layout.addWidget(self.supported_label)
+        layout.addWidget(self.buttons_widget)
+        self.setLayout(layout)
+    
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+    
+    def dropEvent(self, event):
+        urls = event.mimeData().urls()
+        if urls:
+            file_path = urls[0].toLocalFile()
+            if self.is_valid_wallpaper_file(file_path):
+                self.dropped_file_path = file_path
+                filename = os.path.basename(file_path)
+                self.drop_area.setText(f"Selected: {filename}")
+                self.buttons_widget.show()
+                self.upload_btn.setEnabled(True)
+            else:
+                self.drop_area.setText("Invalid file type!\nSupported: Images, Videos")
+                self.upload_btn.setEnabled(False)
+    
+    def set_as_wallpaper(self):
+        if self.dropped_file_path:
+            try:
+                # Store current wallpaper before setting new one (only first time)
+                if not hasattr(self, 'previous_wallpaper') or not self.previous_wallpaper:
+                    self.previous_wallpaper = self.get_current_wallpaper()
+                    logging.info(f"Stored original wallpaper: {self.previous_wallpaper}")
+                
+                # Update URL input field
+                if hasattr(self.parent_app, 'ui') and hasattr(self.parent_app.ui, 'urlInput'):
+                    self.parent_app.ui.urlInput.setText(self.dropped_file_path)
+                
+                # Apply the wallpaper
+                if self.dropped_file_path.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.webm')):
+                    self.parent_app.controller.start_video(self.dropped_file_path)
+                else:
+                    self.parent_app.controller.start_image(self.dropped_file_path)
+                
+                # Show success message
+                self.drop_area.setText("Wallpaper set successfully!")
+                
+                # Update status
+                if hasattr(self.parent_app, '_set_status'):
+                    self.parent_app._set_status(f"Wallpaper set: {os.path.basename(self.dropped_file_path)}")
+                
+                # Store in config
+                self.parent_app.config.set_last_video(self.dropped_file_path)
+                
+            except Exception as e:
+                logging.error(f"Failed to set wallpaper: {e}")
+                QMessageBox.critical(self, "Error", f"Failed to set wallpaper: {str(e)}")
+    
+    def reset_selection(self):
+        """Reset to original selection state"""
+        self.dropped_file_path = None
+        self.drop_area.setText("Drag & drop a photo or video here, or click to choose a file")
+        self.buttons_widget.hide()
+    
+    def restore_original_wallpaper(self):
+        """Restore the original wallpaper that was set before any changes"""
+        if hasattr(self, 'previous_wallpaper') and self.previous_wallpaper:
+            try:
+                logging.info(f"Attempting to restore original wallpaper: {self.previous_wallpaper}")
+                
+                if os.path.exists(self.previous_wallpaper):
+                    if self.previous_wallpaper.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.webm')):
+                        self.parent_app.controller.start_video(self.previous_wallpaper)
+                    else:
+                        self.parent_app.controller.start_image(self.previous_wallpaper)
+                    
+                    if hasattr(self.parent_app, '_set_status'):
+                        self.parent_app._set_status("Original wallpaper restored")
+                    
+                    # Update URL input
+                    if hasattr(self.parent_app.ui, 'urlInput'):
+                        self.parent_app.ui.urlInput.setText(self.previous_wallpaper)
+                    
+                    logging.info("Original wallpaper restored successfully")
+                else:
+                    logging.warning(f"Original wallpaper file not found: {self.previous_wallpaper}")
+                    self.parent_app._set_status("Original wallpaper file not found")
+                    
+            except Exception as e:
+                logging.error(f"Failed to restore original wallpaper: {e}")
+                self.parent_app._set_status("Failed to restore original wallpaper")
+    
+    def get_current_wallpaper(self):
+        """Get the current system wallpaper path"""
+        try:
+            from utils.system_utils import get_current_desktop_wallpaper
+            wallpaper = get_current_desktop_wallpaper()
+            logging.info(f"Retrieved current wallpaper: {wallpaper}")
+            return wallpaper
+        except Exception as e:
+            logging.error(f"Could not get current wallpaper: {e}")
+        return None
+    
+    def is_valid_wallpaper_file(self, file_path):
+        valid_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', 
+                          '.mp4', '.avi', '.mov', '.mkv', '.webm')
+        return file_path.lower().endswith(valid_extensions)
+
+
 class MP4WallApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -58,11 +207,21 @@ class MP4WallApp(QMainWindow):
         self.controller = WallpaperController()
         self.autopause = AutoPauseController()
         self.scheduler = WallpaperScheduler()
+        self.scheduler.set_change_callback(self._apply_wallpaper_from_path)
         self.config = Config()
+
+        # Enhanced wallpaper state
+        self.current_wallpaper_type = None  # 'image' or 'video'
+        self.auto_pause_process = None
+        self.last_wallpaper_path = None
+        self.current_shuffle_mode = None  # 'wallpaper' or 'animation'
 
         # UI components
         self.fade_overlay = FadeOverlay(self)
         self.fade_overlay.hide()
+
+        # Enhanced drag & drop
+        self.drag_drop_widget = EnhancedDragDropWidget(self)
 
         # State
         self.current_range = "all"
@@ -74,39 +233,276 @@ class MP4WallApp(QMainWindow):
         self._setup_tray()
         self._load_settings()
         self._handle_cli_args()
+        
+        # Setup enhanced features
+        self._setup_enhanced_features()
 
+    def _setup_enhanced_features(self):
+        """Setup the enhanced wallpaper features"""
+        # Connect shuffle buttons for mutual exclusivity
+        if hasattr(self.ui, 'randomButton') and hasattr(self.ui, 'randomAnimButton'):
+            self.ui.randomButton.toggled.connect(self.on_shuffle_wallpaper_toggled)
+            self.ui.randomAnimButton.toggled.connect(self.on_shuffle_animation_toggled)
+        
+        # Connect auto-change checkbox to show/hide interval controls
+        if hasattr(self.ui, 'enabledCheck'):
+            self.ui.enabledCheck.toggled.connect(self.toggle_interval_controls)
+            # Set initial state
+            self.toggle_interval_controls(self.ui.enabledCheck.isChecked())
+
+    def on_shuffle_wallpaper_toggled(self, checked):
+        """Handle shuffle wallpaper toggle - only non-animated wallpapers"""
+        if checked:
+            if hasattr(self.ui, 'randomAnimButton'):
+                self.ui.randomAnimButton.setChecked(False)
+            self.current_shuffle_mode = 'wallpaper'
+            logging.info("Shuffle Wallpaper activated - non-animated only")
+            
+            # Apply first shuffle immediately
+            self._apply_shuffled_wallpaper('wallpaper')
+
+    def on_shuffle_animation_toggled(self, checked):
+        """Handle shuffle animation toggle - only animated wallpapers"""
+        if checked:
+            if hasattr(self.ui, 'randomButton'):
+                self.ui.randomButton.setChecked(False)
+            self.current_shuffle_mode = 'animation'
+            logging.info("Shuffle Animation activated - animated only")
+            
+            # Apply first shuffle immediately
+            self._apply_shuffled_wallpaper('animation')
+
+    def toggle_interval_controls(self, enabled):
+        """Show/hide interval and range controls based on auto-change setting"""
+        interval_controls = [
+            'interval_spinBox', 'interval_label', 'interval_value_label',
+            'range_label', 'range_combo', 'range_frame'
+        ]
+        
+        for control_name in interval_controls:
+            if hasattr(self.ui, control_name):
+                control = getattr(self.ui, control_name)
+                control.setVisible(enabled)
+
+    def _apply_shuffled_wallpaper(self, shuffle_mode):
+        """Apply a shuffled wallpaper based on the current mode"""
+        available_wallpapers = self.get_shuffled_wallpapers(shuffle_mode)
+        
+        if available_wallpapers:
+            next_wallpaper = self.ensure_wallpaper_change(available_wallpapers)
+            if next_wallpaper:
+                self.change_wallpaper_with_optimization(next_wallpaper)
+                logging.info(f"Shuffled wallpaper: {os.path.basename(next_wallpaper)}")
+
+    def get_shuffled_wallpapers(self, shuffle_mode):
+        """Get appropriate wallpapers based on shuffle mode"""
+        if shuffle_mode == 'wallpaper':
+            filter_func = self.get_non_animated_filter()
+        elif shuffle_mode == 'animation':
+            filter_func = self.get_animated_filter()
+        else:
+            filter_func = lambda x: True  # No filter
+        
+        all_wallpapers = self._get_media_files("all")  # Use existing method
+        filtered_wallpapers = [str(wp) for wp in all_wallpapers if filter_func(str(wp))]
+        
+        random.shuffle(filtered_wallpapers)
+        return filtered_wallpapers
+
+    def get_non_animated_filter(self):
+        """Filter for non-animated wallpapers (images)"""
+        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
+        return lambda file_path: any(str(file_path).lower().endswith(ext) for ext in image_extensions)
+
+    def get_animated_filter(self):
+        """Filter for animated wallpapers (videos)"""
+        video_extensions = {'.mp4', '.webm', '.avi', '.mov', '.mkv'}
+        return lambda file_path: any(str(file_path).lower().endswith(ext) for ext in video_extensions)
+
+    def ensure_wallpaper_change(self, available_wallpapers):
+        """Ensure wallpaper actually changes, don't select the same one"""
+        if len(available_wallpapers) <= 1:
+            return available_wallpapers[0] if available_wallpapers else None
+            
+        # Filter out current wallpaper
+        other_wallpapers = [wp for wp in available_wallpapers if wp != self.last_wallpaper_path]
+        
+        if not other_wallpapers:
+            # If all wallpapers are the same as current, still change to force update
+            return available_wallpapers[0]
+            
+        return random.choice(other_wallpapers)
+
+    def change_wallpaper_with_optimization(self, new_wallpaper_path):
+        """Optimized wallpaper change with minimal process management"""
+        new_wallpaper_type = self.get_wallpaper_type(new_wallpaper_path)
+        
+        # Determine if process stop is needed
+        needs_process_stop = self.needs_process_stop(self.current_wallpaper_type, new_wallpaper_type)
+        
+        if needs_process_stop:
+            self.controller.stop()
+        
+        # Set new wallpaper using existing method
+        self._apply_wallpaper_from_path(Path(new_wallpaper_path))
+        self.current_wallpaper_type = new_wallpaper_type
+        self.last_wallpaper_path = new_wallpaper_path
+        
+        # Start autoPause if needed and not already running
+        if new_wallpaper_type == 'video' and not self.auto_pause_process:
+            self.start_auto_pause_process()
+
+    def needs_process_stop(self, current_type, new_type):
+        """
+        Determine if we need to stop processes during wallpaper change
+        Stop only when: image->video, video->image, or video->video
+        Don't stop for: image->image
+        """
+        if current_type is None:
+            return False  # First wallpaper, no need to stop
+            
+        if current_type == 'image' and new_type == 'image':
+            return False  # Image to image transition - no stop needed
+            
+        return True  # All other transitions need process stop
+
+    def get_wallpaper_type(self, file_path):
+        """Determine if wallpaper is image or video"""
+        video_extensions = {'.mp4', '.webm', '.avi', '.mov', '.mkv'}
+        file_ext = os.path.splitext(file_path)[1].lower()
+        return 'video' if file_ext in video_extensions else 'image'
+
+    def start_auto_pause_process(self):
+        """Start autoPause.exe and keep it running"""
+        try:
+            if self.auto_pause_process is None:
+                auto_pause_path = self.get_auto_pause_executable()
+                self.auto_pause_process = subprocess.Popen([auto_pause_path])
+                logging.info("AutoPause process started and will run in background")
+        except Exception as e:
+            logging.error(f"Failed to start AutoPause process: {e}")
+
+    def stop_auto_pause_process(self):
+        """Stop autoPause process only on app close or reset"""
+        if self.auto_pause_process:
+            try:
+                self.auto_pause_process.terminate()
+                self.auto_pause_process.wait(timeout=5)
+                logging.info("AutoPause process terminated")
+            except Exception as e:
+                logging.warning(f"Could not terminate AutoPause process: {e}")
+            finally:
+                self.auto_pause_process = None
+
+    def get_auto_pause_executable(self):
+        """Get the path to autoPause executable"""
+        # Adjust this path based on your project structure
+        app_root = Path(__file__).parent.parent
+        auto_pause_path = app_root / "bin" / "autoPause.exe"
+        
+        if not auto_pause_path.exists():
+            # Fallback paths
+            auto_pause_path = app_root / "autoPause.exe"
+            
+        if not auto_pause_path.exists():
+            raise FileNotFoundError(f"autoPause.exe not found at {auto_pause_path}")
+            
+        return str(auto_pause_path)
+
+    # Modified existing methods to use enhanced functionality
+    def on_shuffle_animated(self):
+        """Shuffle through animated wallpapers ONLY - using enhanced system"""
+        if hasattr(self.ui, 'randomAnimButton'):
+            self.ui.randomAnimButton.setChecked(True)
+        # The actual work is handled by on_shuffle_animation_toggled
+
+    def on_shuffle_wallpaper(self):
+        """Shuffle through static wallpapers ONLY - using enhanced system"""
+        if hasattr(self.ui, 'randomButton'):
+            self.ui.randomButton.setChecked(True)
+        # The actual work is handled by on_shuffle_wallpaper_toggled
+
+    def _apply_wallpaper_from_path(self, file_path: Path):
+        """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""
+        current_is_video = self.controller.current_is_video
+        new_is_video = file_path.suffix.lower() in (".mp4", ".mkv", ".webm", ".avi", ".mov")
+        
+        # Use enhanced logic to determine if stop is needed
+        current_type = self.current_wallpaper_type or ('video' if current_is_video else 'image')
+        new_type = 'video' if new_is_video else 'image'
+        needs_stop = self.needs_process_stop(current_type, new_type)
+        
+        if needs_stop:
+            self.controller.stop()
+        
+        # Start autopause only once for videos using enhanced method
+        if new_is_video and not self.auto_pause_process:
+            self.start_auto_pause_process()
+        
+        # Update enhanced state tracking
+        self.current_wallpaper_type = new_type
+        self.last_wallpaper_path = str(file_path)
+        
+        # Use existing application logic
+        if new_is_video:
+            self._apply_video(str(file_path))
+        else:
+            self._apply_image_with_fade(str(file_path))
+
+    def _perform_reset(self):
+        """Reset to default wallpaper - enhanced with process management"""
+        self.controller.stop()
+        self.autopause.stop()
+        self.scheduler.stop()
+        
+        # Stop autoPause process only on reset
+        self.stop_auto_pause_process()
+        
+        # Reset enhanced state
+        self.current_wallpaper_type = None
+        self.last_wallpaper_path = None
+        self.current_shuffle_mode = None
+        
+        # Reset shuffle button states
+        if hasattr(self.ui, 'randomButton'):
+            self.ui.randomButton.setChecked(False)
+        if hasattr(self.ui, 'randomAnimButton'):
+            self.ui.randomAnimButton.setChecked(False)
+        
+        # Use the enhanced drag drop widget to restore original wallpaper
+        if hasattr(self, 'drag_drop_widget'):
+            self.drag_drop_widget.restore_original_wallpaper()
+        elif self.previous_wallpaper:
+            self.controller.start_image(self.previous_wallpaper)
+            self._set_status("Restored previous wallpaper")
+        else:
+            self._set_status("Reset complete (no previous wallpaper)")
+
+    def cleanup(self):
+        """Enhanced cleanup on app close"""
+        self.controller.stop()
+        self.stop_auto_pause_process()
+        logging.info("Application cleanup completed")
+
+    # Rest of your existing methods remain the same...
     def changeEvent(self, event):
-        """
-        Handle window state changes - ONLY minimize to tray on minimize button
-        """
         if event.type() == QEvent.WindowStateChange:
             if self.isMinimized() and not self.is_minimized_to_tray:
-                # User clicked minimize button - hide to system tray
-                event.ignore()  # Ignore the minimize event
+                event.ignore()
                 self.hide_to_tray()
         super().changeEvent(event)
 
     def closeEvent(self, event):
-        """
-        Handle window close event - X button should CLOSE the application
-        """
-        # Stop any running processes
-        self._perform_reset()
-        
-        # Hide tray icon and quit application
+        self.cleanup()
         if hasattr(self, 'tray'):
             self.tray.hide()
-        
         QCoreApplication.quit()
         event.accept()
 
     def hide_to_tray(self):
-        """Hide window to system tray with proper notification"""
         self.hide()
         self.is_minimized_to_tray = True
-        
         if hasattr(self, 'tray'):
-            # Show notification that app is still running
             self.tray.showMessage(
                 "MP4 Wall",
                 "Application is still running in system tray\nClick the tray icon to show the window",
@@ -115,24 +511,52 @@ class MP4WallApp(QMainWindow):
             )
 
     def show_from_tray(self):
-        """Show window from system tray"""
         self.show()
         self.raise_()
         self.activateWindow()
-        # Ensure window is not minimized when showing from tray
         if self.isMinimized():
             self.showNormal()
         self.is_minimized_to_tray = False
+
 
     def _setup_ui(self):
         """Setup UI connections and initial state"""
         self.setAcceptDrops(True)
         
-        # Connect signals
-        self.scheduler.set_change_callback(self._apply_input_string)
+        # Replace the upload area with enhanced drag & drop - FIXED VERSION
+        if hasattr(self.ui, 'uploadArea'):
+            # Clear existing upload area safely without setParent
+            existing_layout = self.ui.uploadArea.layout()
+            if existing_layout:
+                # Use deleteLater() instead of setParent(None) for thread safety
+                for i in reversed(range(existing_layout.count())):
+                    layout_item = existing_layout.itemAt(i)
+                    if layout_item:
+                        widget = layout_item.widget()
+                        if widget:
+                            widget.deleteLater()  # Thread-safe deletion
+                        else:
+                            # If it's a layout item without widget, remove it
+                            existing_layout.removeItem(layout_item)
+            
+            # Create new layout if needed
+            if not self.ui.uploadArea.layout():
+                existing_layout = QVBoxLayout(self.ui.uploadArea)
+            
+            # Add our enhanced widget
+            existing_layout.addWidget(self.drag_drop_widget)
         
-        # Bind UI controls
+        # Center align Start and Reset buttons
+        if hasattr(self.ui, 'startButton'):
+            self.ui.startButton.setStyleSheet("text-align: center;")
+        if hasattr(self.ui, 'resetButton'):
+            self.ui.resetButton.setStyleSheet("text-align: center;")
+        
+        # Connect signals
         self._bind_ui_controls()
+        
+        # Initial UI state
+        self._update_scheduler_ui_state()
 
     def _bind_ui_controls(self):
         """Bind UI controls to their handlers"""
@@ -154,7 +578,7 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "browseButton"):
             self.ui.browseButton.clicked.connect(self.on_browse_clicked)
 
-        # Shuffle buttons
+        # Shuffle buttons - only one can be active at a time
         if hasattr(self.ui, "randomAnimButton"):
             self.ui.randomAnimButton.clicked.connect(self.on_shuffle_animated)
         
@@ -188,6 +612,16 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "interval_spinBox"):
             self.ui.interval_spinBox.valueChanged.connect(self._on_interval_changed)
 
+    def _update_scheduler_ui_state(self):
+        """Show/hide interval and range based on scheduler state"""
+        enabled = hasattr(self.ui, "enabledCheck") and self.ui.enabledCheck.isChecked()
+        
+        # Show/hide interval and range controls
+        if hasattr(self.ui, "source_n_interval_frame"):
+            self.ui.source_n_interval_frame.setVisible(enabled)
+        if hasattr(self.ui, "range_frame"):
+            self.ui.range_frame.setVisible(enabled)
+
     # Main application methods
     def on_apply_clicked(self):
         """Handle apply/load button click"""
@@ -213,7 +647,7 @@ class MP4WallApp(QMainWindow):
                 QMessageBox.warning(self, "No Wallpaper", "Please load a wallpaper first.")
 
     def on_reset_clicked(self):
-        """Reset to default wallpaper"""
+        """Reset to default wallpaper - NOW USES ENHANCED DRAG DROP WIDGET"""
         self._perform_reset()
 
     def on_browse_clicked(self):
@@ -227,15 +661,22 @@ class MP4WallApp(QMainWindow):
                 self.ui.urlInput.setText(path)
             self._apply_input_string(path)
 
-    # Shuffle functionality
+    # Shuffle functionality - FIXED: Only one active at a time
     def on_shuffle_animated(self):
-        """Shuffle through animated wallpapers"""
+        """Shuffle through animated wallpapers ONLY"""
+        self.current_shuffle_type = 'animated'
         self._set_status("Shuffling animated wallpapers...")
+        
+        # Update button states
+        self._update_shuffle_button_states('animated')
+        
         video_files = self._get_media_files(media_type="mp4")
         
         if not video_files:
             QMessageBox.information(self, "No Videos", 
                                 f"No animated wallpapers found in {self._get_range_display_name()} collection.")
+            self.current_shuffle_type = None
+            self._update_shuffle_button_states(None)
             return
         
         selected = random.choice(video_files)
@@ -243,18 +684,43 @@ class MP4WallApp(QMainWindow):
         self._update_url_input(str(selected))
 
     def on_shuffle_wallpaper(self):
-        """Shuffle through static wallpapers"""
+        """Shuffle through static wallpapers ONLY"""
+        self.current_shuffle_type = 'wallpaper'
         self._set_status("Shuffling wallpapers...")
+        
+        # Update button states
+        self._update_shuffle_button_states('wallpaper')
+        
         image_files = self._get_media_files(media_type="wallpaper")
         
         if not image_files:
             QMessageBox.information(self, "No Images", 
                                 f"No wallpapers found in {self._get_range_display_name()} collection.")
+            self.current_shuffle_type = None
+            self._update_shuffle_button_states(None)
             return
         
         selected = random.choice(image_files)
         self._apply_wallpaper_from_path(selected)
         self._update_url_input(str(selected))
+
+    def _update_shuffle_button_states(self, active_type):
+        """Update shuffle button states - only one can be active"""
+        if hasattr(self.ui, "randomAnimButton"):
+            if active_type == 'animated':
+                self.ui.randomAnimButton.setProperty("class", "primary")
+            else:
+                self.ui.randomAnimButton.setProperty("class", "ghost")
+            self.ui.randomAnimButton.style().unpolish(self.ui.randomAnimButton)
+            self.ui.randomAnimButton.style().polish(self.ui.randomAnimButton)
+        
+        if hasattr(self.ui, "randomButton"):
+            if active_type == 'wallpaper':
+                self.ui.randomButton.setProperty("class", "primary")
+            else:
+                self.ui.randomButton.setProperty("class", "ghost")
+            self.ui.randomButton.style().unpolish(self.ui.randomButton)
+            self.ui.randomButton.style().polish(self.ui.randomButton)
 
     # Source selection
     def on_super_wallpaper(self):
@@ -305,6 +771,9 @@ class MP4WallApp(QMainWindow):
     # Scheduler controls
     def on_scheduler_toggled(self, enabled):
         """Handle scheduler enable/disable"""
+        # Update UI visibility
+        self._update_scheduler_ui_state()
+        
         if enabled:
             if not self.scheduler.source:
                 self.scheduler.source = str(COLLECTION_DIR)
@@ -315,6 +784,7 @@ class MP4WallApp(QMainWindow):
                 interval = self.ui.interval_spinBox.value()
             
             self.scheduler.start(self.scheduler.source, interval)
+            self._set_status(f"Scheduler started - changing every {interval} minutes")
         else:
             self.scheduler.stop()
             self._set_status("Scheduler stopped")
@@ -438,18 +908,28 @@ class MP4WallApp(QMainWindow):
         self._apply_wallpaper_from_path(collection_dest)
 
     def _apply_wallpaper_from_path(self, file_path: Path):
-        """Apply wallpaper from file path"""
-        if file_path.suffix.lower() in (".mp4", ".mkv", ".webm", ".avi", ".mov"):
+        """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""
+        current_is_video = self.controller.current_is_video
+        new_is_video = file_path.suffix.lower() in (".mp4", ".mkv", ".webm", ".avi", ".mov")
+        
+        # Only stop if necessary (video to video, video to image, or image to video)
+        needs_stop = (current_is_video and new_is_video) or (current_is_video and not new_is_video) or (not current_is_video and new_is_video)
+        
+        if needs_stop:
+            self.controller.stop()
+        
+        # Start autopause only once for videos
+        if new_is_video and not self.autopause.proc:
+            self.autopause.start()
+        
+        if new_is_video:
             self._apply_video(str(file_path))
-        elif file_path.suffix.lower() in (".jpg", ".jpeg", ".png", ".bmp", ".gif"):
-            self._apply_image_with_fade(str(file_path))
         else:
-            QMessageBox.warning(self, "Unsupported", f"File type not supported: {file_path.suffix}")
+            self._apply_image_with_fade(str(file_path))
 
     def _apply_video(self, video_path: str):
         """Apply video wallpaper"""
         try:
-            self.autopause.start()
             self.controller.start_video(video_path)
             self.config.set_last_video(video_path)
             self._set_status(f"Playing video: {Path(video_path).name}")
@@ -479,19 +959,25 @@ class MP4WallApp(QMainWindow):
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Fade apply failed: {e}")
 
-    # Utility methods
+    # Utility methods - FIXED: Proper media type separation
     def _get_media_files(self, media_type="all"):
-        """Get media files based on current range"""
+        """Get media files based on current range and media type"""
         files = []
         
+        # Define search folders based on current range
+        if self.current_range == "mp4":
+            search_folders = [VIDEOS_DIR]
+        elif self.current_range == "wallpaper":
+            search_folders = [IMAGES_DIR]
+        else:  # "all"
+            search_folders = [VIDEOS_DIR, IMAGES_DIR, FAVS_DIR]
+        
+        # Define extensions based on media type
         if media_type == "mp4":
-            search_folders = [VIDEOS_DIR, FAVS_DIR]
             extensions = ('.mp4', '.mkv', '.webm', '.avi', '.mov')
         elif media_type == "wallpaper":
-            search_folders = [IMAGES_DIR, FAVS_DIR]
             extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif')
         else:
-            search_folders = [VIDEOS_DIR, IMAGES_DIR, FAVS_DIR]
             extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.mp4', '.mkv', '.webm', '.avi', '.mov')
         
         for folder in search_folders:
@@ -557,11 +1043,19 @@ class MP4WallApp(QMainWindow):
             range_buttons[active_range].style().polish(range_buttons[active_range])
 
     def _perform_reset(self):
-        """Reset to default wallpaper"""
+        """Reset to default wallpaper - NOW USES ENHANCED DRAG DROP WIDGET"""
         self.controller.stop()
         self.autopause.stop()
+        self.scheduler.stop()
         
-        if self.previous_wallpaper:
+        # Reset shuffle state
+        self.current_shuffle_type = None
+        self._update_shuffle_button_states(None)
+        
+        # Use the enhanced drag drop widget to restore original wallpaper
+        if hasattr(self, 'drag_drop_widget'):
+            self.drag_drop_widget.restore_original_wallpaper()
+        elif self.previous_wallpaper:
             self.controller.start_image(self.previous_wallpaper)
             self._set_status("Restored previous wallpaper")
         else:
@@ -623,11 +1117,14 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "enabledCheck"):
             self.ui.enabledCheck.setChecked(enabled)
             if enabled and source:
-                self.scheduler.start(source, interval)
+                self.scheduler.start(self.scheduler.source, interval)
+        
+        # Update UI state based on scheduler
+        self._update_scheduler_ui_state()
 
-    # System tray - FIXED for Ubuntu compatibility
+    # System tray
     def _setup_tray(self):
-        # CRITICAL: Don't quit when last window is closed
+        # Don't quit when last window is closed
         QApplication.setQuitOnLastWindowClosed(False)
         
         # Check if system tray is available
@@ -635,17 +1132,17 @@ class MP4WallApp(QMainWindow):
             QMessageBox.critical(None, "System Tray", "System tray is not available on this system.")
             return
         
-        # Create tray icon with proper visibility
+        # Create tray icon
         self.tray = QSystemTrayIcon(self)
         
-        # Set a proper icon that will be visible
+        # Set icon
         icon = QIcon()
         cand = Path(__file__).parent.parent / "ui" / "icons" / "logo_biale.svg"
         if cand.exists():
             icon = QIcon(str(cand))
         else:
-            # Fallback to a standard icon if custom icon not found
-            icon = self.style().standardIcon(self.style().StandardPixmap.SP_ComputerIcon)
+            # Fallback to standard icon
+            icon = self.style().standardIcon(QStyle.SP_ComputerIcon)
         
         self.tray.setIcon(icon)
         self.tray.setToolTip("MP4 Wall - Desktop Wallpaper Manager")
@@ -669,13 +1166,11 @@ class MP4WallApp(QMainWindow):
         
         self.tray.setContextMenu(tray_menu)
         
-        # Connect tray icon activation (click/double-click)
+        # Connect tray icon activation
         self.tray.activated.connect(self._on_tray_activated)
         
-        # Show the tray icon - this is critical for Ubuntu
+        # Show the tray icon
         self.tray.show()
-        
-        # Force the icon to be visible
         self.tray.setVisible(True)
 
     def _on_tray_activated(self, reason):
@@ -687,35 +1182,11 @@ class MP4WallApp(QMainWindow):
             else:
                 self.show_from_tray()
         elif reason == QSystemTrayIcon.Trigger:
-            # Single click also toggles window (common on Ubuntu)
+            # Single click also toggles window
             if self.isVisible():
                 self.hide_to_tray()
             else:
                 self.show_from_tray()
-
-    def show_from_tray(self):
-        """Show window from system tray"""
-        self.show()
-        self.raise_()
-        self.activateWindow()
-        # Ensure window is properly restored
-        if self.isMinimized():
-            self.showNormal()
-        self.is_minimized_to_tray = False
-
-    def hide_to_tray(self):
-        """Hide window to system tray with proper notification"""
-        self.hide()
-        self.is_minimized_to_tray = True
-        
-        if hasattr(self, 'tray'):
-            # Show notification that app is still running
-            self.tray.showMessage(
-                "MP4 Wall",
-                "Application minimized to system tray\nClick the tray icon to restore the window",
-                QSystemTrayIcon.Information,
-                3000
-            )
 
     def _exit_app(self):
         """Properly quit the application from tray menu"""

@@ -1,0 +1,218 @@
+{
+  "en": {
+    "appName": "Tapeciaarnia",
+    "auth": {
+      "emailPlaceholder": "email",
+      "passwordPlaceholder": "password",
+      "logInButton": "Log in"
+    },
+    "navigation": {
+      "shuffleAnimatedButton": "Shuffle animated",
+      "shuffleWallpaperButton": "Shuffle wallpaper",
+      "browseWallpapersButton": "Browse wallpapers"
+    },
+    "uploadSection": {
+      "addFilesHeader": "Add files",
+      "dragDropInstruction": "Drag & drop a photo or video here, or click to choose a file",
+      "supportedFormatsHint": "Supported: JPG, PNG, MP4",
+      "imagesOrVideoURLHeader": "Images or Video URL",
+      "loadButton": "Load"
+    },
+    "settings": {
+      "autoChangeHeader": "Automatic wallpaper change",
+      "enabledLabel": "Enabled",
+      "intervalLabel": "Interval (minutes)",
+      "wallpaperSourceLabel": "Wallpaper source",
+      "superWallpaperSource": "Super Wallpaper",
+      "favoriteWallpapersSource": "Favorite Wallpapers",
+      "myCollectionSource": "My Collection",
+      "rangeHeader": "Range",
+      "rangeAllButton": "All",
+      "rangeWallpaperButton": "Wallpaper",
+      "rangeMp4Button": "Mp4",
+      "schedulerStoppedStatus": "Scheduler stopped",
+      "startButton": "Start",
+      "resetButton": "Reset"
+    }
+  },
+  "es": {
+    "appName": "Tapeciaarnia",
+    "auth": {
+      "emailPlaceholder": "correo electrónico",
+      "passwordPlaceholder": "contraseña",
+      "logInButton": "Iniciar sesión"
+    },
+    "navigation": {
+      "shuffleAnimatedButton": "Mezclar animados",
+      "shuffleWallpaperButton": "Mezclar fondos de pantalla",
+      "browseWallpapersButton": "Explorar fondos de pantalla"
+    },
+    "uploadSection": {
+      "addFilesHeader": "Añadir archivos",
+      "dragDropInstruction": "Arrastre y suelte una foto o video aquí, o haga clic para elegir un archivo",
+      "supportedFormatsHint": "Formatos admitidos: JPG, PNG, MP4",
+      "imagesOrVideoURLHeader": "URL de Imágenes o Video",
+      "loadButton": "Cargar"
+    },
+    "settings": {
+      "autoChangeHeader": "Cambio automático de fondo de pantalla",
+      "enabledLabel": "Activado",
+      "intervalLabel": "Intervalo (minutos)",
+      "wallpaperSourceLabel": "Fuente del fondo de pantalla",
+      "superWallpaperSource": "Super Fondo de Pantalla",
+      "favoriteWallpapersSource": "Fondos de Pantalla Favoritos",
+      "myCollectionSource": "Mi Colección",
+      "rangeHeader": "Rango",
+      "rangeAllButton": "Todos",
+      "rangeWallpaperButton": "Fondo de Pantalla",
+      "rangeMp4Button": "Mp4",
+      "schedulerStoppedStatus": "Programador detenido",
+      "startButton": "Iniciar",
+      "resetButton": "Restablecer"
+    }
+  },
+  "fr": {
+    "appName": "Tapeciaarnia",
+    "auth": {
+      "emailPlaceholder": "e-mail",
+      "passwordPlaceholder": "mot de passe",
+      "logInButton": "Se connecter"
+    },
+    "navigation": {
+      "shuffleAnimatedButton": "Lecture aléatoire animée",
+      "shuffleWallpaperButton": "Lecture aléatoire du fond d'écran",
+      "browseWallpapersButton": "Parcourir les fonds d'écran"
+    },
+    "uploadSection": {
+      "addFilesHeader": "Ajouter des fichiers",
+      "dragDropInstruction": "Glissez et déposez une photo ou une vidéo ici, ou cliquez pour choisir un fichier",
+      "supportedFormatsHint": "Formats pris en charge : JPG, PNG, MP4",
+      "imagesOrVideoURLHeader": "URL d'images ou de vidéos",
+      "loadButton": "Charger"
+    },
+    "settings": {
+      "autoChangeHeader": "Changement automatique du fond d'écran",
+      "enabledLabel": "Activé",
+      "intervalLabel": "Intervalle (minutes)",
+      "wallpaperSourceLabel": "Source du fond d'écran",
+      "superWallpaperSource": "Super Fond d'écran",
+      "favoriteWallpapersSource": "Fonds d'écran favoris",
+      "myCollectionSource": "Ma collection",
+      "rangeHeader": "Gamme",
+      "rangeAllButton": "Tous",
+      "rangeWallpaperButton": "Fond d'écran",
+      "rangeMp4Button": "Mp4",
+      "schedulerStoppedStatus": "Planificateur arrêté",
+      "startButton": "Démarrer",
+      "resetButton": "Réinitialiser"
+    }
+  },
+  "de": {
+    "appName": "Tapeciaarnia",
+    "auth": {
+      "emailPlaceholder": "E-Mail",
+      "passwordPlaceholder": "Passwort",
+      "logInButton": "Anmelden"
+    },
+    "navigation": {
+      "shuffleAnimatedButton": "Animiert mischen",
+      "shuffleWallpaperButton": "Hintergrundbilder mischen",
+      "browseWallpapersButton": "Hintergrundbilder durchsuchen"
+    },
+    "uploadSection": {
+      "addFilesHeader": "Dateien hinzufügen",
+      "dragDropInstruction": "Ziehen Sie ein Foto oder Video hierher, oder klicken Sie, um eine Datei auszuwählen",
+      "supportedFormatsHint": "Unterstützt: JPG, PNG, MP4",
+      "imagesOrVideoURLHeader": "Bilder- oder Video-URL",
+      "loadButton": "Laden"
+    },
+    "settings": {
+      "autoChangeHeader": "Automatischer Hintergrundbildwechsel",
+      "enabledLabel": "Aktiviert",
+      "intervalLabel": "Intervall (Minuten)",
+      "wallpaperSourceLabel": "Hintergrundbild-Quelle",
+      "superWallpaperSource": "Super Hintergrundbild",
+      "favoriteWallpapersSource": "Favorisierte Hintergrundbilder",
+      "myCollectionSource": "Meine Sammlung",
+      "rangeHeader": "Bereich",
+      "rangeAllButton": "Alle",
+      "rangeWallpaperButton": "Hintergrundbild",
+      "rangeMp4Button": "Mp4",
+      "schedulerStoppedStatus": "Planer gestoppt",
+      "startButton": "Starten",
+      "resetButton": "Zurücksetzen"
+    }
+  },
+  "zh-CN": {
+    "appName": "Tapeciaarnia",
+    "auth": {
+      "emailPlaceholder": "邮箱",
+      "passwordPlaceholder": "密码",
+      "logInButton": "登录"
+    },
+    "navigation": {
+      "shuffleAnimatedButton": "随机播放动画",
+      "shuffleWallpaperButton": "随机更换壁纸",
+      "browseWallpapersButton": "浏览壁纸"
+    },
+    "uploadSection": {
+      "addFilesHeader": "添加文件",
+      "dragDropInstruction": "将照片或视频拖放到此处，或单击选择文件",
+      "supportedFormatsHint": "支持格式：JPG, PNG, MP4",
+      "imagesOrVideoURLHeader": "图片或视频URL",
+      "loadButton": "加载"
+    },
+    "settings": {
+      "autoChangeHeader": "自动更换壁纸",
+      "enabledLabel": "启用",
+      "intervalLabel": "间隔 (分钟)",
+      "wallpaperSourceLabel": "壁纸来源",
+      "superWallpaperSource": "超级壁纸",
+      "favoriteWallpapersSource": "最爱壁纸",
+      "myCollectionSource": "我的收藏",
+      "rangeHeader": "范围",
+      "rangeAllButton": "全部",
+      "rangeWallpaperButton": "壁纸",
+      "rangeMp4Button": "Mp4",
+      "schedulerStoppedStatus": "计划程序已停止",
+      "startButton": "开始",
+      "resetButton": "重置"
+    }
+  },
+  "ru": {
+    "appName": "Tapeciaarnia",
+    "auth": {
+      "emailPlaceholder": "эл. почта",
+      "passwordPlaceholder": "пароль",
+      "logInButton": "Войти"
+    },
+    "navigation": {
+      "shuffleAnimatedButton": "Перемешать анимированные",
+      "shuffleWallpaperButton": "Перемешать обои",
+      "browseWallpapersButton": "Просмотреть обои"
+    },
+    "uploadSection": {
+      "addFilesHeader": "Добавить файлы",
+      "dragDropInstruction": "Перетащите фото или видео сюда, или нажмите, чтобы выбрать файл",
+      "supportedFormatsHint": "Поддерживаемые форматы: JPG, PNG, MP4",
+      "imagesOrVideoURLHeader": "URL изображений или видео",
+      "loadButton": "Загрузить"
+    },
+    "settings": {
+      "autoChangeHeader": "Автоматическая смена обоев",
+      "enabledLabel": "Включено",
+      "intervalLabel": "Интервал (минуты)",
+      "wallpaperSourceLabel": "Источник обоев",
+      "superWallpaperSource": "Супер Обои",
+      "favoriteWallpapersSource": "Избранные Обои",
+      "myCollectionSource": "Моя Коллекция",
+      "rangeHeader": "Диапазон",
+      "rangeAllButton": "Все",
+      "rangeWallpaperButton": "Обои",
+      "rangeMp4Button": "Mp4",
+      "schedulerStoppedStatus": "Планировщик остановлен",
+      "startButton": "Запустить",
+      "resetButton": "Сбросить"
+    }
+  }
+}
