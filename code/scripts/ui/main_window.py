@@ -108,6 +108,7 @@ class EnhancedDragDropWidget(QWidget):
                 self.dropped_file_path = file_path
                 filename = os.path.basename(file_path)
                 self.drop_area.setText(f"Selected: {filename}")
+                self.supported_label.hide()
                 self.buttons_widget.show()
                 self.upload_btn.setEnabled(True)
             else:
@@ -150,8 +151,9 @@ class EnhancedDragDropWidget(QWidget):
         """Reset to original selection state"""
         self.dropped_file_path = None
         self.drop_area.setText("Drag & drop a photo or video here, or click to choose a file")
+        self.supported_label.show()
         self.buttons_widget.hide()
-    
+
     def restore_original_wallpaper(self):
         """Restore the original wallpaper that was set before any changes"""
         if hasattr(self, 'previous_wallpaper') and self.previous_wallpaper:
@@ -211,10 +213,10 @@ class MP4WallApp(QMainWindow):
         self.config = Config()
 
         # Enhanced wallpaper state
-        self.current_wallpaper_type = None  # 'image' or 'video'
+        self.current_wallpaper_type = None
         self.auto_pause_process = None
         self.last_wallpaper_path = None
-        self.current_shuffle_mode = None  # 'wallpaper' or 'animation'
+        self.current_shuffle_mode = None
 
         # UI components
         self.fade_overlay = FadeOverlay(self)
@@ -236,6 +238,38 @@ class MP4WallApp(QMainWindow):
         
         # Setup enhanced features
         self._setup_enhanced_features()
+        
+        # Ensure status bar is always visible
+        self._ensure_status_visible()
+
+    def _ensure_status_visible(self):
+        """Make sure status bar is always visible"""
+        if hasattr(self.ui, 'bottomFrame'):
+            self.ui.bottomFrame.setVisible(True)
+            self.ui.bottomFrame.setMinimumHeight(30)  # Force minimum height
+            # Remove any styling that might hide it
+            self.ui.bottomFrame.setStyleSheet("background-color: transparent;")
+        
+        if hasattr(self.ui, 'statusLabel'):
+            self.ui.statusLabel.setVisible(True)
+            self.ui.statusLabel.setText("Ready")
+            # Ensure the label has content and size
+            self.ui.statusLabel.setMinimumHeight(20)
+            self.ui.statusLabel.setStyleSheet("color: white;")  # Make sure text is visible
+        
+        # Force update
+        if hasattr(self.ui, 'bottomFrame'):
+            self.ui.bottomFrame.update()
+            self.ui.bottomFrame.repaint()
+
+    def _set_status(self, message: str):
+        """Update status label and ensure it's visible"""
+        if hasattr(self.ui, "statusLabel"):
+            self.ui.statusLabel.setText(message)
+            self.ui.statusLabel.setVisible(True)
+        # Also ensure the parent frame is visible
+        if hasattr(self.ui, "bottomFrame"):
+            self.ui.bottomFrame.setVisible(True)
 
     def _setup_enhanced_features(self):
         """Setup the enhanced wallpaper features"""

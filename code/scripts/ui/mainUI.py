@@ -606,16 +606,19 @@ class Ui_MainWindow(object):
 
         self.bottomFrame = QFrame(self.card)
         self.bottomFrame.setObjectName(u"bottomFrame")
+        self.bottomFrame.setVisible(True)
         self.bottomLayout = QHBoxLayout(self.bottomFrame)
         self.bottomLayout.setObjectName(u"bottomLayout")
         self.statusLabel = QLabel(self.bottomFrame)
         self.statusLabel.setObjectName(u"statusLabel")
+        self.bottomFrame.setVisible(True)
         font13 = QFont()
         font13.setPointSize(9)
         font13.setBold(True)
         self.statusLabel.setFont(font13)
 
         self.bottomLayout.addWidget(self.statusLabel)
+        self.bottomFrame.setVisible(True)
 
         self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
