@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QStyle
 )
 from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
-from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication
+from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize
 
 current_dir = os.path.dirname(__file__)
 ui_path = os.path.join(current_dir, 'mainUI.py')
@@ -74,22 +74,38 @@ class EnhancedDragDropWidget(QWidget):
         self.supported_label = QLabel("Supported: JPG, PNG, MP4")
         self.supported_label.setAlignment(Qt.AlignCenter)
         
-        # Action buttons (initially hidden)
+        # Action buttons (initially hidden) - CENTERED
         self.buttons_widget = QWidget()
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(10, 0, 10, 0)
         
-        self.upload_btn = QPushButton("Set as Wallpaper")
+        # Upload button with icon and primary class
+        self.upload_btn = QPushButton(" Set as Wallpaper")
         self.upload_btn.clicked.connect(self.set_as_wallpaper)
+        self.upload_btn.setProperty("class", "primary")
         
-        self.reset_btn = QPushButton("Reset")
+        # Add upload icon
+        upload_icon = QIcon(":/icons/upload.png")
+        self.upload_btn.setIcon(upload_icon)
+        self.upload_btn.setIconSize(QSize(16, 16))
+        
+        # Reset button
+        self.reset_btn = QPushButton(" Reset")
         self.reset_btn.clicked.connect(self.reset_selection)
         
+        # Add reset icon
+        reset_icon = QIcon(":/icons/reset.png")
+        self.reset_btn.setIcon(reset_icon)
+        self.reset_btn.setIconSize(QSize(16, 16))
+        
+        # Center the buttons by adding spacers on both sides
+        buttons_layout.addStretch()  # Left spacer
         buttons_layout.addWidget(self.upload_btn)
-        buttons_layout.addStretch()
         buttons_layout.addWidget(self.reset_btn)
+        buttons_layout.addStretch()  # Right spacer
+        
         self.buttons_widget.setLayout(buttons_layout)
-        self.buttons_widget.hide()
+        self.buttons_widget.hide()  # Initially hidden as requested
         
         layout.addWidget(self.drop_area)
         layout.addWidget(self.supported_label)
