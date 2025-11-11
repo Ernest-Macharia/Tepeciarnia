@@ -11,3 +11,5 @@
 [2025-11-11 21:52:18][INFO]->Scheduler stopped
 [2025-11-11 21:52:23][DEBUG]->Logging setup successful
 [2025-11-11 21:52:23][INFO]->Scheduler started: /home/ernest/Pictures/Tapeciarnia/Favorites, interval: 30min
+[2025-11-11 22:16:10][DEBUG]->Logging setup successful
+[2025-11-11 22:16:11][INFO]->Scheduler started: /home/ernest/Pictures/Tapeciarnia/Favorites, interval: 30min

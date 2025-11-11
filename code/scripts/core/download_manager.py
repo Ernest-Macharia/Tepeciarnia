@@ -3,10 +3,14 @@ import os
 import platform
 from pathlib import Path
 from typing import Optional
+import logging
 
 from PySide6.QtCore import QThread, Signal
 
 from utils.path_utils import VIDEOS_DIR
+
+# Get logger for this module
+logger = logging.getLogger(__name__)
 
 
 class DownloaderThread(QThread):
@@ -15,42 +19,54 @@ class DownloaderThread(QThread):
     error = Signal(str)
 
     def __init__(self, url: str, parent=None):
+        logger.info(f"Initializing DownloaderThread for URL: {url}")
         super().__init__(parent)
         self.url = url
         self._ensure_directories()
 
     def _ensure_directories(self):
         """Ensure directories exist and are writable on both platforms"""
+        logger.debug("Ensuring video directory exists and is writable")
         try:
             VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+            logger.debug(f"Video directory ensured: {VIDEOS_DIR}")
             
             # On Linux, ensure proper permissions
             if platform.system() != "Windows":
                 try:
                     os.chmod(VIDEOS_DIR, 0o755)
-                except Exception:
-                    pass  # Permission changes might fail, but that's usually OK
+                    logger.debug("Set directory permissions on Linux")
+                except Exception as e:
+                    logger.warning(f"Could not set directory permissions: {e}")
+                    # Permission changes might fail, but that's usually OK
                     
         except Exception as e:
+            logger.error(f"Directory setup failed: {e}", exc_info=True)
             self.error.emit(f"Directory setup failed: {e}")
 
     def _get_safe_filename(self, filename):
         """Remove invalid characters for both Windows and Linux"""
+        logger.debug(f"Sanitizing filename: {filename}")
         # Characters invalid on Windows: < > : " | ? *
         # Characters to avoid on Linux: / and null bytes
         invalid_chars = '<>:"|?*/\0'
         for char in invalid_chars:
             filename = filename.replace(char, '_')
+        logger.debug(f"Sanitized filename: {filename}")
         return filename
 
     def run(self):
+        logger.info(f"Starting download thread for: {self.url}")
         try:
             import yt_dlp
+            logger.debug("yt_dlp imported successfully")
         except Exception as e:
+            error_msg = f"yt_dlp missing: {e}. Install with: pip install yt-dlp"
+            logger.error(error_msg, exc_info=True)
             try:
-                self.error.emit(f"yt_dlp missing: {e}. Install with: pip install yt-dlp")
+                self.error.emit(error_msg)
             except Exception:
-                pass
+                logger.error("Failed to emit error signal")
             self.done.emit("")
             return
 
@@ -58,15 +74,19 @@ class DownloaderThread(QThread):
             def progress_hook(d):
                 try:
                     status = d.get("status")
+                    logger.debug(f"Progress hook called with status: {status}")
+                    
                     if status == "downloading":
                         total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
                         downloaded = d.get("downloaded_bytes", 0)
                         percent = 0.0
+                        
                         if total:
                             try:
                                 percent = float(downloaded) / float(total) * 100.0
                             except Exception:
                                 percent = 0.0
+                                logger.warning("Failed to calculate percentage from total bytes")
                         else:
                             percent = d.get("progress", 0.0) or 0.0
 
@@ -93,22 +113,27 @@ class DownloaderThread(QThread):
                             eta_str = "unknown"
 
                         status_msg = f"Downloading... {percent:.1f}% ({speed_str}, ETA: {eta_str})"
+                        logger.debug(f"Download progress: {percent:.1f}%, Speed: {speed_str}, ETA: {eta_str}")
+                        
                         try:
                             self.progress.emit(percent, status_msg)
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.error(f"Failed to emit progress signal: {e}")
 
                     elif status == "finished":
+                        logger.info("Download finished, processing...")
                         try:
                             self.progress.emit(100.0, "Processing...")
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.error(f"Failed to emit finished progress signal: {e}")
                         time.sleep(0.3)
-                except Exception:
-                    pass
+                        
+                except Exception as e:
+                    logger.error(f"Error in progress hook: {e}", exc_info=True)
 
             # Cross-platform path handling
             outtmpl = os.path.join(str(VIDEOS_DIR), "%(title)s.%(ext)s")
+            logger.debug(f"Output template set to: {outtmpl}")
 
             ydl_opts = {
                 "outtmpl": outtmpl,
@@ -138,28 +163,41 @@ class DownloaderThread(QThread):
                 "format_sort": ["res:1080", "res:720", "res:480", "res:360", "mp4", "webm"],
             }
 
+            logger.info("Starting YouTube download with yt-dlp")
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 try:
                     self.progress.emit(0, "Checking video availability...")
+                    logger.debug("Extracting video info (no download)")
                     info = ydl.extract_info(self.url, download=False)
                     
                     if not info:
-                        raise Exception("Could not extract video information")
+                        error_msg = "Could not extract video information"
+                        logger.error(error_msg)
+                        raise Exception(error_msg)
                     
                     video_title = info.get('title', 'Unknown')
+                    video_duration = info.get('duration', 'Unknown')
+                    logger.info(f"Video info extracted - Title: '{video_title}', Duration: {video_duration}s")
+                    
                     self.progress.emit(0, f"Downloading: {video_title}")
+                    logger.info(f"Starting download: {video_title}")
                     
                     ydl.download([self.url])
+                    logger.info("Download completed successfully")
                     
                 except Exception as extract_error:
+                    logger.warning(f"First download method failed, trying alternative: {extract_error}")
                     self.progress.emit(0, "Trying alternative download method...")
                     info = ydl.extract_info(self.url, download=True)
+                    logger.info("Alternative download method completed")
 
                 # Cross-platform file detection
                 filename = None
                 try:
                     filename = ydl.prepare_filename(info) if info else None
-                except Exception:
+                    logger.debug(f"Prepared filename: {filename}")
+                except Exception as e:
+                    logger.warning(f"Could not prepare filename: {e}")
                     filename = None
 
                 possible = []
@@ -168,6 +206,7 @@ class DownloaderThread(QThread):
                     possible.append(Path(filename).with_suffix(".mp4"))
                     possible.append(Path(filename).with_suffix(".mkv"))
                     possible.append(Path(filename).with_suffix(".webm"))
+                    logger.debug(f"Generated possible filenames: {[str(p) for p in possible]}")
                 
                 # Check for recently created files (works on both platforms)
                 try:
@@ -177,12 +216,15 @@ class DownloaderThread(QThread):
                         reverse=True
                     )
                     possible.extend(recent_files)
-                except Exception:
-                    pass
+                    logger.debug(f"Added {len(recent_files)} recent files to search")
+                except Exception as e:
+                    logger.warning(f"Could not check recent files: {e}")
                 
                 existing = next((p for p in possible if p.exists()), None)
+                logger.debug(f"Existing file found: {existing}")
                 
                 if not existing:
+                    logger.warning("No file found in initial search, trying all files")
                     try:
                         all_files = sorted(
                             [p for p in VIDEOS_DIR.iterdir() if p.is_file()],
@@ -190,34 +232,59 @@ class DownloaderThread(QThread):
                             reverse=True
                         )
                         existing = all_files[0] if all_files else None
-                    except Exception:
+                        logger.debug(f"Latest file in directory: {existing}")
+                    except Exception as e:
+                        logger.error(f"Could not list directory files: {e}")
                         existing = None
 
                 if not existing:
-                    raise FileNotFoundError("Download finished but file not found in videos folder.")
+                    error_msg = "Download finished but file not found in videos folder."
+                    logger.error(error_msg)
+                    raise FileNotFoundError(error_msg)
 
+                file_size = existing.stat().st_size if existing else 0
+                logger.info(f"Downloaded file confirmed: {existing.name} ({file_size} bytes)")
+                
                 try:
                     self.done.emit(str(existing.resolve()))
-                except Exception:
+                    logger.info("Download completed successfully, emitted done signal")
+                except Exception as e:
+                    logger.error(f"Failed to emit done signal with resolved path: {e}")
                     try:
                         self.done.emit(str(existing))
-                    except Exception:
+                        logger.info("Emitted done signal with string path")
+                    except Exception as e2:
+                        logger.error(f"Failed to emit done signal: {e2}")
                         self.done.emit("")
 
         except Exception as e:
             error_msg = str(e)
+            logger.error(f"Download failed: {error_msg}", exc_info=True)
+            
+            # Provide more user-friendly error messages
             if "403" in error_msg:
                 error_msg = "YouTube blocked the download (HTTP 403). This video may have restrictions or yt-dlp needs updating."
+                logger.warning("YouTube returned 403 Forbidden")
             elif "Private video" in error_msg:
                 error_msg = "This is a private YouTube video and cannot be downloaded."
+                logger.warning("Attempted to download private video")
             elif "Sign in" in error_msg:
                 error_msg = "This video requires sign-in or may be age-restricted."
+                logger.warning("Video requires sign-in or is age-restricted")
+            elif "unable to extract uploader id" in error_msg.lower():
+                error_msg = "Unable to extract video information. The video may not be available."
+                logger.warning("Could not extract video information")
+            
+            logger.error(f"Final error message: {error_msg}")
             
             try:
                 self.error.emit(error_msg)
-            except Exception:
-                pass
+                logger.debug("Error signal emitted successfully")
+            except Exception as emit_error:
+                logger.error(f"Failed to emit error signal: {emit_error}")
+            
             try:
                 self.done.emit("")
-            except Exception:
-                pass
+                logger.debug("Empty done signal emitted")
+            except Exception as emit_error:
+                logger.error(f"Failed to emit empty done signal: {emit_error}")
