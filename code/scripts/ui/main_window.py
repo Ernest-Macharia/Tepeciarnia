@@ -74,10 +74,16 @@ class EnhancedDragDropWidget(QWidget):
         self.supported_label = QLabel("Supported: JPG, PNG, MP4")
         self.supported_label.setAlignment(Qt.AlignCenter)
         
-        # Action buttons (initially hidden) - CENTERED
+        # Action buttons (initially hidden) - CENTERED BUT GROUPED
         self.buttons_widget = QWidget()
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(10, 0, 10, 0)
+        
+        # Create a container for the buttons to keep them together in center
+        button_container = QWidget()
+        button_container_layout = QHBoxLayout()
+        button_container_layout.setContentsMargins(0, 0, 0, 0)
+        button_container_layout.setSpacing(10)  # Space between buttons
         
         # Upload button with icon and primary class
         self.upload_btn = QPushButton(" Set as Wallpaper")
@@ -98,11 +104,15 @@ class EnhancedDragDropWidget(QWidget):
         self.reset_btn.setIcon(reset_icon)
         self.reset_btn.setIconSize(QSize(16, 16))
         
-        # Center the buttons by adding spacers on both sides
-        buttons_layout.addStretch()  # Left spacer
-        buttons_layout.addWidget(self.upload_btn)
-        buttons_layout.addWidget(self.reset_btn)
-        buttons_layout.addStretch()  # Right spacer
+        # Add buttons to container
+        button_container_layout.addWidget(self.upload_btn)
+        button_container_layout.addWidget(self.reset_btn)
+        button_container.setLayout(button_container_layout)
+        
+        # Center the button container
+        buttons_layout.addStretch()
+        buttons_layout.addWidget(button_container)
+        buttons_layout.addStretch()
         
         self.buttons_widget.setLayout(buttons_layout)
         self.buttons_widget.hide()  # Initially hidden as requested
