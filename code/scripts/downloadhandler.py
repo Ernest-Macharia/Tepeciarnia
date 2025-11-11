@@ -4,6 +4,8 @@ import sys
 import logging
 import yt_dlp
 
+# Set up logger
+logger = logging.getLogger(__name__)
 
 def is_video_url(input_string: str) -> bool:
     """Check if the string looks like a video URL."""
@@ -38,6 +40,8 @@ def download_video(url: str, resolution: str = "1080") -> str:
 
     temp_path = os.path.join(os.getcwd(), "download_path.tmp")
     try:
+        logger.info(f"Starting video download: {url} at resolution {resolution}p")
+        
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             file_path = ydl.prepare_filename(info)
@@ -46,15 +50,18 @@ def download_video(url: str, resolution: str = "1080") -> str:
         # Write the downloaded path to temp file
         with open(temp_path, "w", encoding="utf-8") as f:
             f.write(file_path)
+        
+        logger.info(f"Video downloaded successfully: {file_path}")
         return file_path
 
     except Exception as e:
-        logging.error(f"[ERROR] Download failed: {e}")
+        logger.error(f"Download failed for {url}: {e}")
         return ""
 
 
 def main():
     if len(sys.argv) < 2:
+        logger.error("No URL provided in command line arguments")
         sys.exit(1)
 
     url = sys.argv[1]
@@ -65,18 +72,27 @@ def main():
         try:
             res_index = sys.argv.index("-r")
             res = sys.argv[res_index + 1]
-        except Exception:
-            pass
+            logger.debug(f"Resolution set to: {res}p")
+        except Exception as e:
+            logger.warning(f"Failed to parse resolution flag, using default: {e}")
 
     if not is_video_url(url):
+        logger.info(f"URL is not a video URL, skipping download: {url}")
         sys.exit(0)
 
     result = download_video(url, res)
     if not result:
+        logger.error(f"Video download failed for: {url}")
         sys.exit(1)
     else:
+        logger.info("Video download completed successfully")
         sys.exit(0)
 
 
 if __name__ == "__main__":
+    # Basic logging configuration - can be overridden by calling code
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
     main()

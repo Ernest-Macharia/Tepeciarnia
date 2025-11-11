@@ -3,9 +3,13 @@ import logging
 import platform
 import os
 
+# Get logger for this module
+logger = logging.getLogger(__name__)
+
 # --- Constants for Windows-Specific Flags ---
 # We use this to prevent the console window from showing up.
 CREATE_NO_WINDOW = 0x08000000 
+
 
 def run_blocking_silent_command(command_parts, cwd=None, timeout=None):
     """
@@ -21,12 +25,24 @@ def run_blocking_silent_command(command_parts, cwd=None, timeout=None):
         subprocess.CompletedProcess: An object containing the command result.
                                      Returns None if the platform is not Windows.
     """
+    logger.debug(f"Starting blocking silent command: {command_parts}")
+    logger.debug(f"Working directory: {cwd}, Timeout: {timeout}")
+    
     if platform.system() != "Windows":
-        return subprocess.run(command_parts, capture_output=True, text=True, cwd=cwd, timeout=timeout)
+        logger.debug("Non-Windows platform, using standard subprocess.run")
+        try:
+            result = subprocess.run(command_parts, capture_output=True, text=True, cwd=cwd, timeout=timeout)
+            logger.debug(f"Non-Windows command completed - returncode: {result.returncode}")
+            return result
+        except Exception as e:
+            logger.error(f"Non-Windows command failed: {e}", exc_info=True)
+            return None
     
     # --- Windows-Specific Execution (Blocking) ---
+    logger.info(f"Executing Windows blocking command: {' '.join(command_parts)}")
     try:
         # Popen starts the process
+        logger.debug("Creating subprocess with CREATE_NO_WINDOW flag")
         process = subprocess.Popen(
             command_parts,
             creationflags=CREATE_NO_WINDOW,
@@ -35,9 +51,19 @@ def run_blocking_silent_command(command_parts, cwd=None, timeout=None):
             cwd=cwd,
             text=True
         )
+        logger.debug(f"Process created with PID: {process.pid}")
 
         # CRITICAL: communicate() waits for the process to terminate.
+        logger.debug(f"Waiting for process completion with timeout: {timeout}")
         stdout, stderr = process.communicate(timeout=timeout)
+        
+        logger.info(f"Blocking command completed - PID: {process.pid}, returncode: {process.returncode}")
+        logger.debug(f"Command stdout length: {len(stdout)}, stderr length: {len(stderr)}")
+        
+        if process.returncode != 0:
+            logger.warning(f"Command returned non-zero exit code: {process.returncode}")
+            if stderr:
+                logger.warning(f"Command stderr: {stderr.strip()}")
         
         return subprocess.CompletedProcess(
             args=command_parts,
@@ -46,15 +72,24 @@ def run_blocking_silent_command(command_parts, cwd=None, timeout=None):
             stderr=stderr
         )
 
-    except FileNotFoundError:
-        logging.error(f"Error: Executable not found. Command: {command_parts[0]}")
+    except FileNotFoundError as e:
+        logger.error(f"Executable not found for command: {command_parts[0]}", exc_info=True)
+        logger.error(f"Full command: {command_parts}")
         return None
-    except subprocess.TimeoutExpired:
-        logging.error(f"Error: Command timed out after {timeout} seconds.")
-        process.kill()
+    except subprocess.TimeoutExpired as e:
+        logger.error(f"Command timed out after {timeout} seconds: {' '.join(command_parts)}")
+        if 'process' in locals():
+            logger.warning(f"Terminating timed out process: {process.pid}")
+            process.kill()
+            try:
+                process.wait(timeout=5)
+                logger.debug("Timed out process terminated successfully")
+            except subprocess.TimeoutExpired:
+                logger.error("Failed to terminate timed out process")
         return None
     except Exception as e:
-        logging.error(f"An unexpected error occurred: {e}")
+        logger.error(f"Unexpected error executing blocking command: {e}", exc_info=True)
+        logger.error(f"Command that failed: {' '.join(command_parts)}")
         return None
 
 
@@ -71,30 +106,111 @@ def run_and_forget_silent(command_parts, cwd=None):
     Returns:
         subprocess.Popen or None: The process object if successful, None otherwise.
     """
+    logger.debug(f"Starting non-blocking silent command: {command_parts}")
+    logger.debug(f"Working directory: {cwd}")
+    
     if platform.system() != "Windows":
-        return subprocess.Popen(command_parts, cwd=cwd)
+        logger.debug("Non-Windows platform, using standard subprocess.Popen")
+        try:
+            process = subprocess.Popen(command_parts, cwd=cwd)
+            logger.info(f"Non-Windows background process started - PID: {process.pid}")
+            return process
+        except Exception as e:
+            logger.error(f"Non-Windows background process failed: {e}", exc_info=True)
+            return None
 
+    # --- Windows-Specific Execution (Non-Blocking) ---
+    logger.info(f"Starting Windows non-blocking command: {' '.join(command_parts)}")
     try:
         # CRITICAL: Popen is used without communicate/wait. The process runs independently.
+        logger.debug("Creating non-blocking subprocess with CREATE_NO_WINDOW flag")
         process = subprocess.Popen(
             command_parts,
             creationflags=CREATE_NO_WINDOW,
             cwd=cwd
         )
+        logger.info(f"Background process started successfully - PID: {process.pid}")
+        logger.debug(f"Process object created: {process}")
         return process
-    except FileNotFoundError:
-        logging.error(f"Error: Executable not found. Command: {command_parts[0]}")
+        
+    except FileNotFoundError as e:
+        logger.error(f"Executable not found for background command: {command_parts[0]}", exc_info=True)
+        logger.error(f"Full background command: {command_parts}")
+        return None
+    except PermissionError as e:
+        logger.error(f"Permission denied executing background command: {command_parts[0]}")
+        logger.error(f"Full background command: {command_parts}")
         return None
     except Exception as e:
-        logging.error(f"An unexpected error occurred during silent run: {e}")
+        logger.error(f"Unexpected error starting background command: {e}", exc_info=True)
+        logger.error(f"Command that failed: {' '.join(command_parts)}")
         return None
+
+
+def terminate_process(process):
+    """
+    Safely terminate a process created by run_and_forget_silent
+    
+    Args:
+        process: subprocess.Popen object to terminate
+        
+    Returns:
+        bool: True if termination was successful, False otherwise
+    """
+    if process is None:
+        logger.warning("Attempted to terminate None process")
+        return False
+        
+    logger.info(f"Terminating process: {process.pid}")
+    try:
+        process.terminate()
+        logger.debug(f"Terminate signal sent to process: {process.pid}")
+        
+        # Wait a bit for graceful termination
+        try:
+            process.wait(timeout=5)
+            logger.info(f"Process terminated successfully: {process.pid}")
+            return True
+        except subprocess.TimeoutExpired:
+            logger.warning(f"Process did not terminate gracefully, killing: {process.pid}")
+            process.kill()
+            process.wait()
+            logger.info(f"Process killed: {process.pid}")
+            return True
+            
+    except Exception as e:
+        logger.error(f"Failed to terminate process {process.pid}: {e}", exc_info=True)
+        return False
+
+
+def check_process_running(process):
+    """
+    Check if a process is still running
+    
+    Args:
+        process: subprocess.Popen object to check
+        
+    Returns:
+        bool: True if process is running, False otherwise
+    """
+    if process is None:
+        return False
+        
+    return_code = process.poll()
+    is_running = return_code is None
+    
+    logger.debug(f"Process {process.pid} running: {is_running}, returncode: {return_code}")
+    return is_running
 
 
 # --- Example Usage ---
 if __name__ == "__main__":
+    # Set up logging for example
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
     # 1. Define the full path to your MPV executable
     # NOTE: Replace this placeholder path with your actual path
-    mpv_path = r"C:\path\to\mpv.exeqq"  
+    mpv_path = r"C:\path\to\mpv.exe"  
     
     # 2. Define the path to the video you want to play
     # NOTE: Replace this placeholder path with your video file
@@ -110,28 +226,25 @@ if __name__ == "__main__":
     if platform.system() == "Windows":
         
         if mpv_path == r"C:\path\to\mpv.exe":
-             print("\n!!! WARNING !!!")
-             print("Please update the 'mpv_path' variable in this script with your actual MPV executable location.")
+             logger.warning("Please update the 'mpv_path' variable with your actual MPV executable location.")
         else:
-            print("-" * 30)
-            print("RUN MODE 1: Non-Blocking (AutoIt 'Run' Equivalent)")
+            logger.info("Testing RUN MODE 1: Non-Blocking (AutoIt 'Run' Equivalent)")
             # This starts the process and returns immediately.
             # Use this for background tasks like starting MPV to play video.
             background_process = run_and_forget_silent(mpv_command) 
             
             if background_process:
-                print(f"MPV started in background. You can continue running other code now.")
+                logger.info(f"MPV started in background with PID: {background_process.pid}")
                 # If you needed to stop it later, you would use: background_process.terminate()
 
-            # print("-" * 30)
-            # print("RUN MODE 2: Blocking (Waits for completion)")
-            # # This is useful for running a utility command you need the output/result from.
-            # result = run_blocking_silent_command([mpv_path, "--version"], timeout=5)
+            logger.info("Testing RUN MODE 2: Blocking (Waits for completion)")
+            # This is useful for running a utility command you need the output/result from.
+            result = run_blocking_silent_command(["python", "--version"], timeout=5)
 
-            # if result and result.returncode == 0:
-            #     print("Blocking command successful.")
-            #     print(f"MPV Version Info:\n{result.stdout.strip()}")
-            # elif result is not None:
-            #     print(f"Blocking command failed (Return Code: {result.returncode})")
+            if result and result.returncode == 0:
+                logger.info("Blocking command successful.")
+                logger.info(f"Python Version Info:\n{result.stdout.strip()}")
+            elif result is not None:
+                logger.warning(f"Blocking command failed (Return Code: {result.returncode})")
     else:
-        print("This script is designed for silent execution on Windows.")
+        logger.info("This script is designed for silent execution on Windows.")

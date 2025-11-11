@@ -1,8 +1,8 @@
 import sys
-import logging # Import the logging module
-import colorlog # Import colorlog for colored console output
-# --- Custom Logging Handler for QListWidget ---
+import logging
+import colorlog
 
+# --- Custom Logging Handler for QListWidget ---
 
 class InitLogging:
     def __init__(self):
@@ -14,13 +14,14 @@ class InitLogging:
         LOG_FILE_NAME = 'app.log'
         LOGGING_MODE = 'both'  # Options: 'file', 'console', 'both'
         logging_style = True  # If True, use colored console output 
-        # get instance of log window
+        
         # Get the root logger instance
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)  # Set the base logging level
 
         # Clear any existing handlers to prevent duplicate log messages
         if logger.hasHandlers():
+            logger.debug("Clearing existing logging handlers")
             logger.handlers.clear()
 
         # --- Define formatters ---
@@ -50,18 +51,30 @@ class InitLogging:
                 }
             },
             style='%'
-            )
+        )
 
+        handlers_added = []
 
         # --- Conditionally add other handlers based on LOGGING_MODE ---
         if LOGGING_MODE in ['file', 'both']:
-            file_handler = logging.FileHandler(LOG_FILE_NAME)
-            file_handler.setFormatter(basic_formatter) # File logs typically don't need color
-            logger.addHandler(file_handler)
+            try:
+                file_handler = logging.FileHandler(LOG_FILE_NAME)
+                file_handler.setFormatter(basic_formatter) # File logs typically don't need color
+                logger.addHandler(file_handler)
+                handlers_added.append(f"file handler ({LOG_FILE_NAME})")
+            except Exception as e:
+                print(f"Failed to setup file logging: {e}")
 
         if LOGGING_MODE in ['console', 'both']:
-            stream_handler = logging.StreamHandler(sys.stdout)
-            stream_handler.setFormatter(console_formatter)
-            logger.addHandler(stream_handler)
+            try:
+                stream_handler = logging.StreamHandler(sys.stdout)
+                stream_handler.setFormatter(console_formatter)
+                logger.addHandler(stream_handler)
+                handlers_added.append("console handler")
+            except Exception as e:
+                print(f"Failed to setup console logging: {e}")
 
-        logging.debug("Logging setup successful") # Log the successful setup
+        if not handlers_added:
+            logging.error("No logging handlers were successfully configured")
+        else:
+            logging.info(f"Logging setup completed successfully. Handlers: {', '.join(handlers_added)}")
