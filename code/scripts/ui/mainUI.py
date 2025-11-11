@@ -8,16 +8,10 @@
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
 
-from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
-    QMetaObject, QObject, QPoint, QRect,
-    QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtCore import (QCoreApplication, QMetaObject, QSize, Qt)
+from PySide6.QtGui import (QCursor, QFont, QIcon,)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
-    QHBoxLayout, QLabel, QLayout, QLineEdit,
-    QMainWindow, QPushButton, QSizePolicy, QSpacerItem,
+    QHBoxLayout, QLabel, QLayout, QLineEdit,QPushButton, QSizePolicy, QSpacerItem,
     QSpinBox, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
@@ -154,7 +148,7 @@ class Ui_MainWindow(object):
         self.controlsLayout.setObjectName(u"controlsLayout")
         self.controlsLayout.setContentsMargins(3, -1, 3, -1)
         
-        # Main control buttons (Shuffle, Browse)
+        # Shuffle buttons on the left
         self.randomAnimButton = QPushButton(self.controlsFrame)
         self.randomAnimButton.setObjectName(u"randomAnimButton")
         sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
@@ -180,6 +174,12 @@ class Ui_MainWindow(object):
 
         self.controlsLayout.addWidget(self.randomButton)
 
+        # Spacer to push browse button to far right
+        self.controls_spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.controlsLayout.addItem(self.controls_spacer)
+
+        # Browse button on far right
         self.browseButton = QPushButton(self.controlsFrame)
         self.browseButton.setObjectName(u"browseButton")
         self.browseButton.setFont(font2)
@@ -190,10 +190,6 @@ class Ui_MainWindow(object):
         self.browseButton.setIconSize(QSize(20, 20))
 
         self.controlsLayout.addWidget(self.browseButton)
-
-        # Spacer to push buttons to fill space
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        self.controlsLayout.addItem(self.horizontalSpacer)
 
         self.cardLayout.addWidget(self.controlsFrame)
 
@@ -518,7 +514,7 @@ class Ui_MainWindow(object):
         sizePolicy8.setVerticalStretch(0)
         sizePolicy8.setHeightForWidth(self.range_frame.sizePolicy().hasHeightForWidth())
         self.range_frame.setSizePolicy(sizePolicy8)
-        self.range_frame.setMinimumSize(QSize(0, 140))  # Increased height for Start/Reset buttons
+        self.range_frame.setMinimumSize(QSize(0, 140))
         self.range_frame.setFrameShape(QFrame.Shape.NoFrame)
         self.range_frame.setFrameShadow(QFrame.Shadow.Raised)
         self.range_v_layout = QVBoxLayout(self.range_frame)
@@ -588,9 +584,6 @@ class Ui_MainWindow(object):
         self.startButton.setSizePolicy(sizePolicy3)
         self.startButton.setFont(font2)
         self.startButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        icon_start = QIcon()
-        icon_start.addFile(u":/icons/play.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.startButton.setIcon(icon_start)
         self.startButton.setIconSize(QSize(20, 20))
         self.startButton.setMinimumSize(QSize(80, 30))
 
@@ -602,9 +595,6 @@ class Ui_MainWindow(object):
         self.resetButton.setSizePolicy(sizePolicy3)
         self.resetButton.setFont(font2)
         self.resetButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        icon_reset = QIcon()
-        icon_reset.addFile(u":/icons/reset.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.resetButton.setIcon(icon_reset)
         self.resetButton.setIconSize(QSize(20, 20))
         self.resetButton.setMinimumSize(QSize(80, 30))
 
