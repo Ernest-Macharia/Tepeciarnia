@@ -10,7 +10,7 @@ from typing import Optional
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QMessageBox, 
     QSystemTrayIcon, QMenu, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QStyle
+    QLabel, QPushButton, QStyle, QSizePolicy
 )
 from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
 from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize
@@ -57,7 +57,15 @@ class EnhancedDragDropWidget(QWidget):
         self.original_wallpaper = None
         self.parent_app = parent
         self.setup_ui()
-        
+    # Function for toggling visibility of buttons and uplaod icon
+    def toggle_buttons_visibility(self, visible: bool):
+        if visible:
+            self.buttons_widget.show()
+            self.uploadIcon.hide()
+        else:
+            self.buttons_widget.hide()
+            self.uploadIcon.show()
+
     def setup_ui(self):
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -65,14 +73,19 @@ class EnhancedDragDropWidget(QWidget):
         # Drag & drop area
         self.drop_area = QLabel("Drag & drop a photo or video here, or click to choose a file")
         self.drop_area.setAlignment(Qt.AlignCenter)
-        self.drop_area.setMinimumHeight(120)
         self.drop_area.setAcceptDrops(True)
         self.drop_area.dragEnterEvent = self.dragEnterEvent
         self.drop_area.dropEvent = self.dropEvent
+        self.drop_area.setMargin(0)
+        # change vertical policy to fixed
+        self.drop_area.setSizePolicy(self.drop_area.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
         
         # Supported formats label
         self.supported_label = QLabel("Supported: JPG, PNG, MP4")
         self.supported_label.setAlignment(Qt.AlignCenter)
+        self.supported_label.setMargin(0)
+        # change vertical policy to fixed
+        self.supported_label.setSizePolicy(self.supported_label.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
         
         # Action buttons (initially hidden) - CENTERED BUT GROUPED
         self.buttons_widget = QWidget()
@@ -91,13 +104,20 @@ class EnhancedDragDropWidget(QWidget):
         self.upload_btn.setProperty("class", "primary")
         
         # Add upload icon
-        upload_icon = QIcon(":/icons/upload.png")
-        self.upload_btn.setIcon(upload_icon)
-        self.upload_btn.setIconSize(QSize(16, 16))
+        self.uploadIcon = QLabel()
+        self.uploadIcon.setObjectName(u"uploadIcon")
+        self.uploadIcon.setAutoFillBackground(False)
+        self.uploadIcon.setPixmap(QPixmap(u":/icons/upload.png"))
+        self.uploadIcon.setScaledContents(False)
+        self.uploadIcon.setAlignment(Qt.AlignCenter)
+        # change vertical policy to fixed
+        self.uploadIcon.setSizePolicy(self.uploadIcon.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
+        self.uploadIcon.setMargin(0)
         
         # Reset button
-        self.reset_btn = QPushButton(" Reset")
+        self.reset_btn = QPushButton("Reset")
         self.reset_btn.clicked.connect(self.reset_selection)
+        self.reset_btn.setProperty("class", "ghost")
         
         # Add reset icon
         reset_icon = QIcon(":/icons/reset.png")
@@ -117,6 +137,7 @@ class EnhancedDragDropWidget(QWidget):
         self.buttons_widget.setLayout(buttons_layout)
         self.buttons_widget.hide()  # Initially hidden as requested
         
+        layout.addWidget(self.uploadIcon)
         layout.addWidget(self.drop_area)
         layout.addWidget(self.supported_label)
         layout.addWidget(self.buttons_widget)
@@ -136,6 +157,7 @@ class EnhancedDragDropWidget(QWidget):
                 self.drop_area.setText(f"Selected: {filename}")
                 self.supported_label.hide()
                 self.buttons_widget.show()
+                self.uploadIcon.hide()
                 self.upload_btn.setEnabled(True)
             else:
                 self.drop_area.setText("Invalid file type!\nSupported: Images, Videos")
@@ -179,6 +201,7 @@ class EnhancedDragDropWidget(QWidget):
         self.drop_area.setText("Drag & drop a photo or video here, or click to choose a file")
         self.supported_label.show()
         self.buttons_widget.hide()
+        self.uploadIcon.show()
 
     def restore_original_wallpaper(self):
         """Restore the original wallpaper that was set before any changes"""

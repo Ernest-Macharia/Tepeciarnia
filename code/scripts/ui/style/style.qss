@@ -8,6 +8,18 @@ QFrame#uploadArea {
   border-radius: 12px;
   background: transparent;
 }
+/* add a red border to all the widgets */
+/* For debug only */
+QWidget {
+  border: 1px solid rgba(255, 0, 0, 0.503);
+}
+QFrame{
+  border: 1px solid rgba(0, 128, 0, 0.493);
+}
+QSpacer {
+  background-color: red;
+}
+
 
 QFrame#uploadArea:hover {
   background: rgba(255, 255, 255, 0.04);
