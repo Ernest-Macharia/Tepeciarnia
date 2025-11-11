@@ -143,23 +143,3 @@ Video: MP4, MKV, WebM, AVI, MOV
 Image: JPG, JPEG, PNG, BMP, GIF
 
 URLs: YouTube, direct video/image links
-
-Dependencies Verification
-bash
-# Verify core dependencies
-pip list | grep -E "(PySide6|yt-dlp|requests)"
-
-# Expected output:
-# PySide6
-# yt-dlp
-# requests
-Development
-The application features a modular architecture for easy maintenance and extension:
-
-Core Module: Wallpaper control, downloading, scheduling
-
-UI Module: Main window, widgets, and dialogs
-
-Utils Module: Path management, system operations, validation
-
-Models Module: Configuration and data handling
