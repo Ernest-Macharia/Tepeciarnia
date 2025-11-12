@@ -61,6 +61,7 @@ download_path.tmp
 config.json
 *.log
 
+*.pyc
 # python venv folders
 pyvenv.cfg
 __pypackages__/
