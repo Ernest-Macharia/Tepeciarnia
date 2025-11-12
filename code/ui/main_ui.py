@@ -24,216 +24,8 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1070, 900)
+        MainWindow.resize(1307, 900)
         MainWindow.setMinimumSize(QSize(0, 900))
-        MainWindow.setStyleSheet(u"/* Gradient background and modern rounded look */\n"
-"QWidget#centralwidget {\n"
-"  background: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(59, 130, 246, 255), stop:0.6 rgba(99, 102, 241, 255), stop:1 rgba(99, 102, 241, 255));\n"
-"}\n"
-"\n"
-"QFrame#uploadArea {\n"
-"  border: 2px dashed rgba(255, 255, 255, 0.12);\n"
-"  border-radius: 12px;\n"
-"  background: transparent;\n"
-"}\n"
-"\n"
-"QFrame#uploadArea:hover {\n"
-"  background: rgba(255, 255, 255, 0.04);\n"
-"}\n"
-"\n"
-"QFrame#card {\n"
-"  background: rgba(255, 255, 255, 0.06);\n"
-"  border-radius: 16px;\n"
-"  border: 1px solid rgba(255, 255, 255, 0.12);\n"
-"}\n"
-"\n"
-"QPushButton {\n"
-"  border-radius: 12px;\n"
-"  padding: 8px 12px;\n"
-"\n"
-"}\n"
-"\n"
-"QPushButton.aactive {\n"
-"  background: white;\n"
-"  color: #1e40af;\n"
-"  font-weight: 600;\n"
-"}\n"
-"\n"
-"QPushButton.primary {\n"
-"  background: white;\n"
-"  color: #1e40af;\n"
-"  font-weight: 600;\n"
-"}\n"
-"\n"
-"QPushButton.danger {\n"
-"  background: transparent;\n"
-"  color: white;\n"
-"  "
-                        "font-weight: 600;\n"
-"  border: 2px solid  rgb(248, 68, 68);\n"
-"}\n"
-"QPushButton.danger:hover {\n"
-"  background: rgb(248, 68, 68);\n"
-"  border: 2px solid  rgb(248, 68, 68);\n"
-"}\n"
-"\n"
-"QPushButton.deactive {\n"
-"  background: transparent;\n"
-"  color: white;\n"
-"  border: 1px solid rgba(255, 255, 255, 0.18);\n"
-"}\n"
-"\n"
-"QPushButton.deactive:hover {\n"
-"  color: white;\n"
-"  border: 1px solid rgba(255, 255, 255, 0.2);\n"
-"  background-color: rgba(255, 255, 255, 0.2);\n"
-"}\n"
-"\n"
-"QPushButton.ghost:hover {\n"
-"  border: 1px solid rgba(255, 255, 255, 0.2);\n"
-"  background-color: rgba(255, 255, 255, 0.2);\n"
-"}\n"
-"\n"
-"QPushButton.ghost {\n"
-"  color: white;\n"
-"  background-color: transparent;\n"
-"  border: 1px solid rgba(255, 255, 255, 0.2);\n"
-"}\n"
-"\n"
-"QLineEdit,\n"
-"QComboBox,\n"
-"QSpinBox {\n"
-"  background: rgba(255, 255, 255, 0.06);\n"
-"  border: 1px solid rgba(255, 255, 255, 0.12);\n"
-"  border-radius: 10px;\n"
-"  padding: 6px 8px;\n"
-"  color: white;\n"
-"}\n"
-"\n"
-"QLabel {\n"
-"  color: w"
-                        "hite;\n"
-"}\n"
-"\n"
-"QLineEdit:focus {\n"
-"  border: 2px solid rgba(255, 255, 255, 0.795);\n"
-"}\n"
-"\n"
-"QLabel#autoLabel {\n"
-"  padding-left: 2px;\n"
-"}\n"
-"\n"
-"/* QLineEdit#emailInput,QLineEdit#passwordInput{\n"
-"  padding: 12px;\n"
-"} */\n"
-"\n"
-"/* Targets the QLabel acting as the logo container */\n"
-"QLabel#logoLabel {\n"
-"  /* Set the size of the icon within the QLabel */\n"
-"  icon-size: 32px 32px;\n"
-"  /* Set the color for the SVG (this overrides fill=\"currentColor\") */\n"
-"  color: #f5f6fa;\n"
-"  /* Bright white/near-white */\n"
-"\n"
-"  /* Set the dynamic property defined in Designer as the actual icon source */\n"
-"  /* qproperty-icon: url(:/icons/logo_biale.svg);  */\n"
-"\n"
-"  /* Padding to create breathing room around the logo */\n"
-"  padding: 5px;\n"
-"  margin-right: 15px;\n"
-"}\n"
-"\n"
-"/* Add a subtle hover effect if the logo is clickable */\n"
-"QLabel#appLogoLabel:hover {\n"
-"  color: #3498db;\n"
-"  /* Change logo color to blue on hover */\n"
-"}\n"
-"\n"
-"/* Load the white icon by defau"
-                        "lt\n"
-"QToolButton#timerButton {\n"
-"    icon-size: 24px 24px;\n"
-"    qproperty-icon: url(assets/timer_white.png);\n"
-"    background-color: transparent;\n"
-"}\n"
-"\n"
-"Load the blue icon when hovering\n"
-"QToolButton#timerButton:hover {\n"
-"    qproperty-icon: url(assets/timer_blue.png);\n"
-"    background-color: #34495e;\n"
-"    border-radius: 5px;\n"
-"} */\n"
-"\n"
-"\n"
-"/* ----------------------------------------------------\n"
-"   QCheckBox BASE STYLES\n"
-"   ---------------------------------------------------- */\n"
-"\n"
-"QCheckBox {\n"
-"  /* Base text color for the checkbox label */\n"
-"  color: #f5f6fa;\n"
-"\n"
-"  /* Add padding/margin for spacing, especially when used in a layout */\n"
-"  padding: 5px;\n"
-"  spacing: 8px;\n"
-"  /* Space between the box and the text label */\n"
-"}\n"
-"\n"
-"QCheckBox::indicator {\n"
-"  /* Define the size of the clickable box area */\n"
-"  width: 18px;\n"
-"  height: 18px;\n"
-"\n"
-"  /* Rounded corners for the indicator box */\n"
-"  border-radius: 4px;\n"
-"\n"
-"  /* Defau"
-                        "lt (Unchecked) State */\n"
-"  border: 2px solid #7f8c8d;\n"
-"  /* Muted gray border */\n"
-"  background-color: #34495e;\n"
-"  /* Darker fill for the box */\n"
-"}\n"
-"\n"
-"/* ----------------------------------------------------\n"
-"   QCheckBox CHECKED STATE\n"
-"   ---------------------------------------------------- */\n"
-"\n"
-"QCheckBox::indicator:checked {\n"
-"  /* When checked, change the background and border to the accent color */\n"
-"  border: 2px solid #3498db;\n"
-"  /* Primary Blue Border */\n"
-"  background-color: #3498db;\n"
-"  /* Primary Blue Fill */\n"
-"\n"
-"  /* Set the icon/check mark inside the box */\n"
-"  image: url(:/icons/check.png);\n"
-"  /* Assumes you have a white checkmark SVG/PNG in your QRC */\n"
-"}\n"
-"\n"
-"\n"
-"/* ----------------------------------------------------\n"
-"   QCheckBox INTERACTIVE STATES\n"
-"   ---------------------------------------------------- */\n"
-"\n"
-"QCheckBox::indicator:hover {\n"
-"  /* Subtle change when hovering over the indicator */\n"
-"  border-color: #95a5"
-                        "a6;\n"
-"  /* Lighten border slightly */\n"
-"}\n"
-"\n"
-"QCheckBox::indicator:checked:hover {\n"
-"  /* Slightly darker blue on checked hover */\n"
-"  background-color: #2980b9;\n"
-"  border-color: #2980b9;\n"
-"}\n"
-"\n"
-"QCheckBox::indicator:disabled {\n"
-"  /* Mute the colors when the checkbox is disabled */\n"
-"  background-color: #7f8c8d;\n"
-"  border-color: #7f8c8d;\n"
-"}")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.centralwidget.setStyleSheet(u"")
@@ -248,40 +40,37 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.card.sizePolicy().hasHeightForWidth())
         self.card.setSizePolicy(sizePolicy)
         self.card.setMinimumSize(QSize(900, 640))
-        self.card.setFrameShape(QFrame.Shape.NoFrame)
-        self.card.setFrameShadow(QFrame.Shadow.Raised)
+        self.card.setFrameShape(QFrame.NoFrame)
         self.cardLayout = QVBoxLayout(self.card)
         self.cardLayout.setObjectName(u"cardLayout")
         self.topBarLayout = QHBoxLayout()
         self.topBarLayout.setObjectName(u"topBarLayout")
         self.brandingLayout = QHBoxLayout()
         self.brandingLayout.setObjectName(u"brandingLayout")
-        self.titleLayout = QVBoxLayout()
-        self.titleLayout.setObjectName(u"titleLayout")
         self.logoLabel = QLabel(self.card)
         self.logoLabel.setObjectName(u"logoLabel")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.logoLabel.sizePolicy().hasHeightForWidth())
         self.logoLabel.setSizePolicy(sizePolicy1)
-        self.logoLabel.setMinimumSize(QSize(292, 83))
-        self.logoLabel.setStyleSheet(u"QLabel { font-size: 20px; border-radius: 10px; padding: 8px; }")
+        self.logoLabel.setMinimumSize(QSize(0, 0))
         self.logoLabel.setPixmap(QPixmap(u":/icons/logo_biale.svg"))
-        self.logoLabel.setScaledContents(True)
-        self.logoLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.logoLabel.setScaledContents(False)
+        self.logoLabel.setAlignment(Qt.AlignCenter)
 
-        self.titleLayout.addWidget(self.logoLabel)
-
-
-        self.brandingLayout.addLayout(self.titleLayout)
+        self.brandingLayout.addWidget(self.logoLabel)
 
 
         self.topBarLayout.addLayout(self.brandingLayout)
 
-        self.hSpacer1 = QSpacerItem(0, 0, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.hSpacer1 = QSpacerItem(13, 13, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.topBarLayout.addItem(self.hSpacer1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.topBarLayout.addItem(self.horizontalSpacer)
 
         self.loginLayout = QHBoxLayout()
         self.loginLayout.setSpacing(9)
@@ -309,7 +98,7 @@ class Ui_MainWindow(object):
         self.passwordInput = QLineEdit(self.card)
         self.passwordInput.setObjectName(u"passwordInput")
         self.passwordInput.setFont(font1)
-        self.passwordInput.setEchoMode(QLineEdit.EchoMode.Password)
+        self.passwordInput.setEchoMode(QLineEdit.Normal)
 
         self.loginLayout.addWidget(self.passwordInput)
 
@@ -317,13 +106,16 @@ class Ui_MainWindow(object):
         self.logInBnt.setObjectName(u"logInBnt")
         font2 = QFont()
         font2.setPointSize(11)
-        font2.setWeight(QFont.DemiBold)
+        font2.setBold(True)
         self.logInBnt.setFont(font2)
+        self.logInBnt.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.loginLayout.addWidget(self.logInBnt)
 
         self.language_icon = QLabel(self.card)
         self.language_icon.setObjectName(u"language_icon")
+        sizePolicy1.setHeightForWidth(self.language_icon.sizePolicy().hasHeightForWidth())
+        self.language_icon.setSizePolicy(sizePolicy1)
         font3 = QFont()
         font3.setPointSize(8)
         self.language_icon.setFont(font3)
@@ -356,19 +148,17 @@ class Ui_MainWindow(object):
         self.controlsFrame.setMinimumSize(QSize(0, 70))
         self.controlsFrame.setMaximumSize(QSize(16777215, 100))
         self.controlsFrame.setBaseSize(QSize(0, 0))
-        self.controlsFrame.setFrameShape(QFrame.Shape.NoFrame)
+        self.controlsFrame.setFrameShape(QFrame.NoFrame)
         self.controlsLayout = QHBoxLayout(self.controlsFrame)
         self.controlsLayout.setSpacing(9)
         self.controlsLayout.setObjectName(u"controlsLayout")
         self.controlsLayout.setContentsMargins(3, -1, 3, -1)
         self.randomAnimButton = QPushButton(self.controlsFrame)
         self.randomAnimButton.setObjectName(u"randomAnimButton")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.randomAnimButton.sizePolicy().hasHeightForWidth())
-        self.randomAnimButton.setSizePolicy(sizePolicy3)
+        sizePolicy1.setHeightForWidth(self.randomAnimButton.sizePolicy().hasHeightForWidth())
+        self.randomAnimButton.setSizePolicy(sizePolicy1)
         self.randomAnimButton.setFont(font2)
+        self.randomAnimButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         icon1 = QIcon()
         icon1.addFile(u":/icons/shuffle_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.randomAnimButton.setIcon(icon1)
@@ -378,25 +168,28 @@ class Ui_MainWindow(object):
 
         self.randomButton = QPushButton(self.controlsFrame)
         self.randomButton.setObjectName(u"randomButton")
-        sizePolicy3.setHeightForWidth(self.randomButton.sizePolicy().hasHeightForWidth())
-        self.randomButton.setSizePolicy(sizePolicy3)
-        self.randomButton.setFont(font2)
-        self.randomButton.setIcon(icon1)
+        sizePolicy1.setHeightForWidth(self.randomButton.sizePolicy().hasHeightForWidth())
+        self.randomButton.setSizePolicy(sizePolicy1)
+        self.randomButton.setFont(font1)
+        self.randomButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/shuffle.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.randomButton.setIcon(icon2)
         self.randomButton.setIconSize(QSize(20, 20))
 
         self.controlsLayout.addWidget(self.randomButton)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.controlsLayout.addItem(self.horizontalSpacer)
+        self.controlsLayout.addItem(self.horizontalSpacer_7)
 
         self.browseButton = QPushButton(self.controlsFrame)
         self.browseButton.setObjectName(u"browseButton")
         self.browseButton.setFont(font2)
         self.browseButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        icon2 = QIcon()
-        icon2.addFile(u":/icons/images_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.browseButton.setIcon(icon2)
+        icon3 = QIcon()
+        icon3.addFile(u":/icons/images_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.browseButton.setIcon(icon3)
         self.browseButton.setIconSize(QSize(20, 20))
 
         self.controlsLayout.addWidget(self.browseButton)
@@ -404,21 +197,25 @@ class Ui_MainWindow(object):
 
         self.cardLayout.addWidget(self.controlsFrame)
 
+        self.upload_box_v_box_layout = QVBoxLayout()
+        self.upload_box_v_box_layout.setObjectName(u"upload_box_v_box_layout")
         self.add_file_h_layout = QHBoxLayout()
         self.add_file_h_layout.setObjectName(u"add_file_h_layout")
         self.add_files_icon = QLabel(self.card)
         self.add_files_icon.setObjectName(u"add_files_icon")
+        sizePolicy1.setHeightForWidth(self.add_files_icon.sizePolicy().hasHeightForWidth())
+        self.add_files_icon.setSizePolicy(sizePolicy1)
         self.add_files_icon.setPixmap(QPixmap(u":/icons/upload.png"))
 
         self.add_file_h_layout.addWidget(self.add_files_icon)
 
         self.add_file_label = QLabel(self.card)
         self.add_file_label.setObjectName(u"add_file_label")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.add_file_label.sizePolicy().hasHeightForWidth())
-        self.add_file_label.setSizePolicy(sizePolicy4)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.add_file_label.sizePolicy().hasHeightForWidth())
+        self.add_file_label.setSizePolicy(sizePolicy3)
         font4 = QFont()
         font4.setPointSize(14)
         font4.setBold(True)
@@ -431,15 +228,15 @@ class Ui_MainWindow(object):
         self.add_file_h_layout.addItem(self.horizontalSpacer_6)
 
 
-        self.cardLayout.addLayout(self.add_file_h_layout)
+        self.upload_box_v_box_layout.addLayout(self.add_file_h_layout)
 
         self.uploadArea = QFrame(self.card)
         self.uploadArea.setObjectName(u"uploadArea")
-        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
-        sizePolicy5.setHorizontalStretch(0)
-        sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(self.uploadArea.sizePolicy().hasHeightForWidth())
-        self.uploadArea.setSizePolicy(sizePolicy5)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.uploadArea.sizePolicy().hasHeightForWidth())
+        self.uploadArea.setSizePolicy(sizePolicy4)
         self.uploadArea.setMinimumSize(QSize(0, 160))
         self.uploadArea.setAcceptDrops(True)
         self.uploadArea.setAutoFillBackground(False)
@@ -452,52 +249,69 @@ class Ui_MainWindow(object):
         self.upload_area_empty_frame.setObjectName(u"upload_area_empty_frame")
         self.upload_area_empty_v_box = QVBoxLayout(self.upload_area_empty_frame)
         self.upload_area_empty_v_box.setObjectName(u"upload_area_empty_v_box")
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.upload_area_empty_v_box.addItem(self.verticalSpacer_3)
+
         self.uploadIcon = QLabel(self.upload_area_empty_frame)
         self.uploadIcon.setObjectName(u"uploadIcon")
+        sizePolicy1.setHeightForWidth(self.uploadIcon.sizePolicy().hasHeightForWidth())
+        self.uploadIcon.setSizePolicy(sizePolicy1)
         self.uploadIcon.setAutoFillBackground(False)
         self.uploadIcon.setStyleSheet(u"")
         self.uploadIcon.setPixmap(QPixmap(u":/icons/upload.png"))
         self.uploadIcon.setScaledContents(False)
-        self.uploadIcon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.uploadIcon.setAlignment(Qt.AlignCenter)
 
         self.upload_area_empty_v_box.addWidget(self.uploadIcon)
 
         self.uploadText = QLabel(self.upload_area_empty_frame)
         self.uploadText.setObjectName(u"uploadText")
-        sizePolicy3.setHeightForWidth(self.uploadText.sizePolicy().hasHeightForWidth())
-        self.uploadText.setSizePolicy(sizePolicy3)
-        self.uploadText.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        sizePolicy1.setHeightForWidth(self.uploadText.sizePolicy().hasHeightForWidth())
+        self.uploadText.setSizePolicy(sizePolicy1)
+        self.uploadText.setAlignment(Qt.AlignCenter)
 
         self.upload_area_empty_v_box.addWidget(self.uploadText)
 
         self.uploadSupported = QLabel(self.upload_area_empty_frame)
         self.uploadSupported.setObjectName(u"uploadSupported")
+        sizePolicy1.setHeightForWidth(self.uploadSupported.sizePolicy().hasHeightForWidth())
+        self.uploadSupported.setSizePolicy(sizePolicy1)
         self.uploadSupported.setStyleSheet(u"QLabel { color: rgba(255,255,255,0.72); font-size:11px; }")
-        self.uploadSupported.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.uploadSupported.setAlignment(Qt.AlignCenter)
         self.uploadSupported.setMargin(0)
 
         self.upload_area_empty_v_box.addWidget(self.uploadSupported)
+
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.upload_area_empty_v_box.addItem(self.verticalSpacer_2)
 
 
         self.uploadLayout.addWidget(self.upload_area_empty_frame)
 
 
-        self.cardLayout.addWidget(self.uploadArea)
+        self.upload_box_v_box_layout.addWidget(self.uploadArea)
+
+
+        self.cardLayout.addLayout(self.upload_box_v_box_layout)
 
         self.url_loader_qframe = QFrame(self.card)
         self.url_loader_qframe.setObjectName(u"url_loader_qframe")
-        sizePolicy4.setHeightForWidth(self.url_loader_qframe.sizePolicy().hasHeightForWidth())
-        self.url_loader_qframe.setSizePolicy(sizePolicy4)
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        sizePolicy5.setHorizontalStretch(0)
+        sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.url_loader_qframe.sizePolicy().hasHeightForWidth())
+        self.url_loader_qframe.setSizePolicy(sizePolicy5)
         self.url_loader_qframe.setMinimumSize(QSize(0, 0))
-        self.url_loader_qframe.setFrameShape(QFrame.Shape.NoFrame)
-        self.url_loader_qframe.setFrameShadow(QFrame.Shadow.Plain)
+        self.url_loader_qframe.setFrameShape(QFrame.NoFrame)
         self.verticalLayout_2 = QVBoxLayout(self.url_loader_qframe)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_2.setContentsMargins(3, -1, 3, -1)
         self.url_loader_lable_Hbox = QHBoxLayout()
         self.url_loader_lable_Hbox.setSpacing(6)
         self.url_loader_lable_Hbox.setObjectName(u"url_loader_lable_Hbox")
-        self.url_loader_lable_Hbox.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
+        self.url_loader_lable_Hbox.setSizeConstraint(QLayout.SetDefaultConstraint)
         self.icon_label = QLabel(self.url_loader_qframe)
         self.icon_label.setObjectName(u"icon_label")
         sizePolicy2.setHeightForWidth(self.icon_label.sizePolicy().hasHeightForWidth())
@@ -509,8 +323,8 @@ class Ui_MainWindow(object):
         self.url_loader_text_label = QLabel(self.url_loader_qframe)
         self.url_loader_text_label.setObjectName(u"url_loader_text_label")
         self.url_loader_text_label.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.url_loader_text_label.sizePolicy().hasHeightForWidth())
-        self.url_loader_text_label.setSizePolicy(sizePolicy4)
+        sizePolicy5.setHeightForWidth(self.url_loader_text_label.sizePolicy().hasHeightForWidth())
+        self.url_loader_text_label.setSizePolicy(sizePolicy5)
         font5 = QFont()
         font5.setPointSize(15)
         font5.setBold(True)
@@ -518,7 +332,7 @@ class Ui_MainWindow(object):
 
         self.url_loader_lable_Hbox.addWidget(self.url_loader_text_label)
 
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.url_loader_lable_Hbox.addItem(self.horizontalSpacer_4)
 
@@ -528,7 +342,7 @@ class Ui_MainWindow(object):
         self.urlLayout = QHBoxLayout()
         self.urlLayout.setSpacing(9)
         self.urlLayout.setObjectName(u"urlLayout")
-        self.urlLayout.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
+        self.urlLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
         self.urlInput = QLineEdit(self.url_loader_qframe)
         self.urlInput.setObjectName(u"urlInput")
         self.urlInput.setMinimumSize(QSize(0, 38))
@@ -540,12 +354,13 @@ class Ui_MainWindow(object):
 
         self.loadUrlButton = QPushButton(self.url_loader_qframe)
         self.loadUrlButton.setObjectName(u"loadUrlButton")
-        sizePolicy3.setHeightForWidth(self.loadUrlButton.sizePolicy().hasHeightForWidth())
-        self.loadUrlButton.setSizePolicy(sizePolicy3)
+        sizePolicy1.setHeightForWidth(self.loadUrlButton.sizePolicy().hasHeightForWidth())
+        self.loadUrlButton.setSizePolicy(sizePolicy1)
         self.loadUrlButton.setMinimumSize(QSize(92, 42))
         font7 = QFont()
-        font7.setPointSize(12)
-        font7.setWeight(QFont.DemiBold)
+        font7.setPointSize(10)
+        font7.setBold(True)
+        font7.setKerning(True)
         self.loadUrlButton.setFont(font7)
         self.loadUrlButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
@@ -575,11 +390,11 @@ class Ui_MainWindow(object):
         self.autoFrame.setObjectName(u"autoFrame")
         sizePolicy2.setHeightForWidth(self.autoFrame.sizePolicy().hasHeightForWidth())
         self.autoFrame.setSizePolicy(sizePolicy2)
-        self.autoFrame.setFrameShape(QFrame.Shape.NoFrame)
+        self.autoFrame.setFrameShape(QFrame.NoFrame)
         self.autoLayout = QVBoxLayout(self.autoFrame)
         self.autoLayout.setSpacing(0)
         self.autoLayout.setObjectName(u"autoLayout")
-        self.autoLayout.setSizeConstraint(QLayout.SizeConstraint.SetNoConstraint)
+        self.autoLayout.setSizeConstraint(QLayout.SetDefaultConstraint)
         self.autoLayout.setContentsMargins(3, 6, 3, 0)
         self.autoTopLayout = QHBoxLayout()
         self.autoTopLayout.setSpacing(0)
@@ -625,6 +440,10 @@ class Ui_MainWindow(object):
 
         self.cardLayout.addWidget(self.autoFrame)
 
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.cardLayout.addItem(self.verticalSpacer)
+
         self.source_n_interval_frame = QFrame(self.card)
         self.source_n_interval_frame.setObjectName(u"source_n_interval_frame")
         sizePolicy7 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
@@ -636,8 +455,7 @@ class Ui_MainWindow(object):
         font11 = QFont()
         font11.setKerning(True)
         self.source_n_interval_frame.setFont(font11)
-        self.source_n_interval_frame.setFrameShape(QFrame.Shape.NoFrame)
-        self.source_n_interval_frame.setFrameShadow(QFrame.Shadow.Raised)
+        self.source_n_interval_frame.setFrameShape(QFrame.NoFrame)
         self.horizontalLayout_5 = QHBoxLayout(self.source_n_interval_frame)
         self.horizontalLayout_5.setSpacing(6)
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
@@ -684,28 +502,30 @@ class Ui_MainWindow(object):
         self.super_wallpaper_btn = QPushButton(self.source_n_interval_frame)
         self.super_wallpaper_btn.setObjectName(u"super_wallpaper_btn")
         self.super_wallpaper_btn.setFont(font2)
-        self.super_wallpaper_btn.setLayoutDirection(Qt.LayoutDirection.LeftToRight)
-        icon3 = QIcon()
-        icon3.addFile(u":/icons/sparkles_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.super_wallpaper_btn.setIcon(icon3)
+        self.super_wallpaper_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.super_wallpaper_btn.setLayoutDirection(Qt.LeftToRight)
+        icon4 = QIcon()
+        icon4.addFile(u":/icons/sparkles_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.super_wallpaper_btn.setIcon(icon4)
 
         self.source_inner_h_loyout.addWidget(self.super_wallpaper_btn)
 
         self.fvrt_wallpapers_btn = QPushButton(self.source_n_interval_frame)
         self.fvrt_wallpapers_btn.setObjectName(u"fvrt_wallpapers_btn")
         self.fvrt_wallpapers_btn.setFont(font1)
-        icon4 = QIcon()
-        icon4.addFile(u":/icons/heart.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.fvrt_wallpapers_btn.setIcon(icon4)
+        self.fvrt_wallpapers_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        icon5 = QIcon()
+        icon5.addFile(u":/icons/heart.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.fvrt_wallpapers_btn.setIcon(icon5)
 
         self.source_inner_h_loyout.addWidget(self.fvrt_wallpapers_btn)
 
         self.added_wallpaper_btn = QPushButton(self.source_n_interval_frame)
         self.added_wallpaper_btn.setObjectName(u"added_wallpaper_btn")
         self.added_wallpaper_btn.setFont(font1)
-        icon5 = QIcon()
-        icon5.addFile(u":/icons/circle-plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.added_wallpaper_btn.setIcon(icon5)
+        icon6 = QIcon()
+        icon6.addFile(u":/icons/circle-plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.added_wallpaper_btn.setIcon(icon6)
 
         self.source_inner_h_loyout.addWidget(self.added_wallpaper_btn)
 
@@ -726,8 +546,7 @@ class Ui_MainWindow(object):
         sizePolicy8.setHeightForWidth(self.range_frame.sizePolicy().hasHeightForWidth())
         self.range_frame.setSizePolicy(sizePolicy8)
         self.range_frame.setMinimumSize(QSize(0, 100))
-        self.range_frame.setFrameShape(QFrame.Shape.NoFrame)
-        self.range_frame.setFrameShadow(QFrame.Shadow.Raised)
+        self.range_frame.setFrameShape(QFrame.NoFrame)
         self.horizontalLayout_6 = QHBoxLayout(self.range_frame)
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.horizontalLayout_6.setContentsMargins(3, 0, 3, -1)
@@ -748,9 +567,10 @@ class Ui_MainWindow(object):
         self.range_all_bnt = QPushButton(self.range_frame)
         self.range_all_bnt.setObjectName(u"range_all_bnt")
         self.range_all_bnt.setFont(font2)
-        icon6 = QIcon()
-        icon6.addFile(u":/icons/wallpaper_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.range_all_bnt.setIcon(icon6)
+        self.range_all_bnt.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        icon7 = QIcon()
+        icon7.addFile(u":/icons/wallpaper_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.range_all_bnt.setIcon(icon7)
         self.range_all_bnt.setIconSize(QSize(20, 20))
 
         self.range_inner_h_layout.addWidget(self.range_all_bnt)
@@ -758,9 +578,10 @@ class Ui_MainWindow(object):
         self.range_wallpaper_bnt = QPushButton(self.range_frame)
         self.range_wallpaper_bnt.setObjectName(u"range_wallpaper_bnt")
         self.range_wallpaper_bnt.setFont(font1)
-        icon7 = QIcon()
-        icon7.addFile(u":/icons/film.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.range_wallpaper_bnt.setIcon(icon7)
+        self.range_wallpaper_bnt.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        icon8 = QIcon()
+        icon8.addFile(u":/icons/film.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.range_wallpaper_bnt.setIcon(icon8)
         self.range_wallpaper_bnt.setIconSize(QSize(20, 20))
 
         self.range_inner_h_layout.addWidget(self.range_wallpaper_bnt)
@@ -768,7 +589,8 @@ class Ui_MainWindow(object):
         self.range_mp4_bnt = QPushButton(self.range_frame)
         self.range_mp4_bnt.setObjectName(u"range_mp4_bnt")
         self.range_mp4_bnt.setFont(font1)
-        self.range_mp4_bnt.setIcon(icon7)
+        self.range_mp4_bnt.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.range_mp4_bnt.setIcon(icon8)
         self.range_mp4_bnt.setIconSize(QSize(20, 20))
 
         self.range_inner_h_layout.addWidget(self.range_mp4_bnt)
@@ -785,6 +607,15 @@ class Ui_MainWindow(object):
 
 
         self.cardLayout.addWidget(self.range_frame)
+
+        self.start_reset_layout = QHBoxLayout()
+        self.start_reset_layout.setObjectName(u"start_reset_layout")
+
+        self.cardLayout.addLayout(self.start_reset_layout)
+
+        self.verticalSpacer_10 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.cardLayout.addItem(self.verticalSpacer_10)
 
         self.bottomFrame = QFrame(self.card)
         self.bottomFrame.setObjectName(u"bottomFrame")
@@ -803,6 +634,25 @@ class Ui_MainWindow(object):
 
         self.bottomLayout.addItem(self.horizontalSpacer_3)
 
+        self.startButton = QPushButton(self.bottomFrame)
+        self.startButton.setObjectName(u"startButton")
+        self.startButton.setMinimumSize(QSize(100, 0))
+        font14 = QFont()
+        font14.setPointSize(10)
+        font14.setBold(True)
+        self.startButton.setFont(font14)
+        self.startButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.bottomLayout.addWidget(self.startButton)
+
+        self.resetButton = QPushButton(self.bottomFrame)
+        self.resetButton.setObjectName(u"resetButton")
+        self.resetButton.setMinimumSize(QSize(100, 0))
+        self.resetButton.setFont(font14)
+        self.resetButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.bottomLayout.addWidget(self.resetButton)
+
 
         self.cardLayout.addWidget(self.bottomFrame)
 
@@ -820,7 +670,6 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Tapeciarnia", None))
         self.logoLabel.setText("")
-        self.logoLabel.setProperty(u"icon", QCoreApplication.translate("MainWindow", u"\";/icons/llogo_biale.svg\"", None))
 #if QT_CONFIG(tooltip)
         self.logout_bnt.setToolTip(QCoreApplication.translate("MainWindow", u"log out", None))
 #endif // QT_CONFIG(tooltip)
@@ -840,7 +689,7 @@ class Ui_MainWindow(object):
         self.randomAnimButton.setText(QCoreApplication.translate("MainWindow", u"  Shuffle animated", None))
         self.randomAnimButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"primary", None))
         self.randomButton.setText(QCoreApplication.translate("MainWindow", u"  Shuffle wallpaper", None))
-        self.randomButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"primary", None))
+        self.randomButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
         self.browseButton.setText(QCoreApplication.translate("MainWindow", u"  Browse wallpapers", None))
         self.browseButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"primary", None))
         self.add_files_icon.setText("")
@@ -873,5 +722,9 @@ class Ui_MainWindow(object):
         self.range_mp4_bnt.setText(QCoreApplication.translate("MainWindow", u"  Mp4", None))
         self.range_mp4_bnt.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
         self.statusLabel.setText(QCoreApplication.translate("MainWindow", u"Status: min ,Status: min ,Status: min ,Status: min", None))
+        self.startButton.setText(QCoreApplication.translate("MainWindow", u"Start", None))
+        self.startButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"primary", None))
+        self.resetButton.setText(QCoreApplication.translate("MainWindow", u"Reset", None))
+        self.resetButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
     # retranslateUi
 

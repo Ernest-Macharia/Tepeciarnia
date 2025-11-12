@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QStyle, QSizePolicy
 )
 from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
-from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize
+from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize,qIsNull
 
 # Get logger for this module
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ except ImportError as e:
 from core.wallpaper_controller import WallpaperController
 from core.download_manager import DownloaderThread
 from core.scheduler import WallpaperScheduler
-
+from  core.language_controller import LanguageController
 # Import utilities
 from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR
 from utils.system_utils import get_current_desktop_wallpaper
@@ -62,6 +62,7 @@ class EnhancedDragDropWidget(QWidget):
         self.original_wallpaper = None
         self.parent_app = parent
         self.setup_ui()
+        self.update_language()
     
     # Function for toggling visibility of buttons and upload icon
     def toggle_buttons_visibility(self, visible: bool):
@@ -79,7 +80,7 @@ class EnhancedDragDropWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         
         # Drag & drop area
-        self.drop_area = QLabel("Drag & drop a photo or video here, or click to choose a file")
+        self.drop_area = QLabel(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
         self.drop_area.setAlignment(Qt.AlignCenter)
         self.drop_area.setAcceptDrops(True)
         self.drop_area.dragEnterEvent = self.dragEnterEvent
@@ -89,6 +90,7 @@ class EnhancedDragDropWidget(QWidget):
         
         # Supported formats label
         self.supported_label = QLabel("Supported: JPG, PNG, MP4, WebM, AVI, MOV")
+        self.supported_label = QLabel(self.parent_app.lang["uploadSection"]["supportedFormatsHint"])
         self.supported_label.setAlignment(Qt.AlignCenter)
         self.supported_label.setMargin(5)
         self.supported_label.setSizePolicy(self.supported_label.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
@@ -101,13 +103,21 @@ class EnhancedDragDropWidget(QWidget):
         
         # Set as Wallpaper button
         self.upload_btn = QPushButton(" Set as Wallpaper")
+        # Create a container for the buttons to keep them together in center
+        button_container = QWidget()
+        button_container_layout = QHBoxLayout()
+        button_container_layout.setContentsMargins(0, 0, 0, 0)
+        button_container_layout.setSpacing(10)  # Space between buttons
+        
+        # Upload button with icon and primary class
+        self.upload_btn = QPushButton(self.parent_app.lang["uploadSection"]["setAsWallpaperButton"])
         self.upload_btn.clicked.connect(self.set_as_wallpaper)
         self.upload_btn.setProperty("class", "primary")
         self.upload_btn.setMinimumHeight(35)
         self.upload_btn.setIcon(QIcon(":/icons/wallpaper.png"))
         
         # Reset button
-        self.reset_btn = QPushButton("Reset")
+        self.reset_btn = QPushButton(self.parent_app.lang["settings"]["resetButton"])
         self.reset_btn.clicked.connect(self.reset_selection)
         self.reset_btn.setProperty("class", "ghost")
         self.reset_btn.setMinimumHeight(35)
@@ -131,6 +141,14 @@ class EnhancedDragDropWidget(QWidget):
         layout.addWidget(self.buttons_widget)
         self.setLayout(layout)
         logger.debug("EnhancedDragDropWidget UI setup completed")
+    
+    def update_language(self):
+        """Update UI text based on selected language"""
+        logger.info("Updating EnhancedDragDropWidget language")
+        self.drop_area.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
+        self.supported_label.setText(self.parent_app.lang["uploadSection"]["supportedFormatsHint"])
+        self.upload_btn.setText(self.parent_app.lang["uploadSection"]["setAsWallpaperButton"])
+        self.reset_btn.setText(self.parent_app.lang["settings"]["resetButton"])
     
     def dragEnterEvent(self, event):
         logger.debug("Drag enter event detected")
@@ -156,6 +174,8 @@ class EnhancedDragDropWidget(QWidget):
                 self.drop_area.setText(f" {file_type} Ready!\n{filename}")
                 self.supported_label.hide()
                 self.toggle_buttons_visibility(True)  # SHOW THE BUTTONS
+                self.uploadIcon.hide()
+                self.buttons_widget.show()
                 self.upload_btn.setEnabled(True)
                 logger.info(f"Valid {file_type.lower()} file selected: {filename}")
                 
@@ -208,7 +228,7 @@ class EnhancedDragDropWidget(QWidget):
         """Reset to original selection state"""
         logger.info("Reset selection triggered")
         self.dropped_file_path = None
-        self.drop_area.setText("Drag & drop a photo or video here, or click to choose a file")
+        self.drop_area.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
         self.supported_label.show()
         self.toggle_buttons_visibility(False)  # HIDE THE BUTTONS
         logger.debug("Drag drop widget reset to initial state")
@@ -279,8 +299,14 @@ class MP4WallApp(QMainWindow):
         logger.debug("Initializing controllers")
         self.controller = WallpaperController()
         self.scheduler = WallpaperScheduler()
+        self.language_controller = LanguageController()
         self.scheduler.set_change_callback(self._apply_wallpaper_from_path)
         self.config = Config()
+
+        self._set_lang()
+        # connect to the language controller signals
+        self.language_controller.language_changed.connect(self._update_lang)
+        # set initial language
 
         # Enhanced wallpaper state
         self.current_wallpaper_type = None
@@ -313,6 +339,22 @@ class MP4WallApp(QMainWindow):
         self._ensure_status_visible()
         
         logger.info("MP4WallApp initialization completed successfully")
+
+    def _update_lang(self, lang:dict):
+        """Update UI language based on selected language"""
+        self.lang = lang
+        # 
+        self.update_ui_language()
+        self.drag_drop_widget.update_language()
+
+    def _set_lang(self):
+        logging.info("Eumarating all language options into combo box")
+        self.language_controller.enumerate_languages(self.ui.langCombo)
+        # Set initial language
+        self.lang = self.language_controller.setup_initial_language(self.ui.langCombo)
+        self.update_ui_language()
+
+ 
 
     def _ensure_status_visible(self):
         """Make sure status bar is always visible"""
@@ -647,8 +689,8 @@ class MP4WallApp(QMainWindow):
         self.is_minimized_to_tray = True
         if hasattr(self, 'tray'):
             self.tray.showMessage(
-                "MP4 Wall",
-                "Application is still running in system tray\nClick the tray icon to show the window",
+                self.lang["dialog"]["icon_tray_title"],
+                self.lang["dialog"]["icon_tray_message"],
                 QSystemTrayIcon.Information,
                 3000
             )
@@ -695,11 +737,6 @@ class MP4WallApp(QMainWindow):
             existing_layout.addWidget(self.drag_drop_widget)
             logger.debug("Enhanced drag drop widget added to upload area")
         
-        # Center align Start and Reset buttons
-        if hasattr(self.ui, 'startButton'):
-            self.ui.startButton.setStyleSheet("text-align: center;")
-        if hasattr(self.ui, 'resetButton'):
-            self.ui.resetButton.setStyleSheet("text-align: center;")
         
         # Connect signals
         self._bind_ui_controls()
@@ -778,6 +815,14 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "interval_spinBox"):
             self.ui.interval_spinBox.valueChanged.connect(self._on_interval_changed)
             logger.debug("Interval spinbox connected")
+        # connect language combo box
+        if hasattr(self.ui, "langCombo"):
+            logging.debug("Language combo box connected")
+            self.ui.langCombo.currentTextChanged.connect(self.language_controller.on_language_changed)
+
+
+
+
         
         logger.debug("All UI controls bound successfully")
 
@@ -897,6 +942,7 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "randomAnimButton"):
             if active_type == 'animated':
                 self.ui.randomAnimButton.setProperty("class", "primary")
+                self.ui.randomAnimButton.icon()
             else:
                 self.ui.randomAnimButton.setProperty("class", "ghost")
             self.ui.randomAnimButton.style().unpolish(self.ui.randomAnimButton)
@@ -999,6 +1045,38 @@ class MP4WallApp(QMainWindow):
             self.scheduler.stop()
             self.scheduler.start(self.scheduler.source, val)
         self._set_status(f"Scheduler interval: {val} min")
+    
+    def update_ui_language(self):
+        self.ui.emailInput.setPlaceholderText(self.lang["auth"]["emailPlaceholder"])
+        self.ui.passwordInput.setPlaceholderText(self.lang["auth"]["passwordPlaceholder"])
+        self.ui.logInBnt.setText(self.lang["auth"]["logInButton"])
+        # main controls
+        self.ui.randomAnimButton.setText(self.lang["navigation"]["shuffleAnimatedButton"])
+        self.ui.randomButton.setText(self.lang["navigation"]["shuffleWallpaperButton"])
+        self.ui.browseButton.setText(self.lang["navigation"]["browseWallpapersButton"])    
+        # uploadSection
+        self.ui.add_file_label.setText(self.lang["uploadSection"]["addFilesHeader"])
+        # self.ui.uploadText.setText(self.lang["uploadSection"]["dragDropInstruction"]) 
+        # self.ui.uploadSupported.setText(self.lang["uploadSection"]["supportedFormatsHint"])
+        # url loader
+        self.ui.url_loader_text_label.setText(self.lang["uploadSection"]["imagesOrVideoURLHeader"])
+        self.ui.loadUrlButton.setText(self.lang["uploadSection"]["loadButton"])
+        self.ui.url_helper_text_label.setText(self.lang["uploadSection"]["urlHelperText"])
+        # settings
+        self.ui.autoLabel.setText(self.lang["settings"]["autoChangeHeader"])
+        self.ui.enabledCheck.setText(self.lang["settings"]["enabledLabel"])
+        self.ui.inverval_lable.setText(self.lang["settings"]["intervalLabel"])
+        self.ui.wallpaper_source_lable.setText(self.lang["settings"]["wallpaperSourceLabel"])
+        self.ui.super_wallpaper_btn.setText(self.lang["settings"]["superWallpaperButton"])
+        self.ui.fvrt_wallpapers_btn.setText(self.lang["settings"]["favoriteWallpapersButton"])
+        self.ui.added_wallpaper_btn.setText(self.lang["settings"]["myCollectionButton"])
+        self.ui.range_lable.setText(self.lang["settings"]["rangeHeader"])
+        self.ui.range_all_bnt.setText(self.lang["settings"]["rangeAllButton"])
+        self.ui.range_wallpaper_bnt.setText(self.lang["settings"]["rangeWallpaperButton"])
+        self.ui.range_mp4_bnt.setText(self.lang["settings"]["rangeMp4Button"])
+        self.ui.startButton.setText(self.lang["settings"]["startButton"])
+        self.ui.resetButton.setText(self.lang["settings"]["resetButton"])
+            
 
     # Core wallpaper application logic
     def _apply_input_string(self, text: str):
@@ -1280,8 +1358,8 @@ class MP4WallApp(QMainWindow):
         logger.info("Reset with confirmation triggered")
         reply = QMessageBox.question(
             self,
-            "Confirm Reset",
-            "Are you sure you want to reset?\n\nThis will stop all current wallpapers and restore the original wallpaper.",
+            self.lang["dialog"]["confirm_reset_title"],
+            self.lang["dialog"]["confirm_reset_dia"],
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
@@ -1399,7 +1477,7 @@ class MP4WallApp(QMainWindow):
             logger.debug("Using fallback system tray icon")
         
         self.tray.setIcon(icon)
-        self.tray.setToolTip("MP4 Wall - Desktop Wallpaper Manager")
+        self.tray.setToolTip("MP4Wall - Desktop Wallpaper Manager")
         
         # Create context menu
         tray_menu = QMenu()
@@ -1450,9 +1528,8 @@ class MP4WallApp(QMainWindow):
         """Properly quit the application from tray menu with confirmation"""
         logger.info("Exit from tray menu triggered")
         reply = QMessageBox.question(
-            self,
-            "Confirm Exit",
-            "Are you sure you want to exit Tapeciarnia?",
+            self.lang["dialog"]["confirm_exit_title"],
+            self.lang["dialog"]["confirm_exit_dialog"],
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )

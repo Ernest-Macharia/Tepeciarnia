@@ -1,0 +1,37 @@
+{"en": {
+        "appName": "Tapeciaarnia",
+        "auth": {
+            "emailPlaceholder": "email",
+            "passwordPlaceholder": "password",
+            "logInButton": "Log in"
+        },
+        "navigation": {
+            "shuffleAnimatedButton": "Shuffle animated",
+            "shuffleWallpaperButton": "Shuffle wallpaper",
+            "browseWallpapersButton": "Browse wallpapers"
+        },
+        "uploadSection": {
+            "addFilesHeader": "Add files",
+            "dragDropInstruction": "Drag & drop a photo or video here, or click to choose a file",
+            "supportedFormatsHint": "Supported: JPG, PNG, MP4",
+            "imagesOrVideoURLHeader": "Images or Video URL",
+            "loadButton": "Load"
+        },
+        "settings": {
+            "autoChangeHeader": "Automatic wallpaper change",
+            "enabledLabel": "Enabled",
+            "intervalLabel": "Interval (minutes)",
+            "wallpaperSourceLabel": "Wallpaper source",
+            "superWallpaperSource": "Super Wallpaper",
+            "favoriteWallpapersSource": "Favorite Wallpapers",
+            "myCollectionSource": "My Collection",
+            "rangeHeader": "Range",
+            "rangeAllButton": "All",
+            "rangeWallpaperButton": "Wallpaper",
+            "rangeMp4Button": "Mp4",
+            "schedulerStoppedStatus": "Scheduler stopped",
+            "startButton": "Start",
+            "resetButton": "Reset"
+        }
+    }
+}

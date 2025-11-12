@@ -40,6 +40,10 @@ class WallpaperScheduler:
         """Start the scheduler"""
         logger.info(f"Starting scheduler - Source: {source}, Interval: {interval_minutes} minutes")
         
+        if interval_minutes <= 0:
+            logger.warning(f"Invalid interval {interval_minutes}, setting to 1 minute")
+            interval_minutes = 1
+
         if self.is_running:
             logger.warning("Scheduler already running, stopping first")
             self.stop()
