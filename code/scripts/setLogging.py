@@ -17,7 +17,7 @@ class InitLogging:
         
         # Get the root logger instance
         logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)  # Set the base logging level
+        logger.setLevel(logging.INFO)  # Set the base logging level
 
         # Clear any existing handlers to prevent duplicate log messages
         if logger.hasHandlers():

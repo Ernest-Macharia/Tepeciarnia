@@ -56,11 +56,13 @@ download_path.tmp
 *.avi
 *.mov
 
-# Executables and binaries
-*.exe
-*.dll
-*.so
-*.au3
 
 # Config files (user-specific)
 config.json
+*.log
+
+# python venv folders
+pyvenv.cfg
+__pypackages__/
+share/
+Scripts/

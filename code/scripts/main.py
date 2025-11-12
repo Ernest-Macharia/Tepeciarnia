@@ -22,7 +22,7 @@ except ImportError as e:
     from utils.path_utils import get_app_root, get_style_path
     from setLogging import InitLogging
     from utils.pathResolver import *
-    # from ui import icons_rc
+    from ui import icons_rc
     from ui.main_window import MP4WallApp
     logger.debug("Successfully imported modules using relative imports")
     
