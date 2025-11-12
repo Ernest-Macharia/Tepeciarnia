@@ -85,22 +85,24 @@ class EnhancedDragDropWidget(QWidget):
         self.drop_area.setAcceptDrops(True)
         self.drop_area.dragEnterEvent = self.dragEnterEvent
         self.drop_area.dropEvent = self.dropEvent
-        self.drop_area.setMargin(0)
-        # change vertical policy to fixed
-        self.drop_area.setSizePolicy(self.drop_area.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
+        self.drop_area.setMargin(20)
+        self.drop_area.setMinimumHeight(120)
         
         # Supported formats label
+        self.supported_label = QLabel("Supported: JPG, PNG, MP4, WebM, AVI, MOV")
         self.supported_label = QLabel(self.parent_app.lang["uploadSection"]["supportedFormatsHint"])
         self.supported_label.setAlignment(Qt.AlignCenter)
-        self.supported_label.setMargin(0)
-        # change vertical policy to fixed
+        self.supported_label.setMargin(5)
         self.supported_label.setSizePolicy(self.supported_label.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
         
-        # Action buttons (initially hidden) - CENTERED BUT GROUPED
+        # Action buttons (initially hidden)
         self.buttons_widget = QWidget()
         buttons_layout = QHBoxLayout()
-        buttons_layout.setContentsMargins(10, 0, 10, 0)
+        buttons_layout.setContentsMargins(20, 10, 20, 10)
+        buttons_layout.setSpacing(15)
         
+        # Set as Wallpaper button
+        self.upload_btn = QPushButton(" Set as Wallpaper")
         # Create a container for the buttons to keep them together in center
         button_container = QWidget()
         button_container_layout = QHBoxLayout()
@@ -111,40 +113,27 @@ class EnhancedDragDropWidget(QWidget):
         self.upload_btn = QPushButton(self.parent_app.lang["uploadSection"]["setAsWallpaperButton"])
         self.upload_btn.clicked.connect(self.set_as_wallpaper)
         self.upload_btn.setProperty("class", "primary")
-        
-        # Add upload icon
-        self.uploadIcon = QLabel()
-        self.uploadIcon.setObjectName(u"uploadIcon")
-        self.uploadIcon.setAutoFillBackground(False)
-        self.uploadIcon.setPixmap(QPixmap(u":/icons/upload.png"))
-        self.uploadIcon.setScaledContents(False)
-        self.uploadIcon.setAlignment(Qt.AlignCenter)
-        # change vertical policy to fixed
-        self.uploadIcon.setSizePolicy(self.uploadIcon.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
-        self.uploadIcon.setMargin(0)
+        self.upload_btn.setMinimumHeight(35)
+        self.upload_btn.setIcon(QIcon(":/icons/wallpaper.png"))
         
         # Reset button
         self.reset_btn = QPushButton(self.parent_app.lang["settings"]["resetButton"])
         self.reset_btn.clicked.connect(self.reset_selection)
         self.reset_btn.setProperty("class", "ghost")
+        self.reset_btn.setMinimumHeight(35)
+        self.reset_btn.setIcon(QIcon(":/icons/reset.png"))
         
-        # Add reset icon
-        reset_icon = QIcon(":/icons/reset.png")
-        self.reset_btn.setIcon(reset_icon)
-        self.reset_btn.setIconSize(QSize(16, 16))
-        
-        # Add buttons to container
-        button_container_layout.addWidget(self.upload_btn)
-        button_container_layout.addWidget(self.reset_btn)
-        button_container.setLayout(button_container_layout)
-        
-        # Center the button container
-        buttons_layout.addStretch()
-        buttons_layout.addWidget(button_container)
-        buttons_layout.addStretch()
+        buttons_layout.addWidget(self.upload_btn)
+        buttons_layout.addWidget(self.reset_btn)
         
         self.buttons_widget.setLayout(buttons_layout)
-        self.buttons_widget.hide()  # Initially hidden as requested
+        self.buttons_widget.hide()
+        
+        # Upload icon (initially visible)
+        self.uploadIcon = QLabel()
+        self.uploadIcon.setPixmap(QPixmap(":/icons/upload.png").scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.uploadIcon.setAlignment(Qt.AlignCenter)
+        self.uploadIcon.setStyleSheet("margin: 10px;")
         
         layout.addWidget(self.uploadIcon)
         layout.addWidget(self.drop_area)
@@ -167,6 +156,9 @@ class EnhancedDragDropWidget(QWidget):
             event.acceptProposedAction()
             logger.debug("Drag event accepted - URLs detected")
     
+    def dragLeaveEvent(self, event):
+        logger.debug("Drag leave event detected")
+
     def dropEvent(self, event):
         logger.debug("Drop event detected")
         urls = event.mimeData().urls()
@@ -176,12 +168,17 @@ class EnhancedDragDropWidget(QWidget):
             if self.is_valid_wallpaper_file(file_path):
                 self.dropped_file_path = file_path
                 filename = os.path.basename(file_path)
-                self.drop_area.setText(f"Selected: {filename}")
+                file_type = "Video" if self.is_video_file(file_path) else "Image"
+                
+                # Update UI to show file is ready to be set as wallpaper
+                self.drop_area.setText(f" {file_type} Ready!\n{filename}")
                 self.supported_label.hide()
+                self.toggle_buttons_visibility(True)  # SHOW THE BUTTONS
                 self.uploadIcon.hide()
                 self.buttons_widget.show()
                 self.upload_btn.setEnabled(True)
-                logger.info(f"Valid wallpaper file selected: {filename}")
+                logger.info(f"Valid {file_type.lower()} file selected: {filename}")
+                
             else:
                 self.drop_area.setText("Invalid file type!\nSupported: Images, Videos")
                 self.upload_btn.setEnabled(False)
@@ -200,8 +197,8 @@ class EnhancedDragDropWidget(QWidget):
                 if hasattr(self.parent_app, 'ui') and hasattr(self.parent_app.ui, 'urlInput'):
                     self.parent_app.ui.urlInput.setText(self.dropped_file_path)
                 
-                # Apply the wallpaper
-                if self.dropped_file_path.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.webm')):
+                # Apply the wallpaper - this works for BOTH images and videos
+                if self.is_video_file(self.dropped_file_path):
                     logger.info(f"Setting video wallpaper: {self.dropped_file_path}")
                     self.parent_app.controller.start_video(self.dropped_file_path)
                 else:
@@ -219,8 +216,12 @@ class EnhancedDragDropWidget(QWidget):
                 self.parent_app.config.set_last_video(self.dropped_file_path)
                 logger.info(f"Wallpaper set successfully and saved to config: {os.path.basename(self.dropped_file_path)}")
                 
+                # Hide buttons after successful set with delay
+                QTimer.singleShot(3000, self.reset_selection)
+                
             except Exception as e:
                 logger.error(f"Failed to set wallpaper: {e}", exc_info=True)
+                self.drop_area.setText("Failed to set wallpaper!")
                 QMessageBox.critical(self, "Error", f"Failed to set wallpaper: {str(e)}")
     
     def reset_selection(self):
@@ -229,9 +230,13 @@ class EnhancedDragDropWidget(QWidget):
         self.dropped_file_path = None
         self.drop_area.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
         self.supported_label.show()
-        self.buttons_widget.hide()
-        self.uploadIcon.show()
+        self.toggle_buttons_visibility(False)  # HIDE THE BUTTONS
         logger.debug("Drag drop widget reset to initial state")
+    
+    def is_video_file(self, file_path):
+        """Check if file is a video"""
+        video_extensions = ('.mp4', '.avi', '.mov', '.mkv', '.webm')
+        return file_path.lower().endswith(video_extensions)
 
     def restore_original_wallpaper(self):
         """Restore the original wallpaper that was set before any changes"""
@@ -241,7 +246,7 @@ class EnhancedDragDropWidget(QWidget):
                 logger.info(f"Attempting to restore original wallpaper: {self.previous_wallpaper}")
                 
                 if os.path.exists(self.previous_wallpaper):
-                    if self.previous_wallpaper.lower().endswith(('.mp4', '.avi', '.mov', '.mkv', '.webm')):
+                    if self.is_video_file(self.previous_wallpaper):
                         logger.info("Restoring original video wallpaper")
                         self.parent_app.controller.start_video(self.previous_wallpaper)
                     else:
