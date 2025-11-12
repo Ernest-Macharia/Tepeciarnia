@@ -66,3 +66,4 @@ pyvenv.cfg
 __pypackages__/
 share/
 Scripts/
+bin/
