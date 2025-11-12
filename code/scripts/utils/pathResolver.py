@@ -23,10 +23,10 @@ def get_app_root():
 def get_mpv_path(base_path:str) -> str:
     return os.path.join(base_path,"bin","mpv","mpv.exe")
 
-def get_weepe_path(base_path:str) -> str:
-    return os.path.join(base_path,"bin","weepe","weepe.exe")
+def get_weebp_path(base_path:str) -> str:
+    return os.path.join(base_path,"bin","weebp","weebp.exe")
 
 def get_style_path(base_path:str):
     return os.path.join(base_path,"ui","style","style.qss")
 
-__all__ = ["get_app_root","get_weepe_path","get_mpv_path","get_style_path"]
+__all__ = ["get_app_root","get_weebp_path","get_mpv_path","get_style_path"]

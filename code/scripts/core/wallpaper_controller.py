@@ -1,200 +1,222 @@
 import sys
 import subprocess
 import logging
-from pathlib import Path
-from typing import Optional
-
+import platform
+import os
 from utils.system_utils import which, set_static_desktop_wallpaper
-from utils.path_utils import get_weepe_path, get_mpv_path, BASE_DIR
-from utils.command_handler import run_and_forget_silent
+from utils.path_utils import get_weebp_path, get_mpv_path, BASE_DIR,get_bin_path,get_tools_path
+import time
+from utils.command_handler import run_and_forget_silent,run_blocking_silent_command
+import re
 
-# Get logger for this module
-logger = logging.getLogger(__name__)
-
-
+from PySide6.QtWidgets import QMessageBox
 class WallpaperController:
     def __init__(self):
-        logger.debug("Initializing WallpaperController")
         self.player_procs = []
         self.current_is_video = False
-        self.current_wallpaper_path = None
-        logger.info("WallpaperController initialized successfully")
+        self.tools_path = get_tools_path()
+        self.weebp_path = get_weebp_path()
+        self.mpv_path = get_mpv_path()
+        if not self._check_weebp_and_mpv():
+            # show and error window
+            QMessageBox.critical(None, "Error", "weebp or mpv executable not found. Video wallpaper functionality may be limited.")
+            # exit main app
+            sys.exit(1) 
+            return
+
+    def _check_weebp_and_mpv(self) -> bool:
+        """Check if weebp and mpv executables are available"""
+        weebp_exists = self.weebp_path is not None and self.weebp_path.exists()
+        mpv_exists = self.mpv_path is not None and self.mpv_path.exists()
+        return weebp_exists and mpv_exists
+
+    def _run_auto_pause(self):
+        # Runs the autoPause.exe tool to manage pausing based on user activity
+        auto_pause_path = os.path.join(self.tools_path, "autoPause.exe")
+        run_and_forget_silent([auto_pause_path])
+        logging.info("Launched autoPause.exe")
+    
+    def _run_refresh(self):
+        # Runs the refresh.exe tool to refresh the wallpaper
+        refresh_path = os.path.join(self.tools_path, "refresh.exe")
+        run_and_forget_silent([refresh_path, f"0x{self.get_view_id().strip()}"])
+        logging.info("Launched refresh.exe")
+
+    def run_optional_tools(self):
+        self._run_auto_pause()
+        self._run_refresh()
+
 
     def stop(self):
         """Stop all wallpaper processes"""
-        logger.info("Stopping all wallpaper processes...")
-        logger.debug(f"Current state - is_video: {self.current_is_video}, path: {self.current_wallpaper_path}")
+        logging.info("Stopping all wallpaper processes...")
         
         if sys.platform.startswith("linux"):
-            logger.debug("Stopping Linux wallpaper processes")
             subprocess.call("pkill -f xwinwrap", shell=True, 
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             subprocess.call("pkill -f mpv", shell=True, 
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            logger.debug("Linux process cleanup commands executed")
         elif sys.platform.startswith("win"):
-            logger.debug("Stopping Windows wallpaper processes")
-            # Use taskkill to stop wallpaper processes on Windows
-            subprocess.call("taskkill /F /IM weepe.exe", shell=True, 
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.call("taskkill /F /IM mpv.exe", shell=True, 
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.call("taskkill /F /IM ffplay.exe", shell=True, 
-                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            logger.debug("Windows process cleanup commands executed")
-        else:
-            logger.warning(f"Unsupported platform for process cleanup: {sys.platform}")
+            if self.current_is_video:
+                self.stop_for_windows()
         
-        # Also terminate any tracked processes
-        logger.debug(f"Terminating {len(self.player_procs)} tracked processes")
-        terminated_count = 0
-        for p in list(self.player_procs):
-            try:
-                p.terminate()
-                terminated_count += 1
-                logger.debug(f"Terminated process: {p.pid}")
-            except Exception as e:
-                logger.warning(f"Failed to terminate process {p.pid}: {e}")
-        
-        self.player_procs = []
         self.current_is_video = False
-        logger.info(f"Wallpaper processes stopped - {terminated_count} processes terminated")
+        logging.info("All wallpaper processes stopped")
+
+    def stop_for_windows(self):
+        # clear_playlist
+        """Stops wallpaper processes on Windows using taskkill."""
+        self._clear_playlist()
+        # Uses Windows 'taskkill' command for robust process termination
+        # This replaces the AutoIt ProcessClose loop.
+        processes_to_kill = ['mpv.exe', 'wp.exe', 'autopause.exe', 'refresh.exe']
+        
+        if platform.system() == "Windows":
+            logging.debug("Attempting to kill background processes...")
+            # /F (force kill) /IM (image name)
+            command = ["taskkill", "/F", "/IM", "", "/T"]
+            for proc in processes_to_kill:
+                command[3] = proc # Set the image name dynamically
+                try:
+                    subprocess.run(command, check=False, creationflags=0x08000000, capture_output=True)
+                    logging.debug(f"Killed: {proc}")
+                except Exception as e:
+                    # Usually, if a process doesn't exist, this fails silently
+                    logging.debug(f"Process kill failed for {proc}: {e}")
+        else:
+            print("Non-Windows system: Skipping taskkill.")
 
     def start_video(self, video_path_or_url: str):
+        
         """Starts a video as wallpaper using platform-specific tools."""
-        logger.info(f"Starting video wallpaper: {video_path_or_url}")
-        self.current_is_video = True
-        self.current_wallpaper_path = video_path_or_url
-        
         video_path = str(video_path_or_url)
-        
-        if sys.platform.startswith("win"):
-            logger.debug("Using Windows video wallpaper implementation")
+        logging.debug(f"Is current video: {self.current_is_video}")
+        if platform.system() == "Windows":
+            if self.current_is_video:
+                # perfrom transition if already video is playing
+                logging.info("Switching video wallpaper...")
+                self._play_next_video(str(video_path_or_url))
+                return
+            # Start new video wallpaper
             self._start_video_windows(video_path)
+            self.current_is_video = True            
+            logging.info(f"Starting video wallpaper: {video_path}")
+
+        
         elif sys.platform.startswith("linux"):
-            logger.debug("Using Linux video wallpaper implementation")
             self._start_video_linux(video_path)
         else:
-            logger.warning(f"Unsupported platform, using fallback: {sys.platform}")
             self._start_video_fallback(video_path)
-        
-        logger.info(f"Video wallpaper started successfully: {video_path}")
+
+    def _clear_playlist(self):   
+        """Clears the MPV playlist via weebp."""
+
+        command = [
+            str(self.weebp_path),
+            "mpv",
+            "playlist-clear"
+        ]
+
+        run_and_forget_silent(command,cwd=self.mpv_path.parents[0])
+        time.sleep(1)  # Give MPV time to process the command
+
+
+    def _play_next_video(self,video_path: str):
+
+        """Plays the next video by stopping current and starting new one."""
+        logging.info(f"Switching to next video wallpaper: {video_path}")
+
+        # appand video to the playlist of the existing mpv process
+        command = [
+            str(self.weebp_path),
+            "mpv",
+            "loadfile",
+            video_path,
+            "append"
+        ]
+
+        run_and_forget_silent(command,cwd=self.mpv_path.parents[0])
+        time.sleep(1)  # Give MPV time to process the new file
+        # play the newly added video
+        command = [
+            str(self.weebp_path),
+            "mpv",
+            "playlist-next"
+        ]
+        run_and_forget_silent(command,cwd=self.mpv_path.parents[0])
+
+
+    def _play_previous_video(self,video_path: str):
+
+        """Plays the previous video by going back."""
+        logging.info(f"Switching to previous video wallpaper: {video_path}")
+
+        weebp_exe = get_weebp_path()
+
+        command = [
+            str(weebp_exe),
+            "mpv",
+            "playlist-prev"
+        ]
+        run_and_forget_silent(command,cwd=self.mpv_path.parents[0])
 
     def _start_video_windows(self, video_path: str):
         """Windows-specific video wallpaper implementation"""
-        logger.debug(f"Starting Windows video wallpaper: {video_path}")
-        
-        # Primary method: Use Weepe for proper wallpaper
-        weepe_exe = get_weepe_path()
-        logger.debug(f"Weepe executable path: {weepe_exe}")
-        
-        if weepe_exe and weepe_exe.exists():
-            try:
-                logger.info("Attempting to start video with Weepe")
-                # Use Weepe with the video path - this should set it as actual wallpaper
-                cmd = [str(weepe_exe), video_path]
-                logger.debug(f"Weepe command: {' '.join(cmd)}")
-                p = run_and_forget_silent(cmd)
-                if p:
-                    self.player_procs.append(p)
-                    logger.info(f"Video wallpaper started with Weepe (PID: {p.pid})")
-                    return
-                else:
-                    logger.warning("Weepe process started but returned None")
-            except Exception as e:
-                logger.error(f"Weepe failed: {e}", exc_info=True)
+        # Primary method: Use weebp for proper wallpaper
+        try:
+            # WINDOWS-COMPATIBLE MPV COMMANDS ONLY
+            # These are the core commands that work reliably on Windows
+            mpv_run_command = [
+                str(self.weebp_path),
+                "run", 
+                "mpv",
+                video_path,
+                r"--input-ipc-server=\\.\pipe\mpvsocket"
+                ]   
+            # 2. Add as wallpaper command (attaches video player to desktop)
+            add_command = [
+                str(self.weebp_path), 
+                "add", "--wait", "--fullscreen", "--class", "mpv"
+            ]
 
-        # Fallback: MPV with Windows-compatible commands ONLY
-        mpv_exe = get_mpv_path()
-        logger.debug(f"MPV executable path: {mpv_exe}")
-        
-        if mpv_exe and mpv_exe.exists():
-            try:
-                logger.info("Attempting to start video with MPV fallback")
-                # WINDOWS-COMPATIBLE MPV COMMANDS ONLY
-                cmd = [
-                    str(mpv_exe),
-                    video_path,
-                    "--loop",                    # Loop the video
-                    "--no-audio",                # Disable audio (safe)
-                    "--no-osd-bar",              # Hide OSD (safe)
-                    "--fullscreen",              # Fullscreen mode (safe)
-                    "--no-border",               # No window border (safe)
-                    "--ontop",                   # Keep on top (safe)
-                    "--no-input-default-bindings", # Disable default key bindings
-                    "--input-ipc-server=\\.\\pipe\\mpvsocket"  # IPC for control
-                ]
-                logger.debug(f"MPV command: {' '.join(cmd)}")
-                p = run_and_forget_silent(cmd)
-                if p:
-                    self.player_procs.append(p)
-                    logger.info(f"Video started with MPV (PID: {p.pid})")
-                    return
-                else:
-                    logger.warning("MPV process started but returned None")
-            except Exception as e:
-                logger.error(f"MPV fallback failed: {e}", exc_info=True)
+            run_mvp = run_and_forget_silent(mpv_run_command,cwd=self.mpv_path.parents[0])
+            run_weebp = run_and_forget_silent(add_command,cwd=self.mpv_path.parents[0])
+            time.sleep(1)  # Give weebp time to attach
 
-        # Final fallback: ffplay with basic commands
-        ffplay = which("ffplay")
-        logger.debug(f"FFplay found: {ffplay}")
-        
-        if ffplay:
-            try:
-                logger.info("Attempting to start video with ffplay final fallback")
-                # Basic ffplay commands that work on Windows
-                cmd = [
-                    ffplay, 
-                    "-autoexit", 
-                    "-loop", "0", 
-                    "-an",                       # No audio
-                    "-fs",                       # Fullscreen
-                    "-noborder",                 # No border
-                    video_path
-                ]
-                logger.debug(f"FFplay command: {' '.join(cmd)}")
-                p = run_and_forget_silent(cmd)
-                if p:
-                    self.player_procs.append(p)
-                    logger.info(f"Video started with ffplay fallback (PID: {p.pid})")
-                    return
-                else:
-                    logger.warning("FFplay process started but returned None")
-            except Exception as e:
-                logger.error(f"ffplay fallback failed: {e}", exc_info=True)
-        
-        error_msg = "No suitable video wallpaper player found on Windows."
-        logger.error(error_msg)
-        logger.error(f"Available players - Weepe: {weepe_exe and weepe_exe.exists()}, MPV: {mpv_exe and mpv_exe.exists()}, FFplay: {bool(ffplay)}")
-        raise RuntimeError(error_msg)
+            self.run_optional_tools()
+            # self._run_refresh()
+            
+            if run_mvp and run_weebp:
+                self.player_procs.append(run_mvp)
+                self.player_procs.append(run_weebp)
+                logging.info("Video started with MPV (Windows-compatible commands)")
+                return
+        except Exception as e:
+            logging.error(f"MPV fallback failed: {e}")
+
+
 
     def _start_video_linux(self, video_path: str):
         """Linux-specific video wallpaper implementation"""
-        logger.debug(f"Starting Linux video wallpaper: {video_path}")
-        
         # Try xwinwrap + mpv first (proper wallpaper)
         xwinwrap = which("xwinwrap")
         mpv = which("mpv")
-        logger.debug(f"Linux tools - xwinwrap: {xwinwrap}, mpv: {mpv}")
         
         if xwinwrap and mpv:
             try:
-                logger.info("Attempting to start video with xwinwrap + mpv")
                 # Linux-specific commands for proper wallpaper
                 cmd = f"{xwinwrap} -ov -fs -- {mpv} --loop --no-audio --no-osd-bar --wid=WID '{video_path}'"
-                logger.debug(f"xwinwrap command: {cmd}")
                 p = subprocess.Popen(cmd, shell=True, executable="/bin/bash",
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 self.player_procs.append(p)
-                logger.info(f"Video wallpaper started with xwinwrap + mpv (PID: {p.pid})")
+                logging.info("Video wallpaper started with xwinwrap + mpv")
                 return
             except Exception as e:
-                logger.error(f"xwinwrap failed: {e}", exc_info=True)
+                logging.error(f"xwinwrap failed: {e}")
 
         # Fallback: mpv fullscreen (Linux-compatible commands)
         if mpv:
             try:
-                logger.info("Attempting to start video with MPV fullscreen fallback")
                 # Linux-compatible MPV commands
                 cmd = [
                     mpv, 
@@ -205,29 +227,20 @@ class WallpaperController:
                     "--no-border",
                     video_path
                 ]
-                logger.debug(f"MPV fallback command: {' '.join(cmd)}")
                 p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 self.player_procs.append(p)
-                logger.info(f"Video started with MPV fullscreen (PID: {p.pid})")
+                logging.info("Video started with MPV fullscreen")
                 return
             except Exception as e:
-                logger.error(f"MPV fullscreen failed: {e}", exc_info=True)
-        
-        error_msg = "No suitable video wallpaper player found on Linux."
-        logger.error(error_msg)
-        logger.error(f"Available players - xwinwrap: {bool(xwinwrap)}, mpv: {bool(mpv)}")
-        raise RuntimeError(error_msg)
+                logging.error(f"MPV fullscreen failed: {e}")
+                
+        raise RuntimeError("No suitable video wallpaper player found on Linux.")
 
     def _start_video_fallback(self, video_path: str):
         """Fallback for other platforms"""
-        logger.debug(f"Starting fallback video wallpaper for platform: {sys.platform}")
-        
         mpv = which("mpv")
-        logger.debug(f"Fallback MPV found: {mpv}")
-        
         if mpv:
             try:
-                logger.info("Attempting to start video with universal MPV fallback")
                 # Universal fallback commands
                 cmd = [
                     mpv, 
@@ -237,28 +250,59 @@ class WallpaperController:
                     "--no-border", 
                     video_path
                 ]
-                logger.debug(f"Universal MPV command: {' '.join(cmd)}")
                 p = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 self.player_procs.append(p)
-                logger.info(f"Video started with MPV fallback (PID: {p.pid})")
+                logging.info("Video started with MPV fallback")
                 return
             except Exception as e:
-                logger.error(f"MPV fallback failed: {e}", exc_info=True)
+                logging.error(f"MPV fallback failed: {e}")
         
-        error_msg = f"Unsupported platform: {sys.platform}"
-        logger.error(error_msg)
-        raise RuntimeError(error_msg)
+        raise RuntimeError(f"Unsupported platform: {sys.platform}")
 
     def start_image(self, image_path: str):
-        """Set static wallpaper with proper error handling"""
-        logger.info(f"Setting static wallpaper: {image_path}")
-        self.current_is_video = False
-        self.current_wallpaper_path = image_path
-        
+        """Set static wallpaper"""
+        if self.current_is_video:
+            logging.info(f"Setting static wallpaper: {image_path}")
+            try:
+                set_static_desktop_wallpaper(image_path)
+                logging.info("Static wallpaper set successfully")
+            except Exception as e:
+                logging.error(f"Failed to set static wallpaper: {e}")
+                raise
+
+            self.stop()
+            self.current_is_video = False
+            return
+
         try:
-            logger.debug("Calling set_static_desktop_wallpaper")
             set_static_desktop_wallpaper(image_path)
-            logger.info("Static wallpaper set successfully")
+            logging.info("Static wallpaper set successfully")
         except Exception as e:
-            logger.error(f"Failed to set static wallpaper: {e}", exc_info=True)
-            raise RuntimeError(f"Failed to set static wallpaper: {e}") from e
+            logging.error(f"Failed to set static wallpaper: {e}")
+            raise
+
+
+    # It's only working on Windows with weebp
+    # Test it thoroughly before enabling on other platforms
+    def get_view_id(self) -> str:
+        """
+        Run the wp.exe 'ls' command in old_work\\bin\\weebp and return the first view id found.
+        Tries to match a line containing 'mpv' . Returns "0" if none found.
+        """
+
+        try:
+            proc = subprocess.run([self.weebp_path, "ls"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+            output = proc.stdout
+        except Exception:
+            return "0"
+        
+        logging.debug(f"Command wp.exe ls:\n {output}")
+        # First try to find 'mpv' line
+        pattern = r'\[([0-9A-Fa-f]{8})\].*?mpv'
+        m = re.search(pattern, output)
+        if m:
+            logging.debug(f"Found view id with mpv: {m.group(1)}")
+            return m.group(1)
+        # Fallback: just get the first view id
+        logging.error("Falling back to first view id")
+        return "0"

@@ -36,7 +36,6 @@ except ImportError as e:
 
 # Import core modules
 from core.wallpaper_controller import WallpaperController
-# from core.autopause_controller import AutoPauseController
 from core.download_manager import DownloaderThread
 from core.scheduler import WallpaperScheduler
 
@@ -285,7 +284,6 @@ class MP4WallApp(QMainWindow):
         # Initialize controllers
         logger.debug("Initializing controllers")
         self.controller = WallpaperController()
-        # self.autopause = AutoPauseController()
         self.scheduler = WallpaperScheduler()
         self.scheduler.set_change_callback(self._apply_wallpaper_from_path)
         self.config = Config()
@@ -498,10 +496,6 @@ class MP4WallApp(QMainWindow):
         self.current_wallpaper_type = new_wallpaper_type
         self.last_wallpaper_path = new_wallpaper_path
         
-        # Start autoPause if needed and not already running
-        if new_wallpaper_type == 'video' and not self.auto_pause_process:
-            logger.debug("Starting autoPause process for video wallpaper")
-            self.start_auto_pause_process()
 
     def needs_process_stop(self, current_type, new_type):
         """
@@ -528,50 +522,6 @@ class MP4WallApp(QMainWindow):
         logger.debug(f"File {os.path.basename(file_path)} identified as: {wallpaper_type}")
         return wallpaper_type
 
-    def start_auto_pause_process(self):
-        """Start autoPause.exe and keep it running"""
-        try:
-            if self.auto_pause_process is None:
-                auto_pause_path = self.get_auto_pause_executable()
-                logger.info(f"Starting autoPause process: {auto_pause_path}")
-                self.auto_pause_process = subprocess.Popen([auto_pause_path])
-                logger.info("AutoPause process started and will run in background")
-            else:
-                logger.debug("AutoPause process already running")
-        except Exception as e:
-            logger.error(f"Failed to start AutoPause process: {e}", exc_info=True)
-
-    def stop_auto_pause_process(self):
-        """Stop autoPause process only on app close or reset"""
-        if self.auto_pause_process:
-            try:
-                logger.info("Stopping autoPause process")
-                self.auto_pause_process.terminate()
-                self.auto_pause_process.wait(timeout=5)
-                logger.info("AutoPause process terminated")
-            except Exception as e:
-                logger.warning(f"Could not terminate AutoPause process: {e}")
-            finally:
-                self.auto_pause_process = None
-        else:
-            logger.debug("No autoPause process to stop")
-
-    def get_auto_pause_executable(self):
-        """Get the path to autoPause executable"""
-        # Adjust this path based on your project structure
-        app_root = Path(__file__).parent.parent
-        auto_pause_path = app_root / "bin" / "autoPause.exe"
-        
-        if not auto_pause_path.exists():
-            # Fallback paths
-            auto_pause_path = app_root / "autoPause.exe"
-            
-        if not auto_pause_path.exists():
-            logger.error(f"autoPause.exe not found at {auto_pause_path}")
-            raise FileNotFoundError(f"autoPause.exe not found at {auto_pause_path}")
-        
-        logger.debug(f"Found autoPause executable at: {auto_pause_path}")
-        return str(auto_pause_path)
 
     # Modified existing methods to use enhanced functionality
     def on_shuffle_animated(self):
@@ -603,10 +553,6 @@ class MP4WallApp(QMainWindow):
             logger.debug("Stopping current wallpaper due to type change")
             self.controller.stop()
         
-        # Start autopause only once for videos using enhanced method
-        if new_is_video and not self.auto_pause_process:
-            logger.debug("Starting autoPause for video wallpaper")
-            self.start_auto_pause_process()
         
         # Update enhanced state tracking
         self.current_wallpaper_type = new_type
@@ -624,11 +570,8 @@ class MP4WallApp(QMainWindow):
         """Reset to default wallpaper WITHOUT confirmation"""
         logger.info("Performing reset without confirmation")
         self.controller.stop()
-        self.autopause.stop()
         self.scheduler.stop()
         
-        # Stop autoPause process only on reset
-        self.stop_auto_pause_process()
         
         # Reset enhanced state
         self.current_wallpaper_type = None
@@ -1200,15 +1143,10 @@ class MP4WallApp(QMainWindow):
         
         # Only stop if necessary (video to video, video to image, or image to video)
         needs_stop = (current_is_video and new_is_video) or (current_is_video and not new_is_video) or (not current_is_video and new_is_video)
-        
-        if needs_stop:
-            logger.debug("Stopping current wallpaper due to type change")
-            self.controller.stop()
-        
-        # Start autopause only once for videos
-        if new_is_video and not self.autopause.proc:
-            logger.debug("Starting autopause for video wallpaper")
-            self.autopause.start()
+        # No need to stop here, as the controller methods handle it
+        # if needs_stop:
+        #     logger.debug("Stopping current wallpaper due to type change")
+        #     self.controller.stop()
         
         if new_is_video:
             self._apply_video(str(file_path))
