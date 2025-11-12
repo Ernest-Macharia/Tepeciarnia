@@ -19,7 +19,6 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QHBoxLayout, QLabel, QLayout, QLineEdit,
     QMainWindow, QPushButton, QSizePolicy, QSpacerItem,
     QSpinBox, QVBoxLayout, QWidget)
-# import icons_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -65,7 +64,7 @@ class Ui_MainWindow(object):
 
         self.topBarLayout.addLayout(self.brandingLayout)
 
-        self.hSpacer1 = QSpacerItem(0, 0, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.hSpacer1 = QSpacerItem(13, 13, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.topBarLayout.addItem(self.hSpacer1)
 
@@ -611,31 +610,12 @@ class Ui_MainWindow(object):
 
         self.start_reset_layout = QHBoxLayout()
         self.start_reset_layout.setObjectName(u"start_reset_layout")
-        self.start_reset_spacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.start_reset_layout.addItem(self.start_reset_spacer)
-
-        self.startButton = QPushButton(self.card)
-        self.startButton.setObjectName(u"startButton")
-        self.startButton.setMinimumSize(QSize(100, 0))
-        font13 = QFont()
-        font13.setPointSize(10)
-        font13.setBold(True)
-        self.startButton.setFont(font13)
-        self.startButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-
-        self.start_reset_layout.addWidget(self.startButton)
-
-        self.resetButton = QPushButton(self.card)
-        self.resetButton.setObjectName(u"resetButton")
-        self.resetButton.setMinimumSize(QSize(100, 0))
-        self.resetButton.setFont(font13)
-        self.resetButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-
-        self.start_reset_layout.addWidget(self.resetButton)
-
 
         self.cardLayout.addLayout(self.start_reset_layout)
+
+        self.verticalSpacer_10 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.cardLayout.addItem(self.verticalSpacer_10)
 
         self.bottomFrame = QFrame(self.card)
         self.bottomFrame.setObjectName(u"bottomFrame")
@@ -643,16 +623,35 @@ class Ui_MainWindow(object):
         self.bottomLayout.setObjectName(u"bottomLayout")
         self.statusLabel = QLabel(self.bottomFrame)
         self.statusLabel.setObjectName(u"statusLabel")
-        font14 = QFont()
-        font14.setPointSize(9)
-        font14.setBold(True)
-        self.statusLabel.setFont(font14)
+        font13 = QFont()
+        font13.setPointSize(9)
+        font13.setBold(True)
+        self.statusLabel.setFont(font13)
 
         self.bottomLayout.addWidget(self.statusLabel)
 
         self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.bottomLayout.addItem(self.horizontalSpacer_3)
+
+        self.startButton = QPushButton(self.bottomFrame)
+        self.startButton.setObjectName(u"startButton")
+        self.startButton.setMinimumSize(QSize(100, 0))
+        font14 = QFont()
+        font14.setPointSize(10)
+        font14.setBold(True)
+        self.startButton.setFont(font14)
+        self.startButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.bottomLayout.addWidget(self.startButton)
+
+        self.resetButton = QPushButton(self.bottomFrame)
+        self.resetButton.setObjectName(u"resetButton")
+        self.resetButton.setMinimumSize(QSize(100, 0))
+        self.resetButton.setFont(font14)
+        self.resetButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+        self.bottomLayout.addWidget(self.resetButton)
 
 
         self.cardLayout.addWidget(self.bottomFrame)
@@ -722,10 +721,10 @@ class Ui_MainWindow(object):
         self.range_wallpaper_bnt.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
         self.range_mp4_bnt.setText(QCoreApplication.translate("MainWindow", u"  Mp4", None))
         self.range_mp4_bnt.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
+        self.statusLabel.setText(QCoreApplication.translate("MainWindow", u"Status: min ,Status: min ,Status: min ,Status: min", None))
         self.startButton.setText(QCoreApplication.translate("MainWindow", u"Start", None))
-        self.startButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"primary", None))
+        self.startButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
         self.resetButton.setText(QCoreApplication.translate("MainWindow", u"Reset", None))
         self.resetButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
-        self.statusLabel.setText(QCoreApplication.translate("MainWindow", u"Status: min ,Status: min ,Status: min ,Status: min", None))
     # retranslateUi
 

@@ -10,7 +10,7 @@ QFrame#uploadArea {
 }
 /* add a red border to all the widgets */
 /* For debug only */
-QWidget {
+/* QWidget {
   border: 1px solid rgba(255, 0, 0, 0.503);
 }
 QFrame{
@@ -18,7 +18,7 @@ QFrame{
 }
 QSpacer {
   background-color: red;
-}
+} */
 
 
 QFrame#uploadArea:hover {
@@ -37,7 +37,7 @@ QPushButton {
 
 }
 
-QPushButton.aactive {
+QPushButton.active {
   background: white;
   color: #1e40af;
   font-weight: 600;
