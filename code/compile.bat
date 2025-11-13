@@ -16,7 +16,7 @@ echo Converting %INPUT_UI_FILE% to %OUTPUT_PY_FILE%
 
 :: Ensure pyuic5 is available in the virtual environment's PATH
 pyside6-uic "%INPUT_UI_FILE%" -o "%OUTPUT_PY_FILE%"
-pyside6-rcc scripts\ui\icons\icons.qrc -o scripts\ui\icons_rc.py
+pyside6-rcc scripts\ui\icons_resource.qrc -o scripts\ui\icons_resource_rc.py
 echo.
 echo Deactivating Virtual Environment...
 :: Deactivate the environment after the conversion is done

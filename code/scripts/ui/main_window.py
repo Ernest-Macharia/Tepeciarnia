@@ -8,7 +8,7 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QMessageBox, 
     QSystemTrayIcon, QMenu, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QStyle, QSizePolicy
+    QLabel, QPushButton, QStyle, QSizePolicy,QSpacerItem
 )
 from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
 from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize,qIsNull
@@ -77,35 +77,37 @@ class EnhancedDragDropWidget(QWidget):
         logger.debug("Setting up EnhancedDragDropWidget UI")
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        # spacers
+
         
         # Drag & drop area
-        self.drop_area = QLabel(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
-        self.drop_area.setAlignment(Qt.AlignCenter)
-        self.drop_area.setAcceptDrops(True)
-        self.drop_area.dragEnterEvent = self.dragEnterEvent
-        self.drop_area.dropEvent = self.dropEvent
-        self.drop_area.setMargin(20)
-        self.drop_area.setMinimumHeight(120)
+        self.parent_app.ui.uploadArea.dragEnterEvent = self.dragEnterEvent
+        self.parent_app.ui.uploadArea.dropEvent = self.dropEvent
+        # upload text
+        self.upload_text = QLabel(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
+        self.upload_text.setAlignment(Qt.AlignCenter)
+        self.upload_text.setAcceptDrops(True)
+        self.upload_text.setSizePolicy(self.upload_text.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
         
         # Supported formats label
-        self.supported_label = QLabel("Supported: JPG, PNG, MP4, WebM, AVI, MOV")
         self.supported_label = QLabel(self.parent_app.lang["uploadSection"]["supportedFormatsHint"])
         self.supported_label.setAlignment(Qt.AlignCenter)
-        self.supported_label.setMargin(5)
         self.supported_label.setSizePolicy(self.supported_label.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
         
         # Action buttons (initially hidden)
+        self.spacer_left = QSpacerItem(250, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.spacer_right = QSpacerItem(250, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        
         self.buttons_widget = QWidget()
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(20, 10, 20, 10)
         buttons_layout.setSpacing(15)
         
         # Set as Wallpaper button
-        self.upload_btn = QPushButton(" Set as Wallpaper")
+        self.upload_btn = QPushButton("Set as Wallpaper")
         # Create a container for the buttons to keep them together in center
         button_container = QWidget()
         button_container_layout = QHBoxLayout()
-        button_container_layout.setContentsMargins(0, 0, 0, 0)
         button_container_layout.setSpacing(10)  # Space between buttons
         
         # Upload button with icon and primary class
@@ -113,38 +115,44 @@ class EnhancedDragDropWidget(QWidget):
         self.upload_btn.clicked.connect(self.set_as_wallpaper)
         self.upload_btn.setProperty("class", "primary")
         self.upload_btn.setMinimumHeight(35)
-        self.upload_btn.setIcon(QIcon(":/icons/wallpaper.png"))
         
         # Reset button
         self.reset_btn = QPushButton(self.parent_app.lang["settings"]["resetButton"])
         self.reset_btn.clicked.connect(self.reset_selection)
         self.reset_btn.setProperty("class", "ghost")
         self.reset_btn.setMinimumHeight(35)
-        self.reset_btn.setIcon(QIcon(":/icons/reset.png"))
-        
+
+        buttons_layout.addItem(self.spacer_left)
         buttons_layout.addWidget(self.upload_btn)
         buttons_layout.addWidget(self.reset_btn)
+        buttons_layout.addItem(self.spacer_right)
         
         self.buttons_widget.setLayout(buttons_layout)
         self.buttons_widget.hide()
         
         # Upload icon (initially visible)
         self.uploadIcon = QLabel()
-        self.uploadIcon.setPixmap(QPixmap(":/icons/upload.png").scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.uploadIcon.setPixmap(QPixmap(":/icons/icons/upload.png").scaled(24, 24, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         self.uploadIcon.setAlignment(Qt.AlignCenter)
-        self.uploadIcon.setStyleSheet("margin: 10px;")
+        self.uploadIcon.setStyleSheet("padding:0px;")
+        self.uploadIcon.setSizePolicy(self.uploadIcon.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
+
         
         layout.addWidget(self.uploadIcon)
-        layout.addWidget(self.drop_area)
+        layout.addWidget(self.upload_text)
         layout.addWidget(self.supported_label)
         layout.addWidget(self.buttons_widget)
+        
+        # self.spacer_down = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        # layout.addItem(self.spacer_down)
+
         self.setLayout(layout)
         logger.debug("EnhancedDragDropWidget UI setup completed")
     
     def update_language(self):
         """Update UI text based on selected language"""
         logger.info("Updating EnhancedDragDropWidget language")
-        self.drop_area.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
+        self.upload_text.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
         self.supported_label.setText(self.parent_app.lang["uploadSection"]["supportedFormatsHint"])
         self.upload_btn.setText(self.parent_app.lang["uploadSection"]["setAsWallpaperButton"])
         self.reset_btn.setText(self.parent_app.lang["settings"]["resetButton"])
@@ -170,7 +178,7 @@ class EnhancedDragDropWidget(QWidget):
                 file_type = "Video" if self.is_video_file(file_path) else "Image"
                 
                 # Update UI to show file is ready to be set as wallpaper
-                self.drop_area.setText(f" {file_type} Ready!\n{filename}")
+                self.upload_text.setText(f" {file_type} Ready!\n\n{filename}")
                 self.supported_label.hide()
                 self.toggle_buttons_visibility(True)  # SHOW THE BUTTONS
                 self.uploadIcon.hide()
@@ -179,7 +187,7 @@ class EnhancedDragDropWidget(QWidget):
                 logger.info(f"Valid {file_type.lower()} file selected: {filename}")
                 
             else:
-                self.drop_area.setText("Invalid file type!\nSupported: Images, Videos")
+                self.upload_text.setText("Invalid file type!\nSupported: Images, Videos")
                 self.upload_btn.setEnabled(False)
                 logger.warning(f"Invalid file type dropped: {file_path}")
     
@@ -205,7 +213,7 @@ class EnhancedDragDropWidget(QWidget):
                     self.parent_app.controller.start_image(self.dropped_file_path)
                 
                 # Show success message
-                self.drop_area.setText("Wallpaper set successfully!")
+                self.upload_text.setText("Wallpaper set successfully!")
                 
                 # Update status
                 if hasattr(self.parent_app, '_set_status'):
@@ -220,14 +228,14 @@ class EnhancedDragDropWidget(QWidget):
                 
             except Exception as e:
                 logger.error(f"Failed to set wallpaper: {e}", exc_info=True)
-                self.drop_area.setText("Failed to set wallpaper!")
+                self.upload_text.setText("Failed to set wallpaper!")
                 QMessageBox.critical(self, "Error", f"Failed to set wallpaper: {str(e)}")
     
     def reset_selection(self):
         """Reset to original selection state"""
         logger.info("Reset selection triggered")
         self.dropped_file_path = None
-        self.drop_area.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
+        self.upload_text.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
         self.supported_label.show()
         self.toggle_buttons_visibility(False)  # HIDE THE BUTTONS
         logger.debug("Drag drop widget reset to initial state")
@@ -285,8 +293,7 @@ class EnhancedDragDropWidget(QWidget):
         is_valid = file_path.lower().endswith(valid_extensions)
         logger.debug(f"File validation for {file_path}: {is_valid}")
         return is_valid
-
-
+    
 class MP4WallApp(QMainWindow):
     def __init__(self):
         logger.info("Initializing MP4WallApp")
@@ -353,6 +360,19 @@ class MP4WallApp(QMainWindow):
         self.lang = self.language_controller.setup_initial_language(self.ui.langCombo)
         self.update_ui_language()
 
+    def _make_icon(self,icon_name:QIcon,className:str ="primary") -> QIcon:
+        if className == "primary":
+            icon = QIcon()
+            icon.addFile(f":/icons/icons/{icon_name}_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+            return icon
+        elif className == "ghost":
+            icon = QIcon()
+            icon.addFile(f":/icons/icons/{icon_name}.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+            return icon
+        else:
+            icon = QIcon()
+            icon.addFile(f":/icons/icons/{icon_name}.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+            return icon
  
 
     def _ensure_status_visible(self):
@@ -616,12 +636,14 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, 'randomButton'):
             self.ui.randomButton.setChecked(False)
             self.ui.randomButton.setProperty("class", "ghost")
+            self.ui.randomButton.setIcon(self._make_icon(self.ui.randomButton.property("icon_name"),className="ghost"))
             self.ui.randomButton.style().unpolish(self.ui.randomButton)
             self.ui.randomButton.style().polish(self.ui.randomButton)
         
         if hasattr(self.ui, 'randomAnimButton'):
             self.ui.randomAnimButton.setChecked(False)
             self.ui.randomAnimButton.setProperty("class", "ghost")
+            self.ui.randomAnimButton.setIcon(self._make_icon(self.ui.randomAnimButton.property("icon_name"),className="ghost"))
             self.ui.randomAnimButton.style().unpolish(self.ui.randomAnimButton)
             self.ui.randomAnimButton.style().polish(self.ui.randomAnimButton)
         
@@ -986,17 +1008,20 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "randomAnimButton"):
             if active_type == 'animated':
                 self.ui.randomAnimButton.setProperty("class", "primary")
-                self.ui.randomAnimButton.icon()
+                self.ui.randomAnimButton.setIcon(self._make_icon(self.ui.randomAnimButton.property("icon_name"),className="primary"))
             else:
                 self.ui.randomAnimButton.setProperty("class", "ghost")
+                self.ui.randomAnimButton.setIcon(self._make_icon(self.ui.randomAnimButton.property("icon_name"),className="ghost"))
             self.ui.randomAnimButton.style().unpolish(self.ui.randomAnimButton)
             self.ui.randomAnimButton.style().polish(self.ui.randomAnimButton)
         
         if hasattr(self.ui, "randomButton"):
             if active_type == 'wallpaper':
                 self.ui.randomButton.setProperty("class", "primary")
+                self.ui.randomButton.setIcon(self._make_icon(self.ui.randomButton.property("icon_name"),className="primary"))
             else:
                 self.ui.randomButton.setProperty("class", "ghost")
+                self.ui.randomButton.setIcon(self._make_icon(self.ui.randomButton.property("icon_name"),className="ghost"))
             self.ui.randomButton.style().unpolish(self.ui.randomButton)
             self.ui.randomButton.style().polish(self.ui.randomButton)
         
@@ -1091,35 +1116,35 @@ class MP4WallApp(QMainWindow):
         self._set_status(f"Scheduler interval: {val} min")
     
     def update_ui_language(self):
-        self.ui.emailInput.setPlaceholderText(self.lang["auth"]["emailPlaceholder"])
-        self.ui.passwordInput.setPlaceholderText(self.lang["auth"]["passwordPlaceholder"])
-        self.ui.logInBnt.setText(self.lang["auth"]["logInButton"])
+        self.ui.emailInput.setPlaceholderText(f"{self.lang['auth']['emailPlaceholder']}")
+        self.ui.passwordInput.setPlaceholderText(f"{self.lang['auth']['passwordPlaceholder']}")
+        self.ui.logInBnt.setText(f"{self.lang['auth']['logInButton']}")
         # main controls
-        self.ui.randomAnimButton.setText(self.lang["navigation"]["shuffleAnimatedButton"])
-        self.ui.randomButton.setText(self.lang["navigation"]["shuffleWallpaperButton"])
-        self.ui.browseButton.setText(self.lang["navigation"]["browseWallpapersButton"])    
+        self.ui.randomAnimButton.setText(f"  {self.lang['navigation']['shuffleAnimatedButton']}")
+        self.ui.randomButton.setText(f"  {self.lang['navigation']['shuffleWallpaperButton']}")
+        self.ui.browseButton.setText(f"  {self.lang['navigation']['browseWallpapersButton']}")
         # uploadSection
-        self.ui.add_file_label.setText(self.lang["uploadSection"]["addFilesHeader"])
+        self.ui.add_file_label.setText(f"  {self.lang['uploadSection']['addFilesHeader']}")
         # self.ui.uploadText.setText(self.lang["uploadSection"]["dragDropInstruction"]) 
         # self.ui.uploadSupported.setText(self.lang["uploadSection"]["supportedFormatsHint"])
         # url loader
-        self.ui.url_loader_text_label.setText(self.lang["uploadSection"]["imagesOrVideoURLHeader"])
-        self.ui.loadUrlButton.setText(self.lang["uploadSection"]["loadButton"])
-        self.ui.url_helper_text_label.setText(self.lang["uploadSection"]["urlHelperText"])
+        self.ui.url_loader_text_label.setText(f"  {self.lang['uploadSection']['imagesOrVideoURLHeader']}")
+        self.ui.loadUrlButton.setText(f"{self.lang['uploadSection']['loadButton']}")
+        self.ui.url_helper_text_label.setText(f"  {self.lang['uploadSection']['urlHelperText']}")
         # settings
-        self.ui.autoLabel.setText(self.lang["settings"]["autoChangeHeader"])
-        self.ui.enabledCheck.setText(self.lang["settings"]["enabledLabel"])
-        self.ui.inverval_lable.setText(self.lang["settings"]["intervalLabel"])
-        self.ui.wallpaper_source_lable.setText(self.lang["settings"]["wallpaperSourceLabel"])
-        self.ui.super_wallpaper_btn.setText(self.lang["settings"]["superWallpaperButton"])
-        self.ui.fvrt_wallpapers_btn.setText(self.lang["settings"]["favoriteWallpapersButton"])
-        self.ui.added_wallpaper_btn.setText(self.lang["settings"]["myCollectionButton"])
-        self.ui.range_lable.setText(self.lang["settings"]["rangeHeader"])
-        self.ui.range_all_bnt.setText(self.lang["settings"]["rangeAllButton"])
-        self.ui.range_wallpaper_bnt.setText(self.lang["settings"]["rangeWallpaperButton"])
-        self.ui.range_mp4_bnt.setText(self.lang["settings"]["rangeMp4Button"])
-        self.ui.startButton.setText(self.lang["settings"]["startButton"])
-        self.ui.resetButton.setText(self.lang["settings"]["resetButton"])
+        self.ui.autoLabel.setText(f"  {self.lang['settings']['autoChangeHeader']}")
+        self.ui.enabledCheck.setText(f"  {self.lang['settings']['enabledLabel']}")
+        self.ui.inverval_lable.setText(f"  {self.lang['settings']['intervalLabel']}")
+        self.ui.wallpaper_source_lable.setText(f"  {self.lang['settings']['wallpaperSourceLabel']}")
+        self.ui.super_wallpaper_btn.setText(f"  {self.lang['settings']['superWallpaperButton']}")
+        self.ui.fvrt_wallpapers_btn.setText(f"  {self.lang['settings']['favoriteWallpapersButton']}")
+        self.ui.added_wallpaper_btn.setText(f"  {self.lang['settings']['myCollectionButton']}")
+        self.ui.range_lable.setText(f"  {self.lang['settings']['rangeHeader']}")
+        self.ui.range_all_bnt.setText(f"  {self.lang['settings']['rangeAllButton']}")
+        self.ui.range_wallpaper_bnt.setText(f"  {self.lang['settings']['rangeWallpaperButton']}")
+        self.ui.range_mp4_bnt.setText(f"  {self.lang['settings']['rangeMp4Button']}")
+        self.ui.startButton.setText(f"  {self.lang['settings']['startButton']}")
+        self.ui.resetButton.setText(f"  {self.lang['settings']['resetButton']}")
             
 
     # Core wallpaper application logic
@@ -1365,11 +1390,13 @@ class MP4WallApp(QMainWindow):
         for btn in sources.values():
             if btn:
                 btn.setProperty("class", "ghost")
+                btn.setIcon(self._make_icon(btn.property("icon_name"),className="ghost"))
                 btn.style().unpolish(btn)
                 btn.style().polish(btn)
         
         if active_source in sources and sources[active_source]:
             sources[active_source].setProperty("class", "primary")
+            sources[active_source].setIcon(self._make_icon(sources[active_source].property("icon_name"),className="primary"))
             sources[active_source].style().unpolish(sources[active_source])
             sources[active_source].style().polish(sources[active_source])
         
@@ -1387,11 +1414,13 @@ class MP4WallApp(QMainWindow):
         for btn in range_buttons.values():
             if btn:
                 btn.setProperty("class", "ghost")
+                btn.setIcon(self._make_icon(btn.property("icon_name"),className="ghost"))
                 btn.style().unpolish(btn)
                 btn.style().polish(btn)
         
         if active_range in range_buttons and range_buttons[active_range]:
             range_buttons[active_range].setProperty("class", "primary")
+            range_buttons[active_range].setIcon(self._make_icon(range_buttons[active_range].property("icon_name"),className="primary"))
             range_buttons[active_range].style().unpolish(range_buttons[active_range])
             range_buttons[active_range].style().polish(range_buttons[active_range])
         
