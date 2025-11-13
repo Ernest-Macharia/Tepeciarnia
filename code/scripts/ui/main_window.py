@@ -95,8 +95,8 @@ class EnhancedDragDropWidget(QWidget):
         self.supported_label.setSizePolicy(self.supported_label.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
         
         # Action buttons (initially hidden)
-        self.spacer_left = QSpacerItem(40, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.spacer_right = QSpacerItem(40, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.spacer_left = QSpacerItem(250, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.spacer_right = QSpacerItem(250, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         
         self.buttons_widget = QWidget()
         buttons_layout = QHBoxLayout()
@@ -114,13 +114,13 @@ class EnhancedDragDropWidget(QWidget):
         self.upload_btn = QPushButton(self.parent_app.lang["uploadSection"]["setAsWallpaperButton"])
         self.upload_btn.clicked.connect(self.set_as_wallpaper)
         self.upload_btn.setProperty("class", "primary")
-        # self.upload_btn.setMinimumHeight(35)
+        self.upload_btn.setMinimumHeight(35)
         
         # Reset button
         self.reset_btn = QPushButton(self.parent_app.lang["settings"]["resetButton"])
         self.reset_btn.clicked.connect(self.reset_selection)
         self.reset_btn.setProperty("class", "ghost")
-        # self.reset_btn.setMinimumHeight(35)
+        self.reset_btn.setMinimumHeight(35)
 
         buttons_layout.addItem(self.spacer_left)
         buttons_layout.addWidget(self.upload_btn)
@@ -132,7 +132,7 @@ class EnhancedDragDropWidget(QWidget):
         
         # Upload icon (initially visible)
         self.uploadIcon = QLabel()
-        self.uploadIcon.setPixmap(QPixmap(":/icons/icons/upload.png").scaled(32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.uploadIcon.setPixmap(QPixmap(":/icons/icons/upload.png").scaled(24, 24, Qt.KeepAspectRatio, Qt.SmoothTransformation))
         self.uploadIcon.setAlignment(Qt.AlignCenter)
         self.uploadIcon.setStyleSheet("padding:0px;")
         self.uploadIcon.setSizePolicy(self.uploadIcon.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)

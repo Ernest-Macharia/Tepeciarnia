@@ -247,7 +247,7 @@ QCheckBox::indicator:disabled {
               <string/>
              </property>
              <property name="pixmap">
-              <pixmap resource="../scripts/ui/icons_resouce.qrc">:/icons/icons/logo_biale.svg</pixmap>
+              <pixmap resource="../scripts/ui/icons_resource.qrc">:/icons/icons/logo_biale.svg</pixmap>
              </property>
              <property name="scaledContents">
               <bool>false</bool>
@@ -291,7 +291,7 @@ QCheckBox::indicator:disabled {
               <string/>
              </property>
              <property name="icon">
-              <iconset resource="../scripts/ui/icons_resouce.qrc">
+              <iconset resource="../scripts/ui/icons_resource.qrc">
                <normaloff>:/icons/icons/log-in.png</normaloff>:/icons/icons/log-in.png</iconset>
              </property>
              <property name="iconSize">
@@ -369,7 +369,7 @@ QCheckBox::indicator:disabled {
               <string/>
              </property>
              <property name="pixmap">
-              <pixmap resource="../scripts/ui/icons_resouce.qrc">:/icons/icons/languages.png</pixmap>
+              <pixmap resource="../scripts/ui/icons_resource.qrc">:/icons/icons/languages.png</pixmap>
              </property>
             </widget>
            </item>
@@ -418,7 +418,7 @@ QCheckBox::indicator:disabled {
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>100</height>
+           <height>70</height>
           </size>
          </property>
          <property name="baseSize">
@@ -462,7 +462,7 @@ QCheckBox::indicator:disabled {
              <string>  Shuffle animated</string>
             </property>
             <property name="icon">
-             <iconset resource="../scripts/ui/icons_resouce.qrc">
+             <iconset resource="../scripts/ui/icons_resource.qrc">
               <normaloff>:/icons/icons/shuffle.png</normaloff>:/icons/icons/shuffle.png</iconset>
             </property>
             <property name="iconSize">
@@ -495,11 +495,14 @@ QCheckBox::indicator:disabled {
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
             </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
             <property name="text">
              <string>  Shuffle wallpaper</string>
             </property>
             <property name="icon">
-             <iconset resource="../scripts/ui/icons_resouce.qrc">
+             <iconset resource="../scripts/ui/icons_resource.qrc">
               <normaloff>:/icons/icons/shuffle.png</normaloff>:/icons/icons/shuffle.png</iconset>
             </property>
             <property name="iconSize">
@@ -545,7 +548,7 @@ QCheckBox::indicator:disabled {
              <string>  Browse wallpapers</string>
             </property>
             <property name="icon">
-             <iconset resource="../scripts/ui/icons_resouce.qrc">
+             <iconset resource="../scripts/ui/icons_resource.qrc">
               <normaloff>:/icons/icons/images_blue.png</normaloff>:/icons/icons/images_blue.png</iconset>
             </property>
             <property name="iconSize">
@@ -581,7 +584,7 @@ QCheckBox::indicator:disabled {
               <string/>
              </property>
              <property name="pixmap">
-              <pixmap resource="../scripts/ui/icons_resouce.qrc">:/icons/icons/upload.png</pixmap>
+              <pixmap resource="../scripts/ui/icons_resource.qrc">:/icons/icons/upload.png</pixmap>
              </property>
             </widget>
            </item>
@@ -631,7 +634,13 @@ QCheckBox::indicator:disabled {
            <property name="minimumSize">
             <size>
              <width>0</width>
-             <height>160</height>
+             <height>100</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>120</height>
             </size>
            </property>
            <property name="acceptDrops">
@@ -689,7 +698,7 @@ QCheckBox::indicator:disabled {
                   <string/>
                  </property>
                  <property name="pixmap">
-                  <pixmap resource="../scripts/ui/icons_resouce.qrc">:/icons/icons/upload.png</pixmap>
+                  <pixmap resource="../scripts/ui/icons_resource.qrc">:/icons/icons/upload.png</pixmap>
                  </property>
                  <property name="scaledContents">
                   <bool>false</bool>
@@ -795,7 +804,7 @@ QCheckBox::indicator:disabled {
                <string/>
               </property>
               <property name="pixmap">
-               <pixmap resource="../scripts/ui/icons_resouce.qrc">:/icons/icons/link.png</pixmap>
+               <pixmap resource="../scripts/ui/icons_resource.qrc">:/icons/icons/link.png</pixmap>
               </property>
              </widget>
             </item>
@@ -978,7 +987,7 @@ QCheckBox::indicator:disabled {
                <string/>
               </property>
               <property name="pixmap">
-               <pixmap resource="../scripts/ui/icons_resouce.qrc">:/icons/icons/timer.png</pixmap>
+               <pixmap resource="../scripts/ui/icons_resource.qrc">:/icons/icons/timer.png</pixmap>
               </property>
               <property name="scaledContents">
                <bool>false</bool>
@@ -1179,8 +1188,14 @@ QCheckBox::indicator:disabled {
                  <string>  Super Wallpaper</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="../scripts/ui/icons_resouce.qrc">
+                 <iconset resource="../scripts/ui/icons_resource.qrc">
                   <normaloff>:/icons/icons/sparkles.png</normaloff>:/icons/icons/sparkles.png</iconset>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>20</width>
+                  <height>20</height>
+                 </size>
                 </property>
                 <property name="class" stdset="0">
                  <string>ghost</string>
@@ -1204,8 +1219,14 @@ QCheckBox::indicator:disabled {
                  <string>  Favorite Wallpapers</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="../scripts/ui/icons_resouce.qrc">
+                 <iconset resource="../scripts/ui/icons_resource.qrc">
                   <normaloff>:/icons/icons/heart.png</normaloff>:/icons/icons/heart.png</iconset>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>20</width>
+                  <height>20</height>
+                 </size>
                 </property>
                 <property name="class" stdset="0">
                  <string>ghost</string>
@@ -1222,12 +1243,21 @@ QCheckBox::indicator:disabled {
                   <pointsize>11</pointsize>
                  </font>
                 </property>
+                <property name="cursor">
+                 <cursorShape>PointingHandCursor</cursorShape>
+                </property>
                 <property name="text">
                  <string>  Added wallpapers</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="../scripts/ui/icons_resouce.qrc">
+                 <iconset resource="../scripts/ui/icons_resource.qrc">
                   <normaloff>:/icons/icons/circle_plus.png</normaloff>:/icons/icons/circle_plus.png</iconset>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>20</width>
+                  <height>20</height>
+                 </size>
                 </property>
                 <property name="class" stdset="0">
                  <string>ghost</string>
@@ -1320,7 +1350,7 @@ QCheckBox::indicator:disabled {
                  <string>  All</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="../scripts/ui/icons_resouce.qrc">
+                 <iconset resource="../scripts/ui/icons_resource.qrc">
                   <normaloff>:/icons/icons/wallpaper.png</normaloff>:/icons/icons/wallpaper.png</iconset>
                 </property>
                 <property name="iconSize">
@@ -1351,7 +1381,7 @@ QCheckBox::indicator:disabled {
                  <string>  Wallpaper</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="../scripts/ui/icons_resouce.qrc">
+                 <iconset resource="../scripts/ui/icons_resource.qrc">
                   <normaloff>:/icons/icons/film.png</normaloff>:/icons/icons/film.png</iconset>
                 </property>
                 <property name="iconSize">
@@ -1382,7 +1412,7 @@ QCheckBox::indicator:disabled {
                  <string>  Mp4</string>
                 </property>
                 <property name="icon">
-                 <iconset resource="../scripts/ui/icons_resouce.qrc">
+                 <iconset resource="../scripts/ui/icons_resource.qrc">
                   <normaloff>:/icons/icons/film.png</normaloff>:/icons/icons/film.png</iconset>
                 </property>
                 <property name="iconSize">
@@ -1420,23 +1450,22 @@ QCheckBox::indicator:disabled {
         </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
+        <widget class="QFrame" name="bottomFrame">
+         <property name="maximumSize">
           <size>
-           <width>20</width>
-           <height>40</height>
+           <width>16777215</width>
+           <height>65</height>
           </size>
          </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QFrame" name="bottomFrame">
          <layout class="QHBoxLayout" name="bottomLayout">
           <item>
            <widget class="QLabel" name="statusLabel">
+            <property name="sizeIncrement">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
             <property name="font">
              <font>
               <pointsize>9</pointsize>
@@ -1524,7 +1553,7 @@ QCheckBox::indicator:disabled {
   </widget>
  </widget>
  <resources>
-  <include location="../scripts/ui/icons_resouce.qrc"/>
+  <include location="../scripts/ui/icons_resource.qrc"/>
  </resources>
  <connections>
   <connection>

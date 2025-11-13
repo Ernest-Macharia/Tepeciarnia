@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QHBoxLayout, QLabel, QLayout, QLineEdit,
     QMainWindow, QPushButton, QSizePolicy, QSpacerItem,
     QSpinBox, QVBoxLayout, QWidget)
+import icons_resource_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -142,7 +143,7 @@ class Ui_MainWindow(object):
         sizePolicy2.setHeightForWidth(self.controlsFrame.sizePolicy().hasHeightForWidth())
         self.controlsFrame.setSizePolicy(sizePolicy2)
         self.controlsFrame.setMinimumSize(QSize(0, 70))
-        self.controlsFrame.setMaximumSize(QSize(16777215, 100))
+        self.controlsFrame.setMaximumSize(QSize(16777215, 70))
         self.controlsFrame.setBaseSize(QSize(0, 0))
         self.controlsFrame.setFrameShape(QFrame.NoFrame)
         self.controlsLayout = QHBoxLayout(self.controlsFrame)
@@ -171,6 +172,7 @@ class Ui_MainWindow(object):
         self.randomButton.setSizePolicy(sizePolicy1)
         self.randomButton.setFont(font1)
         self.randomButton.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+        self.randomButton.setLayoutDirection(Qt.LeftToRight)
         self.randomButton.setIcon(icon1)
         self.randomButton.setIconSize(QSize(20, 20))
 
@@ -234,7 +236,8 @@ class Ui_MainWindow(object):
         sizePolicy4.setVerticalStretch(0)
         sizePolicy4.setHeightForWidth(self.uploadArea.sizePolicy().hasHeightForWidth())
         self.uploadArea.setSizePolicy(sizePolicy4)
-        self.uploadArea.setMinimumSize(QSize(0, 160))
+        self.uploadArea.setMinimumSize(QSize(0, 100))
+        self.uploadArea.setMaximumSize(QSize(16777215, 120))
         self.uploadArea.setAcceptDrops(True)
         self.uploadArea.setAutoFillBackground(False)
         self.uploadArea.setStyleSheet(u"")
@@ -495,6 +498,7 @@ class Ui_MainWindow(object):
         icon3 = QIcon()
         icon3.addFile(u":/icons/icons/sparkles.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.super_wallpaper_btn.setIcon(icon3)
+        self.super_wallpaper_btn.setIconSize(QSize(20, 20))
 
         self.source_inner_h_loyout.addWidget(self.super_wallpaper_btn)
 
@@ -505,6 +509,7 @@ class Ui_MainWindow(object):
         icon4 = QIcon()
         icon4.addFile(u":/icons/icons/heart.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.fvrt_wallpapers_btn.setIcon(icon4)
+        self.fvrt_wallpapers_btn.setIconSize(QSize(20, 20))
 
         self.source_inner_h_loyout.addWidget(self.fvrt_wallpapers_btn)
 
@@ -514,6 +519,7 @@ class Ui_MainWindow(object):
         icon5 = QIcon()
         icon5.addFile(u":/icons/icons/circle_plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.added_wallpaper_btn.setIcon(icon5)
+        self.added_wallpaper_btn.setIconSize(QSize(20, 20))
 
         self.source_inner_h_loyout.addWidget(self.added_wallpaper_btn)
 
@@ -596,16 +602,14 @@ class Ui_MainWindow(object):
 
         self.cardLayout.addWidget(self.range_frame)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.cardLayout.addItem(self.verticalSpacer)
-
         self.bottomFrame = QFrame(self.card)
         self.bottomFrame.setObjectName(u"bottomFrame")
+        self.bottomFrame.setMaximumSize(QSize(16777215, 65))
         self.bottomLayout = QHBoxLayout(self.bottomFrame)
         self.bottomLayout.setObjectName(u"bottomLayout")
         self.statusLabel = QLabel(self.bottomFrame)
         self.statusLabel.setObjectName(u"statusLabel")
+        self.statusLabel.setSizeIncrement(QSize(0, 0))
         font13 = QFont()
         font13.setPointSize(9)
         font13.setBold(True)

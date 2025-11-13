@@ -93,14 +93,12 @@ QPushButton[class="deactive"]:hover {
 QPushButton[class="ghost"]:hover {
   border: 1px solid rgba(255, 255, 255, 0.2);
   background-color: rgba(255, 255, 255, 0.2);
-  /* Example: Change icon to a light gray version on hover */
 }
 
 QPushButton[class="ghost"] {
   color: white;
   background-color: transparent;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  /* Load the default white icon */
 }
 
 QLineEdit,
@@ -160,7 +158,7 @@ QCheckBox::indicator {
 QCheckBox::indicator:checked {
   border: 2px solid #3498db;
   background-color: #3498db;
-  image: url(:/icons/check.png);
+  qproperty-icon: url(:/icons/icons/check.png);
 }
 
 QCheckBox::indicator:hover {
