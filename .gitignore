@@ -68,3 +68,4 @@ __pypackages__/
 share/
 Scripts/
 bin/
+code/ui/main_ui.py
