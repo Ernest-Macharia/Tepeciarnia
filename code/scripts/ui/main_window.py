@@ -4,6 +4,7 @@ import random
 import shutil
 import logging
 from pathlib import Path
+import time
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QMessageBox, 
@@ -11,7 +12,7 @@ from PySide6.QtWidgets import (
     QLabel, QPushButton, QStyle, QSizePolicy,QSpacerItem
 )
 from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
-from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize,qIsNull
+from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize,qIsNull, Signal, QThread
 
 # Get logger for this module
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ from  core.language_controller import LanguageController
 # Import utilities
 from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR, get_folder_for_range, get_folder_for_source, open_folder_in_explorer
 from utils.system_utils import get_current_desktop_wallpaper
-from utils.validators import validate_url_or_path, is_image_url_or_path
+from utils.validators import get_media_type, validate_url_or_path, is_image_url_or_path
 from utils.file_utils import download_image, copy_to_collection, cleanup_temp_marker
 
 # Import models
@@ -1170,13 +1171,23 @@ class MP4WallApp(QMainWindow):
             self._handle_local_file(p)
             return
 
-        # Handle remote URLs
+        # Handle remote URLs - USING get_media_type
         if validated.lower().startswith("http"):
             logger.info(f"Handling remote URL: {validated}")
-            if is_image_url_or_path(validated):
+            
+            media_type = get_media_type(validated)
+            logger.debug(f"Detected media type: {media_type}")
+            
+            if media_type == "image":
+                logger.info(f"Handling as image URL: {validated}")
                 self._handle_remote_image(validated)
-            else:
+            elif media_type == "video":
+                logger.info(f"Handling as video URL: {validated}")
                 self._handle_remote_video(validated)
+            else:
+                logger.warning(f"Unsupported URL type: {validated}")
+                QMessageBox.warning(self, "Unsupported URL", 
+                                "The URL doesn't appear to be a supported image or video.")
             return
 
         logger.warning(f"Unsupported input type: {text}")
@@ -1212,11 +1223,69 @@ class MP4WallApp(QMainWindow):
             QMessageBox.critical(self, "Error", f"Failed to download image: {e}")
 
     def _handle_remote_video(self, url: str):
-        """Handle remote video download"""
+        """Handle remote video download - FIXED for direct video links"""
         logger.info(f"Downloading remote video: {url}")
         self._set_status("Downloading video...")
         cleanup_temp_marker()
 
+        # Check if it's a direct video link (ends with common video extensions)
+        direct_video_extensions = ('.mp4', '.mkv', '.webm', '.avi', '.mov')
+        is_direct_link = any(url.lower().endswith(ext) for ext in direct_video_extensions)
+        
+        if is_direct_link:
+            logger.info(f"Detected direct video link: {url}")
+            self._handle_direct_video_download(url)
+        else:
+            logger.info(f"Using yt-dlp for video URL: {url}")
+            self._handle_ytdlp_video_download(url)
+
+    def _handle_direct_video_download(self, url: str):
+        """Handle direct video file downloads (not YouTube/streaming)"""
+        try:
+            import requests
+            from urllib.parse import urlparse
+            
+            logger.info(f"Starting direct video download: {url}")
+            
+            # Create progress dialog
+            self.progress_dialog = DownloadProgressDialog(self)
+            self.progress_dialog.show()
+            self.progress_dialog.update_progress(0, "Starting direct download...")
+            
+            # Get filename from URL
+            parsed_url = urlparse(url)
+            filename = os.path.basename(parsed_url.path)
+            if not filename or '.' not in filename:
+                filename = f"video_{int(time.time())}.mp4"
+            
+            # Sanitize filename
+            filename = self._get_safe_filename(filename)
+            download_path = VIDEOS_DIR / filename
+            
+            logger.info(f"Downloading to: {download_path}")
+            
+            # Start download in a thread to avoid blocking UI
+            self.direct_download_thread = DirectDownloadThread(url, str(download_path))
+            self.direct_download_thread.progress.connect(
+                lambda percent, status: (
+                    self.progress_dialog.update_progress(percent, status),
+                    self._set_status(status)
+                )
+            )
+            self.direct_download_thread.error.connect(self._on_download_error)
+            self.direct_download_thread.done.connect(self._on_direct_download_done)
+            
+            self.direct_download_thread.start()
+            logger.info("Direct download thread started")
+            
+        except Exception as e:
+            logger.error(f"Direct download setup failed: {e}", exc_info=True)
+            if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
+                self.progress_dialog.close()
+            QMessageBox.critical(self, "Error", f"Download setup failed: {e}")
+
+    def _handle_ytdlp_video_download(self, url: str):
+        """Handle YouTube/streaming video downloads using yt-dlp"""
         try:
             self.progress_dialog = DownloadProgressDialog(self)
             self.downloader = DownloaderThread(url)
@@ -1232,11 +1301,37 @@ class MP4WallApp(QMainWindow):
 
             self.downloader.start()
             self.progress_dialog.show()
-            logger.info("Downloader thread started for remote video")
+            logger.info("YouTube downloader thread started")
 
         except Exception as e:
-            logger.error(f"Download setup failed: {e}", exc_info=True)
+            logger.error(f"YouTube download setup failed: {e}", exc_info=True)
             QMessageBox.critical(self, "Error", f"Download setup failed: {e}")
+
+    def _on_direct_download_done(self, file_path: str):
+        """Handle completion of direct video download"""
+        logger.info(f"Direct download completed: {file_path}")
+        if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
+            self.progress_dialog.close()
+        
+        if file_path and os.path.exists(file_path):
+            logger.info(f"Direct download successful: {file_path}")
+            self._apply_wallpaper_from_path(Path(file_path))
+            self._set_status(f"Video downloaded: {os.path.basename(file_path)}")
+        else:
+            logger.error("Direct download failed - file not found")
+            self._set_status("Download failed - file not found")
+            QMessageBox.critical(self, "Download Error", "Download failed - file not found")
+
+    def _get_safe_filename(self, filename):
+        """Remove invalid characters for both Windows and Linux"""
+        logger.debug(f"Sanitizing filename: {filename}")
+        # Characters invalid on Windows: < > : " | ? *
+        # Characters to avoid on Linux: / and null bytes
+        invalid_chars = '<>:"|?*/\0'
+        for char in invalid_chars:
+            filename = filename.replace(char, '_')
+        logger.debug(f"Sanitized filename: {filename}")
+        return filename
 
     def _on_download_done(self, path: str):
         """Handle download completion"""
@@ -1619,3 +1714,82 @@ class MP4WallApp(QMainWindow):
             logger.info("Application quit from tray")
         else:
             logger.info("User cancelled exit from tray")
+
+class DirectDownloadThread(QThread):
+    progress = Signal(float, str)   # percent, status message
+    done = Signal(str)              # path to downloaded file
+    error = Signal(str)
+
+    def __init__(self, url: str, file_path: str, parent=None):
+        logger.info(f"Initializing DirectDownloadThread for URL: {url}")
+        super().__init__(parent)
+        self.url = url
+        self.file_path = file_path
+        self._cancelled = False
+
+    def run(self):
+        try:
+            import requests
+            logger.info(f"Starting direct download: {self.url} -> {self.file_path}")
+            
+            self.progress.emit(0, "Connecting...")
+            
+            # Stream download with progress
+            response = requests.get(self.url, stream=True, timeout=30)
+            response.raise_for_status()
+            
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded_size = 0
+            
+            self.progress.emit(0, f"Downloading... (0%)")
+            
+            with open(self.file_path, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if self._cancelled:
+                        logger.info("Download cancelled by user")
+                        if os.path.exists(self.file_path):
+                            os.remove(self.file_path)
+                        return
+                    
+                    if chunk:
+                        file.write(chunk)
+                        downloaded_size += len(chunk)
+                        
+                        if total_size > 0:
+                            percent = (downloaded_size / total_size) * 100
+                            mb_downloaded = downloaded_size / (1024 * 1024)
+                            mb_total = total_size / (1024 * 1024)
+                            
+                            status = f"Downloading... {percent:.1f}% ({mb_downloaded:.1f}/{mb_total:.1f} MB)"
+                            self.progress.emit(percent, status)
+                        else:
+                            status = f"Downloading... {downloaded_size / (1024 * 1024):.1f} MB"
+                            self.progress.emit(0, status)
+            
+            # Verify download
+            if os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:
+                self.progress.emit(100, "Download completed!")
+                logger.info(f"Direct download completed successfully: {self.file_path}")
+                self.done.emit(self.file_path)
+            else:
+                error_msg = "Downloaded file is empty or missing"
+                logger.error(error_msg)
+                self.error.emit(error_msg)
+                
+        except Exception as e:
+            error_msg = f"Direct download failed: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            
+            # Clean up partial download
+            if os.path.exists(self.file_path):
+                try:
+                    os.remove(self.file_path)
+                except:
+                    pass
+                    
+            self.error.emit(error_msg)
+
+    def cancel(self):
+        """Cancel the download"""
+        self._cancelled = True
+        logger.info("Download cancellation requested")
