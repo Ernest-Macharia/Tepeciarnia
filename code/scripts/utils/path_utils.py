@@ -1,9 +1,13 @@
 # utils/path_utils.py
 import platform
+import subprocess
 import json
 import sys
 import os
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 def get_app_root():
     """
@@ -74,7 +78,6 @@ def get_style_path() -> Path:
     """Get style file path"""
     return BASE_DIR / "ui" / "style" / "style.qss"
 
-
 def get_bin_path() -> Path:
     """Get binary folder path"""
     return BASE_DIR / "bin" 
@@ -82,6 +85,42 @@ def get_bin_path() -> Path:
 def get_tools_path() -> Path:
     """Get tools folder path"""
     return BASE_DIR / "bin" / "tools"
+
+# Folder opening functionality
+def open_folder_in_explorer(folder_path: Path):
+    """Open folder in system file explorer"""
+    try:
+        if platform.system() == "Windows":
+            os.startfile(folder_path)
+        elif platform.system() == "Darwin":  # macOS
+            subprocess.run(["open", folder_path])
+        else:  # Linux and other UNIX-like
+            subprocess.run(["xdg-open", folder_path])
+        return True
+    except Exception as e:
+        logger.error(f"Failed to open folder {folder_path}: {e}")
+        return False
+
+def get_folder_for_source(source_type: str) -> Path:
+    """Get the corresponding folder path for a source type"""
+    folder_map = {
+        "favorites": FAVS_DIR,
+        "added": COLLECTION_DIR,
+        "super": COLLECTION_DIR,  # Fallback for super wallpaper
+        "all": COLLECTION_DIR,
+        "wallpaper": IMAGES_DIR,
+        "mp4": VIDEOS_DIR
+    }
+    return folder_map.get(source_type, COLLECTION_DIR)
+
+def get_folder_for_range(range_type: str) -> Path:
+    """Get the corresponding folder path for a range type"""
+    folder_map = {
+        "all": COLLECTION_DIR,
+        "wallpaper": IMAGES_DIR,
+        "mp4": VIDEOS_DIR
+    }
+    return folder_map.get(range_type, COLLECTION_DIR)
 
 # Backward compatibility
 get_app_root = get_app_root

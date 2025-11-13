@@ -1,5 +1,4 @@
 import os
-import subprocess
 import sys
 import random
 import shutil
@@ -40,7 +39,7 @@ from core.download_manager import DownloaderThread
 from core.scheduler import WallpaperScheduler
 from  core.language_controller import LanguageController
 # Import utilities
-from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR
+from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR, get_folder_for_range, get_folder_for_source, open_folder_in_explorer
 from utils.system_utils import get_current_desktop_wallpaper
 from utils.validators import validate_url_or_path, is_image_url_or_path
 from utils.file_utils import download_image, copy_to_collection, cleanup_temp_marker
@@ -608,17 +607,23 @@ class MP4WallApp(QMainWindow):
         self.controller.stop()
         self.scheduler.stop()
         
-        
         # Reset enhanced state
         self.current_wallpaper_type = None
         self.last_wallpaper_path = None
         self.current_shuffle_mode = None
         
-        # Reset shuffle button states
+        # Reset shuffle button states - FIXED: Set all to 'ghost' class
         if hasattr(self.ui, 'randomButton'):
             self.ui.randomButton.setChecked(False)
+            self.ui.randomButton.setProperty("class", "ghost")
+            self.ui.randomButton.style().unpolish(self.ui.randomButton)
+            self.ui.randomButton.style().polish(self.ui.randomButton)
+        
         if hasattr(self.ui, 'randomAnimButton'):
             self.ui.randomAnimButton.setChecked(False)
+            self.ui.randomAnimButton.setProperty("class", "ghost")
+            self.ui.randomAnimButton.style().unpolish(self.ui.randomAnimButton)
+            self.ui.randomAnimButton.style().polish(self.ui.randomAnimButton)
         
         # Use the enhanced drag drop widget to restore original wallpaper
         if hasattr(self, 'drag_drop_widget'):
@@ -745,6 +750,42 @@ class MP4WallApp(QMainWindow):
         self._update_scheduler_ui_state()
         logger.debug("UI setup completed")
 
+    def on_source_double_clicked(self, source_type):
+        """Handle double-click on source buttons to open corresponding folder"""
+        logger.info(f"Double-click detected on source: {source_type}")
+        folder_path = get_folder_for_source(source_type)
+        
+        if folder_path.exists():
+            success = open_folder_in_explorer(folder_path)
+            if success:
+                self._set_status(f"Opened {source_type} folder")
+                logger.info(f"Successfully opened folder: {folder_path}")
+            else:
+                self._set_status(f"Failed to open {source_type} folder")
+                logger.error(f"Failed to open folder: {folder_path}")
+        else:
+            logger.warning(f"Folder does not exist: {folder_path}")
+            QMessageBox.warning(self, "Folder Not Found", 
+                            f"The {source_type} folder does not exist:\n{folder_path}")
+
+    def on_range_double_clicked(self, range_type):
+        """Handle double-click on range buttons to open corresponding folder"""
+        logger.info(f"Double-click detected on range: {range_type}")
+        folder_path = get_folder_for_range(range_type)
+        
+        if folder_path.exists():
+            success = open_folder_in_explorer(folder_path)
+            if success:
+                self._set_status(f"Opened {range_type} range folder")
+                logger.info(f"Successfully opened folder: {folder_path}")
+            else:
+                self._set_status(f"Failed to open {range_type} folder")
+                logger.error(f"Failed to open folder: {folder_path}")
+        else:
+            logger.warning(f"Folder does not exist: {folder_path}")
+            QMessageBox.warning(self, "Folder Not Found", 
+                            f"The {range_type} folder does not exist:\n{folder_path}")
+
     def _bind_ui_controls(self):
         """Bind UI controls to their handlers"""
         logger.debug("Binding UI controls")
@@ -781,30 +822,36 @@ class MP4WallApp(QMainWindow):
             self.ui.randomButton.clicked.connect(self.on_shuffle_wallpaper)
             logger.debug("Shuffle wallpaper button connected")
 
-        # Source buttons
+        # Source buttons - with double-click support
         if hasattr(self.ui, "super_wallpaper_btn"):
             self.ui.super_wallpaper_btn.clicked.connect(self.on_super_wallpaper)
+            self.ui.super_wallpaper_btn.mouseDoubleClickEvent = lambda e: self.on_source_double_clicked("super")
             logger.debug("Super wallpaper button connected")
         
         if hasattr(self.ui, "fvrt_wallpapers_btn"):
             self.ui.fvrt_wallpapers_btn.clicked.connect(self.on_favorite_wallpapers)
+            self.ui.fvrt_wallpapers_btn.mouseDoubleClickEvent = lambda e: self.on_source_double_clicked("favorites")
             logger.debug("Favorite wallpapers button connected")
         
         if hasattr(self.ui, "added_wallpaper_btn"):
             self.ui.added_wallpaper_btn.clicked.connect(self.on_added_wallpapers)
+            self.ui.added_wallpaper_btn.mouseDoubleClickEvent = lambda e: self.on_source_double_clicked("added")
             logger.debug("Added wallpapers button connected")
 
-        # Range buttons
+        # Range buttons - with double-click support
         if hasattr(self.ui, "range_all_bnt"):
             self.ui.range_all_bnt.clicked.connect(lambda: self.on_range_changed("all"))
+            self.ui.range_all_bnt.mouseDoubleClickEvent = lambda e: self.on_range_double_clicked("all")
             logger.debug("Range all button connected")
         
         if hasattr(self.ui, "range_wallpaper_bnt"):
             self.ui.range_wallpaper_bnt.clicked.connect(lambda: self.on_range_changed("wallpaper"))
+            self.ui.range_wallpaper_bnt.mouseDoubleClickEvent = lambda e: self.on_range_double_clicked("wallpaper")
             logger.debug("Range wallpaper button connected")
         
         if hasattr(self.ui, "range_mp4_bnt"):
             self.ui.range_mp4_bnt.clicked.connect(lambda: self.on_range_changed("mp4"))
+            self.ui.range_mp4_bnt.mouseDoubleClickEvent = lambda e: self.on_range_double_clicked("mp4")
             logger.debug("Range MP4 button connected")
 
         # Scheduler controls
@@ -815,15 +862,12 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "interval_spinBox"):
             self.ui.interval_spinBox.valueChanged.connect(self._on_interval_changed)
             logger.debug("Interval spinbox connected")
+        
         # connect language combo box
         if hasattr(self.ui, "langCombo"):
             logging.debug("Language combo box connected")
             self.ui.langCombo.currentTextChanged.connect(self.language_controller.on_language_changed)
 
-
-
-
-        
         logger.debug("All UI controls bound successfully")
 
     def _update_scheduler_ui_state(self):
@@ -1528,6 +1572,7 @@ class MP4WallApp(QMainWindow):
         """Properly quit the application from tray menu with confirmation"""
         logger.info("Exit from tray menu triggered")
         reply = QMessageBox.question(
+            self,
             self.lang["dialog"]["confirm_exit_title"],
             self.lang["dialog"]["confirm_exit_dialog"],
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
