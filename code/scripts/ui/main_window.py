@@ -10,7 +10,7 @@ import time
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QMessageBox, 
     QSystemTrayIcon, QMenu, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QStyle, QSizePolicy,QSpacerItem
+    QLabel, QPushButton, QStyle, QSizePolicy, QDialog
 )
 from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
 from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize,qIsNull, Signal, QThread
@@ -79,13 +79,12 @@ class EnhancedDragDropWidget(QWidget):
         logging.debug("Setting up EnhancedDragDropWidget UI")
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        # spacers
-
         
         # Drag & drop area
         self.parent_app.ui.uploadArea.dragEnterEvent = self.dragEnterEvent
         self.parent_app.ui.uploadArea.dropEvent = self.dropEvent
-        # upload text
+        
+        # Upload text
         self.upload_text = QLabel(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
         self.upload_text.setAlignment(Qt.AlignCenter)
         self.upload_text.setAcceptDrops(True)
@@ -97,37 +96,41 @@ class EnhancedDragDropWidget(QWidget):
         self.supported_label.setSizePolicy(self.supported_label.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
         
         # Action buttons (initially hidden)
-        self.spacer_left = QSpacerItem(250, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.spacer_right = QSpacerItem(250, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        
         self.buttons_widget = QWidget()
         buttons_layout = QHBoxLayout()
         buttons_layout.setContentsMargins(20, 10, 20, 10)
         buttons_layout.setSpacing(15)
         
-        # Set as Wallpaper button
-        self.upload_btn = QPushButton("Set as Wallpaper")
-        # Create a container for the buttons to keep them together in center
-        button_container = QWidget()
-        button_container_layout = QHBoxLayout()
-        button_container_layout.setSpacing(10)  # Space between buttons
+        # NEW: Add to Collection button
+        self.add_to_collection_btn = QPushButton(self.parent_app.lang["uploadSection"]["addToCollectionButton"])
+        self.add_to_collection_btn.clicked.connect(self.add_to_collection)
+        self.add_to_collection_btn.setProperty("class", "ghost")
+        self.add_to_collection_btn.setMinimumHeight(35)
         
-        # Upload button with icon and primary class
+        # NEW: Add to Favorites button  
+        self.add_to_favorites_btn = QPushButton(self.parent_app.lang["uploadSection"]["addToFavoritesButton"])
+        self.add_to_favorites_btn.clicked.connect(self.add_to_favorites)
+        self.add_to_favorites_btn.setProperty("class", "ghost")
+        self.add_to_favorites_btn.setMinimumHeight(35)
+        
+        # Set as Wallpaper button (appears after selecting collection/favorites)
         self.upload_btn = QPushButton(self.parent_app.lang["uploadSection"]["setAsWallpaperButton"])
         self.upload_btn.clicked.connect(self.set_as_wallpaper)
         self.upload_btn.setProperty("class", "primary")
         self.upload_btn.setMinimumHeight(35)
+        self.upload_btn.setVisible(False)  # Hidden initially
         
-        # Reset button
+        # Reset button (always visible when file is selected)
         self.reset_btn = QPushButton(self.parent_app.lang["settings"]["resetButton"])
         self.reset_btn.clicked.connect(self.reset_selection)
         self.reset_btn.setProperty("class", "ghost")
         self.reset_btn.setMinimumHeight(35)
+        self.reset_btn.setVisible(False)  # Hidden initially
 
-        buttons_layout.addItem(self.spacer_left)
+        buttons_layout.addWidget(self.add_to_collection_btn)
+        buttons_layout.addWidget(self.add_to_favorites_btn)
         buttons_layout.addWidget(self.upload_btn)
         buttons_layout.addWidget(self.reset_btn)
-        buttons_layout.addItem(self.spacer_right)
         
         self.buttons_widget.setLayout(buttons_layout)
         self.buttons_widget.hide()
@@ -145,9 +148,6 @@ class EnhancedDragDropWidget(QWidget):
         layout.addWidget(self.supported_label)
         layout.addWidget(self.buttons_widget)
         
-        # self.spacer_down = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        # layout.addItem(self.spacer_down)
-
         self.setLayout(layout)
         logging.debug("EnhancedDragDropWidget UI setup completed")
     
@@ -179,51 +179,131 @@ class EnhancedDragDropWidget(QWidget):
                 filename = os.path.basename(file_path)
                 file_type = "Video" if self.is_video_file(file_path) else "Image"
                 
-                # Update UI to show file is ready to be set as wallpaper
+                # Update UI to show file is ready
                 self.upload_text.setText(f" {file_type} Ready!\n\n{filename}")
                 self.supported_label.hide()
-                self.toggle_buttons_visibility(True)  # SHOW THE BUTTONS
+                
+                # Show buttons: Add to Collection, Add to Favorites, Reset
+                self.toggle_buttons_visibility(True)
                 self.uploadIcon.hide()
-                self.buttons_widget.show()
-                self.upload_btn.setEnabled(True)
+                
+                # Show collection/favorites buttons, hide set as wallpaper initially
+                self.add_to_collection_btn.show()
+                self.add_to_favorites_btn.show()
+                self.upload_btn.hide()  # Hidden until user selects destination
+                self.reset_btn.show()   # Always show reset when file is selected
+                
                 logging.info(f"Valid {file_type.lower()} file selected: {filename}")
                 
             else:
                 self.upload_text.setText("Invalid file type!\nSupported: Images, Videos")
                 self.upload_btn.setEnabled(False)
                 logging.warning(f"Invalid file type dropped: {file_path}")
-    
-    def set_as_wallpaper(self):
-        logging.info("Set as Wallpaper button clicked")
+
+    def add_to_collection(self):
+        """Add dropped file to collection"""
+        logging.info("Add to Collection button clicked")
         if self.dropped_file_path:
             try:
-                # Store current wallpaper before setting new one (only first time)
+                self._add_file_to_destination("collection")
+                logging.info("File added to collection successfully")
+            except Exception as e:
+                logging.error(f"Failed to add to collection: {e}")
+                QMessageBox.critical(self, "Error", f"Failed to add to collection: {str(e)}")
+    
+    def add_to_favorites(self):
+        """Add dropped file to favorites"""
+        logging.info("Add to Favorites button clicked")
+        if self.dropped_file_path:
+            try:
+                self._add_file_to_destination("favorites")
+                logging.info("File added to favorites successfully")
+            except Exception as e:
+                logging.error(f"Failed to add to favorites: {e}")
+                QMessageBox.critical(self, "Error", f"Failed to add to favorites: {str(e)}")
+
+    def _add_file_to_destination(self, destination):
+        """Add file to specified destination and show set as wallpaper option"""
+        if not self.dropped_file_path:
+            return
+        
+        source_path = Path(self.dropped_file_path)
+        
+        # Determine destination folder
+        if destination == "favorites":
+            dest_folder = FAVS_DIR
+            dest_name = "favorites"
+        else:  # collection
+            if source_path.suffix.lower() in ('.mp4', '.mkv', '.webm', '.avi', '.mov'):
+                dest_folder = VIDEOS_DIR
+            else:
+                dest_folder = IMAGES_DIR
+            dest_name = "collection"
+        
+        # Copy file with duplicate handling
+        dest_path = dest_folder / source_path.name
+        counter = 1
+        original_stem = source_path.stem
+        while dest_path.exists():
+            dest_path = dest_folder / f"{original_stem}_{counter}{source_path.suffix}"
+            counter += 1
+        
+        shutil.copy2(source_path, dest_path)
+        
+        # Store the destination path for potential wallpaper setting
+        self.destination_path = str(dest_path)
+        
+        # Update UI to show success and ask to set as wallpaper
+        self.upload_text.setText(f"Added to {dest_name}!\n\n{source_path.name}")
+        
+        # Hide collection/favorites buttons, show set as wallpaper button
+        self.add_to_collection_btn.hide()
+        self.add_to_favorites_btn.hide()
+        self.upload_btn.show()  # Show set as wallpaper option
+        self.reset_btn.show()   # Keep reset visible
+        
+        # Show success message
+        QMessageBox.information(
+            self,
+            "Success",
+            f"File successfully added to {dest_name}!\n\nWould you like to set it as wallpaper now?",
+            QMessageBox.StandardButton.Ok
+        )
+        
+        logging.info(f"File added to {dest_name}: {source_path.name} -> {dest_path}")
+    
+    def set_as_wallpaper(self):
+        """Set the added file as wallpaper"""
+        logging.info("Set as Wallpaper button clicked")
+        if hasattr(self, 'destination_path') and self.destination_path:
+            try:
+                # Store current wallpaper before setting new one
                 if not hasattr(self, 'previous_wallpaper') or not self.previous_wallpaper:
                     self.previous_wallpaper = self.get_current_wallpaper()
                     logging.info(f"Stored original wallpaper: {self.previous_wallpaper}")
                 
                 # Update URL input field
                 if hasattr(self.parent_app, 'ui') and hasattr(self.parent_app.ui, 'urlInput'):
-                    self.parent_app.ui.urlInput.setText(self.dropped_file_path)
+                    self.parent_app.ui.urlInput.setText(self.destination_path)
                 
-                # Apply the wallpaper - this works for BOTH images and videos
-                if self.is_video_file(self.dropped_file_path):
-                    logging.info(f"Setting video wallpaper: {self.dropped_file_path}")
-                    self.parent_app.controller.start_video(self.dropped_file_path)
+                # Apply the wallpaper
+                if self.is_video_file(self.destination_path):
+                    logging.info(f"Setting video wallpaper: {self.destination_path}")
+                    self.parent_app.controller.start_video(self.destination_path)
                 else:
-                    logging.info(f"Setting image wallpaper: {self.dropped_file_path}")
-                    self.parent_app.controller.start_image(self.dropped_file_path)
+                    logging.info(f"Setting image wallpaper: {self.destination_path}")
+                    self.parent_app.controller.start_image(self.destination_path)
                 
                 # Show success message
                 self.upload_text.setText("Wallpaper set successfully!")
                 
                 # Update status
                 if hasattr(self.parent_app, '_set_status'):
-                    self.parent_app._set_status(f"Wallpaper set: {os.path.basename(self.dropped_file_path)}")
+                    self.parent_app._set_status(f"Wallpaper set: {os.path.basename(self.destination_path)}")
                 
                 # Store in config
-                self.parent_app.config.set_last_video(self.dropped_file_path)
-                logging.info(f"Wallpaper set successfully and saved to config: {os.path.basename(self.dropped_file_path)}")
+                self.parent_app.config.set_last_video(self.destination_path)
+                logging.info(f"Wallpaper set successfully and saved to config: {os.path.basename(self.destination_path)}")
                 
                 # Hide buttons after successful set with delay
                 QTimer.singleShot(3000, self.reset_selection)
@@ -232,14 +312,20 @@ class EnhancedDragDropWidget(QWidget):
                 logging.error(f"Failed to set wallpaper: {e}", exc_info=True)
                 self.upload_text.setText("Failed to set wallpaper!")
                 QMessageBox.critical(self, "Error", f"Failed to set wallpaper: {str(e)}")
+        else:
+            logging.warning("No destination path available for setting wallpaper")
+            QMessageBox.warning(self, "Error", "No file available to set as wallpaper.")
     
     def reset_selection(self):
         """Reset to original selection state"""
         logging.info("Reset selection triggered")
         self.dropped_file_path = None
+        if hasattr(self, 'destination_path'):
+            delattr(self, 'destination_path')
         self.upload_text.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
         self.supported_label.show()
-        self.toggle_buttons_visibility(False)  # HIDE THE BUTTONS
+        self.toggle_buttons_visibility(False)
+        self.reset_btn.hide()  # Hide reset when no file selected
         logging.debug("Drag drop widget reset to initial state")
     
     def is_video_file(self, file_path):
@@ -1675,58 +1761,224 @@ class TapeciarniaApp(QMainWindow):
         return filename
 
     def _on_download_done(self, path: str):
-        """Handle download completion - FIXED to not set wallpaper on failure"""
-        logging.info(f"Download completed, path: {path}")
+        """Handle download completion with robust validation"""
+        logging.info(f"Download completion handler called with path: {path}")
         
-        # Close progress dialog
+        # Close progress dialog first
         if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
             self.progress_dialog.close()
+            logging.debug("Progress dialog closed")
         
-        # Check if download actually succeeded
-        if not path:
-            logger.warning("Download failed - no path provided")
-            self._set_status("Download failed")
-            # Don't set any wallpaper - just show the error status
+        # Validate the downloaded file thoroughly
+        if not self._validate_downloaded_file(path):
+            logging.error(f"Download validation failed for: {path}")
+            self._set_status("Download failed - file validation error")
             return
         
+        # Only proceed if file is valid
         p = Path(path)
-        if not p.exists():
-            logger.error(f"Downloaded file missing: {path}")
-            self._set_status("Download failed - file missing")
-            # Don't set any wallpaper
+        logging.info(f"Download validated successfully: {p.name} ({p.stat().st_size} bytes)")
+        
+        # Ask user where to add the file
+        self._ask_download_destination(p)
+
+    def _validate_downloaded_file(self, path: str) -> bool:
+        """Thoroughly validate the downloaded file"""
+        if not path or not isinstance(path, str):
+            logging.error("Invalid path provided")
+            return False
+        
+        try:
+            p = Path(path)
+            
+            # Check if file exists
+            if not p.exists():
+                logging.error(f"Downloaded file does not exist: {path}")
+                return False
+            
+            # Check file size
+            file_size = p.stat().st_size
+            if file_size == 0:
+                logging.error(f"Downloaded file is empty: {path}")
+                return False
+            
+            # Check if file is readable
+            if not os.access(p, os.R_OK):
+                logging.error(f"Downloaded file is not readable: {path}")
+                return False
+            
+            # Additional checks for video files
+            if p.suffix.lower() in ('.mp4', '.mkv', '.webm', '.avi', '.mov'):
+                # Quick check if it might be a valid video file
+                if file_size < 1024:  # Less than 1KB is suspicious for a video
+                    logging.warning(f"Video file seems too small: {file_size} bytes")
+                    # Don't fail here, just warn
+            
+            logging.info(f"File validation passed: {p.name} ({file_size} bytes)")
+            return True
+            
+        except Exception as e:
+            logging.error(f"File validation error: {e}")
+            return False
+
+    def _ask_download_destination(self, downloaded_file: Path):
+        """Ask user where to add downloaded file with error handling"""
+        logging.info("Asking user for download destination")
+        
+        # Double-check file still exists before showing dialog
+        if not downloaded_file.exists():
+            logging.error("Downloaded file disappeared before destination selection")
+            QMessageBox.critical(
+                self,
+                "File Error",
+                "The downloaded file is no longer available. Please try downloading again.",
+                QMessageBox.StandardButton.Ok
+            )
             return
+        
+        try:
+            dialog = QDialog(self)
+            dialog.setWindowTitle("Add Downloaded File")
+            dialog.setModal(True)
+            dialog.setFixedSize(400, 200)
+            
+            layout = QVBoxLayout(dialog)
+            
+            # Message with file info
+            file_size = downloaded_file.stat().st_size
+            message = QLabel(
+                f"Where would you like to add the downloaded file?\n\n"
+                f"{downloaded_file.name}\n"
+                f"Size: {file_size / 1024 / 1024:.1f} MB"
+            )
+            message.setAlignment(Qt.AlignCenter)
+            layout.addWidget(message)
+            
+            # Buttons
+            buttons_layout = QHBoxLayout()
+            
+            add_to_collection_btn = QPushButton("Add to Collection")
+            add_to_favorites_btn = QPushButton("Add to Favorites")
+            cancel_btn = QPushButton("Cancel")
+            
+            add_to_collection_btn.clicked.connect(
+                lambda: self._safe_process_destination(downloaded_file, "collection", dialog)
+            )
+            add_to_favorites_btn.clicked.connect(
+                lambda: self._safe_process_destination(downloaded_file, "favorites", dialog)
+            )
+            cancel_btn.clicked.connect(dialog.reject)
+            
+            buttons_layout.addWidget(add_to_collection_btn)
+            buttons_layout.addWidget(add_to_favorites_btn)
+            buttons_layout.addWidget(cancel_btn)
+            
+            layout.addLayout(buttons_layout)
+            
+            dialog.exec()
+            
+        except Exception as e:
+            logging.error(f"Error showing destination dialog: {e}")
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to show destination options: {str(e)}",
+                QMessageBox.StandardButton.Ok
+            )
 
-        # Verify file has content
-        file_size = p.stat().st_size
-        if file_size == 0:
-            logger.error(f"Downloaded file is empty: {path}")
-            self._set_status("Download failed - empty file")
-            # Don't set any wallpaper  
-            return
+    def _safe_process_destination(self, downloaded_file: Path, destination: str, dialog: QDialog):
+        """Safely process destination with comprehensive error handling"""
+        try:
+            # Final validation before processing
+            if not downloaded_file.exists():
+                logging.error("File disappeared during destination selection")
+                QMessageBox.critical(
+                    self,
+                    "File Error", 
+                    "The file is no longer available. Operation cancelled.",
+                    QMessageBox.StandardButton.Ok
+                )
+                dialog.reject()
+                return
+            
+            self._process_download_destination(downloaded_file, destination, dialog)
+            
+        except Exception as e:
+            logging.error(f"Error processing destination: {e}")
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"Failed to process file: {str(e)}",
+                QMessageBox.StandardButton.Ok
+            )
+            dialog.reject()
 
-        # Determine destination folder
-        if p.suffix.lower() in (".mp4", ".mkv", ".webm", ".avi", ".mov"):
-            dest_folder = VIDEOS_DIR
-            file_type = "video"
-        elif p.suffix.lower() in (".jpg", ".jpeg", ".png", ".bmp", ".gif"):
-            dest_folder = IMAGES_DIR
-            file_type = "image"
+    def _process_download_destination(self, downloaded_file: Path, destination: str, dialog: QDialog):
+        """Process the downloaded file to specified destination"""
+        try:
+            # Determine destination folder
+            if destination == "favorites":
+                dest_folder = FAVS_DIR
+                dest_name = "favorites"
+            else:  # collection
+                if downloaded_file.suffix.lower() in ('.mp4', '.mkv', '.webm', '.avi', '.mov'):
+                    dest_folder = VIDEOS_DIR
+                else:
+                    dest_folder = IMAGES_DIR
+                dest_name = "collection"
+            
+            # Copy file with duplicate handling
+            dest_path = dest_folder / downloaded_file.name
+            counter = 1
+            original_stem = downloaded_file.stem
+            while dest_path.exists():
+                dest_path = dest_folder / f"{original_stem}_{counter}{downloaded_file.suffix}"
+                counter += 1
+            
+            shutil.copy2(downloaded_file, dest_path)
+            
+            # Close the destination dialog
+            dialog.accept()
+            
+            # Ask if user wants to set as wallpaper
+            self._ask_set_as_wallpaper(dest_path, dest_name)
+            
+            logging.info(f"Downloaded file added to {dest_name}: {dest_path}")
+            
+        except Exception as e:
+            logging.error(f"Failed to process download destination: {e}")
+            QMessageBox.critical(self, "Error", f"Failed to add file: {str(e)}")
+            dialog.reject()
+
+    def _ask_set_as_wallpaper(self, file_path: Path, source: str):
+        """Ask user if they want to set the file as wallpaper"""
+        logging.info(f"Asking to set as wallpaper: {file_path}")
+        
+        reply = QMessageBox.question(
+            self,
+            "Set as Wallpaper?",
+            f"File successfully added to {source}!\n\n"
+            f"Would you like to set '{file_path.name}' as your wallpaper now?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            logging.info(f"User chose to set as wallpaper: {file_path}")
+            self._apply_wallpaper_from_path(file_path)
+            self._set_status(f"Wallpaper set: {file_path.name}")
+            QMessageBox.information(
+                self,
+                "Success",
+                f"Wallpaper set successfully!\n\n{file_path.name}",
+                QMessageBox.StandardButton.Ok
+            )
         else:
-            dest_folder = COLLECTION_DIR
-            file_type = "unknown"
-
-        # Copy to collection
-        collection_dest = dest_folder / p.name
-        if not collection_dest.exists():
-            shutil.copy2(p, collection_dest)
-            logging.info(f"Downloaded {file_type} copied to collection: {collection_dest}")
-        else:
-            logger.debug(f"Downloaded {file_type} already exists in collection: {collection_dest}")
-
-        # Only set wallpaper if download was successful
-        self._apply_wallpaper_from_path(collection_dest)
-        self._set_status(f"{file_type.capitalize()} downloaded and set: {p.name}")
-        logging.info(f"Download successful and wallpaper set: {p.name}")
+            logging.info(f"User chose not to set as wallpaper: {file_path}")
+            self._set_status(f"File added to {source}: {file_path.name}")
+            # Still update URL input so user can set it later
+            if hasattr(self.ui, 'urlInput'):
+                self.ui.urlInput.setText(str(file_path))
 
     def _apply_wallpaper_from_path(self, file_path: Path):
         """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""

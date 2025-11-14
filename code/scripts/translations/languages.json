@@ -19,7 +19,9 @@
       "loadButton": "Load",
       "urlHelperText": "Paete a dirick link to a .jpg/.png or mp4 file",
       "setAsWallpaperButton" : "Set as Wallpaper",
-      "selected_text":"Selected"
+      "selected_text":"Selected",
+      "addToCollectionButton": "Add to Collection",
+      "addToFavoritesButton": "Add to Favorites"
     },
     "settings": {
       "autoChangeHeader": "Automatic wallpaper change",
