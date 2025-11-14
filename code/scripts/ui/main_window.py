@@ -1717,17 +1717,32 @@ class TapeciarniaApp(QMainWindow):
 
     # Utility methods - FIXED: Proper media type separation
     def _get_media_files(self, media_type="all"):
-        """Get media files based on current range and media type"""
+        """Get media files based on current range and media type - FIXED LOGIC"""
         logging.debug(f"Getting media files - type: {media_type}, range: {self.current_range}")
         files = []
         
-        # Define search folders based on current range
-        if self.current_range == "mp4":
-            search_folders = [VIDEOS_DIR]
-        elif self.current_range == "wallpaper":
-            search_folders = [IMAGES_DIR]
-        else:  # "all"
-            search_folders = [VIDEOS_DIR, IMAGES_DIR, FAVS_DIR]
+        # Define search folders based on CURRENT SOURCE (not just range)
+        if hasattr(self, 'scheduler') and self.scheduler.source:
+            if self.scheduler.source == str(FAVS_DIR):
+                search_folders = [FAVS_DIR]
+                source_type = "favorites"
+            elif self.scheduler.source == str(COLLECTION_DIR):
+                search_folders = [VIDEOS_DIR, IMAGES_DIR, FAVS_DIR]
+                source_type = "collection"
+            else:
+                search_folders = [Path(self.scheduler.source)]
+                source_type = "custom"
+        else:
+            # Fallback to range-based selection
+            if self.current_range == "mp4":
+                search_folders = [VIDEOS_DIR]
+            elif self.current_range == "wallpaper":
+                search_folders = [IMAGES_DIR]
+            else:  # "all"
+                search_folders = [VIDEOS_DIR, IMAGES_DIR, FAVS_DIR]
+            source_type = "range-based"
+        
+        logging.debug(f"Using source: {source_type}, folders: {[str(f) for f in search_folders]}")
         
         # Define extensions based on media type
         if media_type == "mp4":
@@ -1746,7 +1761,7 @@ class TapeciarniaApp(QMainWindow):
                 files.extend(folder_files)
                 logging.debug(f"Found {len(folder_files)} files in {folder}")
         
-        logging.debug(f"Total media files found: {len(files)}")
+        logging.debug(f"Total media files found: {len(files)} from {source_type}")
         return files
 
     def _get_range_display_name(self):
