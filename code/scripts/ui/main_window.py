@@ -2413,7 +2413,7 @@ class TapeciarniaApp(QMainWindow):
         
         # Set icon
         icon = QIcon()
-        cand = Path(_file_).parent.parent / "bin" / "media" / "icon.ico"
+        cand = Path(__file__).parent.parent / "bin" / "media" / "icon.ico"
         if cand.exists():
             icon = QIcon(str(cand))
             logging.debug("Using custom tray icon")
