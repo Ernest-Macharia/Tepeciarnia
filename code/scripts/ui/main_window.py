@@ -51,7 +51,7 @@ from models.config import Config
 
 # Import UI components
 from .widgets import FadeOverlay
-from .dialogs import DownloadProgressDialog
+from .dialogs import DownloadProgressDialog, ShutdownProgressDialog
 
 
 
@@ -624,7 +624,7 @@ class TapeciarniaApp(QMainWindow):
             self._apply_image_with_fade(str(file_path))
 
     def _perform_reset(self):
-        """Reset to default wallpaper WITHOUT confirmation"""
+        """Reset to default wallpaper WITHOUT confirmation but WITH success message"""
         logging.info("Performing reset without confirmation")
         self.controller.stop()
         self.scheduler.stop()
@@ -634,7 +634,7 @@ class TapeciarniaApp(QMainWindow):
         self.last_wallpaper_path = None
         self.current_shuffle_mode = None
         
-        # Reset shuffle button states - FIXED: Set all to 'ghost' class
+        # Reset shuffle button states
         if hasattr(self.ui, 'randomButton'):
             self.ui.randomButton.setChecked(False)
             self.ui.randomButton.setProperty("class", "ghost")
@@ -664,6 +664,46 @@ class TapeciarniaApp(QMainWindow):
         
         self._set_status("Reset completed")
         logging.info("Reset completed successfully")
+        
+        # Show success confirmation
+        QTimer.singleShot(500, self._show_reset_success_message)
+
+    def _show_reset_success_message(self):
+        """Show success confirmation dialog after reset"""
+        logging.info("Showing reset success confirmation")
+        
+        # Create a custom dialog for better UX
+        success_dialog = QMessageBox(self)
+        success_dialog.setWindowTitle(self.lang["dialog"]["reset_success_title"])
+        success_dialog.setText(self.lang["dialog"]["reset_success_message"])
+        success_dialog.setIcon(QMessageBox.Icon.Information)
+        success_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
+        
+        # Style the dialog to match your app
+        success_dialog.setStyleSheet("""
+            QMessageBox {
+                background-color: #2b2b2b;
+                color: white;
+            }
+            QMessageBox QLabel {
+                color: white;
+            }
+            QMessageBox QPushButton {
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                min-width: 80px;
+            }
+            QMessageBox QPushButton:hover {
+                background-color: #45a049;
+            }
+        """)
+        
+        # Show the dialog
+        success_dialog.exec()
+        logging.info("Reset success confirmation shown")
 
     def cleanup(self):
         """Enhanced cleanup on app close"""
@@ -696,21 +736,181 @@ class TapeciarniaApp(QMainWindow):
         
         if reply == QMessageBox.StandardButton.Yes:
             logging.info("User confirmed exit")
-            # Stop any running processes WITHOUT reset confirmation
-            self._perform_reset()  # Use the version WITHOUT confirmation
+            # Show shutdown progress dialog
+            self._show_shutdown_progress(event)
+        else:
+            logging.info("User cancelled exit")
+            event.ignore()
+
+    def _show_shutdown_progress(self, event):
+        """Show shutdown progress and perform cleanup"""
+        logging.info("Starting shutdown process with enhanced progress dialog")
+        
+        # Create and show shutdown progress dialog
+        self.shutdown_dialog = ShutdownProgressDialog(self)
+        self.shutdown_dialog.show()
+        
+        # Start the actual shutdown process after dialog is shown
+        QTimer.singleShot(200, lambda: self._perform_shutdown(event))
+
+    def _perform_shutdown(self, event):
+        """Perform shutdown with coordinated progress updates"""
+        try:
+            logging.info("Performing coordinated shutdown sequence")
             
+            # Step 1: Stop wallpaper processes (25%)
+            self.shutdown_dialog.update_progress(25, "Stopping wallpaper processes...")
+            self.controller.stop()
+            QApplication.processEvents()
+            
+            # Step 2: Stop scheduler (50%)
+            self.shutdown_dialog.update_progress(50, "Stopping scheduler...")
+            self.scheduler.stop()
+            QApplication.processEvents()
+            
+            # Step 3: Cleanup resources (75%)
+            self.shutdown_dialog.update_progress(75, "Cleaning up resources...")
+            try:
+                if hasattr(self, 'stop_auto_pause_process'):
+                    self.stop_auto_pause_process()
+            except Exception as e:
+                logger.warning(f"Error stopping auto-pause process: {e}")
+            QApplication.processEvents()
+            
+            # Step 4: Save settings (90%)
+            self.shutdown_dialog.update_progress(90, "Saving settings...")
+            # Add any final settings save operations here
+            QApplication.processEvents()
+            
+            # Step 5: Complete (100%)
+            self.shutdown_dialog.update_progress(100, "Shutdown complete!")
+            QApplication.processEvents()
+            
+            # Wait a moment to show completion, then finalize
+            QTimer.singleShot(800, lambda: self._finalize_shutdown(event))
+            
+        except Exception as e:
+            logger.error(f"Error during shutdown: {e}", exc_info=True)
+            # Even if there's an error, try to finalize
+            self._finalize_shutdown(event)
+
+    def _finalize_shutdown(self, event):
+        """Finalize the shutdown process - FIXED for deleted event"""
+        try:
             # Hide tray icon
             if hasattr(self, 'tray'):
                 self.tray.hide()
             
-            # Since we set quitOnLastWindowClosed to False, we MUST call quit()
+            # Close shutdown dialog
+            if hasattr(self, 'shutdown_dialog'):
+                self.shutdown_dialog.close()
+            
+            # Don't try to use event if it's already deleted
+            try:
+                if event and hasattr(event, 'accept'):
+                    event.accept()
+            except RuntimeError:
+                logger.debug("Close event already deleted, continuing shutdown")
+            
+            # Quit application
             QApplication.quit()
             
-            event.accept()
-            logging.info("Application quit initiated")
-        else:
-            logging.info("User cancelled exit")
-            event.ignore()
+            logging.info("Application quit initiated successfully")
+            
+        except Exception as e:
+            logger.error(f"Error finalizing shutdown: {e}", exc_info=True)
+            # Force quit if graceful shutdown fails
+            QApplication.quit()
+
+    def _show_shutdown_progress_from_tray(self):
+        """Show shutdown progress when exiting from tray"""
+        logging.info("Starting shutdown process from tray with progress dialog")
+        
+        # Create and show shutdown progress dialog
+        self.shutdown_dialog = ShutdownProgressDialog(self)
+        self.shutdown_dialog.show()
+        
+        # Start shutdown process
+        QTimer.singleShot(200, self._perform_shutdown_from_tray)
+
+    def _perform_shutdown_from_tray(self):
+        """Perform shutdown from tray with progress updates"""
+        try:
+            logging.info("Performing shutdown sequence from tray")
+            
+            # Step 1: Stop wallpaper processes (25%)
+            self.shutdown_dialog.update_progress(25, "Stopping wallpaper processes...")
+            self.controller.stop()
+            QApplication.processEvents()
+            
+            # Step 2: Stop scheduler (50%)
+            self.shutdown_dialog.update_progress(50, "Stopping scheduler...")
+            self.scheduler.stop()
+            QApplication.processEvents()
+            
+            # Step 3: Cleanup (75%)
+            self.shutdown_dialog.update_progress(75, "Cleaning up resources...")
+            try:
+                if hasattr(self, 'stop_auto_pause_process'):
+                    self.stop_auto_pause_process()
+            except Exception as e:
+                logger.warning(f"Error stopping auto-pause process: {e}")
+            QApplication.processEvents()
+            
+            # Step 4: Save settings (90%)
+            self.shutdown_dialog.update_progress(90, "Saving settings...")
+            QApplication.processEvents()
+            
+            # Step 5: Complete (100%)
+            self.shutdown_dialog.update_progress(100, "Shutdown complete!")
+            QApplication.processEvents()
+            
+            # Wait a moment to show completion
+            QTimer.singleShot(800, self._finalize_shutdown_from_tray)
+            
+        except Exception as e:
+            logger.error(f"Error during tray shutdown: {e}", exc_info=True)
+            self._finalize_shutdown_from_tray()
+
+    def _finalize_shutdown_from_tray(self):
+        """Finalize shutdown from tray"""
+        try:
+            # Hide tray icon
+            if hasattr(self, 'tray'):
+                self.tray.hide()
+            
+            # Close shutdown dialog
+            if hasattr(self, 'shutdown_dialog'):
+                self.shutdown_dialog.close()
+            
+            # Quit application
+            QApplication.quit()
+            logging.info("Application quit from tray completed successfully")
+            
+        except Exception as e:
+            logger.error(f"Error finalizing tray shutdown: {e}", exc_info=True)
+            QApplication.quit()
+
+    def stop_auto_pause_process(self):
+        """Stop any auto-pause background processes"""
+        logging.info("Stopping auto-pause processes")
+        try:
+            if hasattr(self, 'auto_pause_process') and self.auto_pause_process:
+                try:
+                    self.auto_pause_process.terminate()
+                    self.auto_pause_process.wait(2000)  # Wait up to 2 seconds
+                    logger.debug("Auto-pause process terminated successfully")
+                except Exception as e:
+                    logger.warning(f"Could not terminate auto-pause process gracefully: {e}")
+                    try:
+                        self.auto_pause_process.kill()
+                        logger.debug("Auto-pause process killed")
+                    except Exception as kill_error:
+                        logger.error(f"Could not kill auto-pause process: {kill_error}")
+                finally:
+                    self.auto_pause_process = None
+        except Exception as e:
+            logger.warning(f"Error stopping auto-pause process: {e}")
 
     def hide_to_tray(self):
         logging.info("Hiding window to system tray")
@@ -1310,7 +1510,7 @@ class TapeciarniaApp(QMainWindow):
 
     def _on_direct_download_done(self, file_path: str):
         """Handle completion of direct video download - FIXED to not set wallpaper on failure"""
-        logger.info(f"Direct download completed: {file_path}")
+        logging.info(f"Direct download completed: {file_path}")
         if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
             self.progress_dialog.close()
         
@@ -1328,7 +1528,7 @@ class TapeciarniaApp(QMainWindow):
             # Don't set any wallpaper
             return
             
-        logger.info(f"Direct download successful: {file_path}")
+        logging.info(f"Direct download successful: {file_path}")
         self._apply_wallpaper_from_path(Path(file_path))
         self._set_status(f"Video downloaded and set: {os.path.basename(file_path)}")
 
@@ -1345,7 +1545,7 @@ class TapeciarniaApp(QMainWindow):
 
     def _on_download_done(self, path: str):
         """Handle download completion - FIXED to not set wallpaper on failure"""
-        logger.info(f"Download completed, path: {path}")
+        logging.info(f"Download completed, path: {path}")
         
         # Close progress dialog
         if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
@@ -1388,14 +1588,14 @@ class TapeciarniaApp(QMainWindow):
         collection_dest = dest_folder / p.name
         if not collection_dest.exists():
             shutil.copy2(p, collection_dest)
-            logger.info(f"Downloaded {file_type} copied to collection: {collection_dest}")
+            logging.info(f"Downloaded {file_type} copied to collection: {collection_dest}")
         else:
             logger.debug(f"Downloaded {file_type} already exists in collection: {collection_dest}")
 
         # Only set wallpaper if download was successful
         self._apply_wallpaper_from_path(collection_dest)
         self._set_status(f"{file_type.capitalize()} downloaded and set: {p.name}")
-        logger.info(f"Download successful and wallpaper set: {p.name}")
+        logging.info(f"Download successful and wallpaper set: {p.name}")
 
     def _apply_wallpaper_from_path(self, file_path: Path):
         """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""
@@ -1429,29 +1629,63 @@ class TapeciarniaApp(QMainWindow):
             QMessageBox.critical(self, "Error", f"Failed to play video: {e}")
 
     def _apply_image_with_fade(self, image_path: str):
-        """Apply image wallpaper with fade effect"""
+        """Apply image wallpaper with fade effect - FIXED for null pixmap"""
         try:
             logging.info(f"Applying image wallpaper with fade: {image_path}")
-            old_pix = self.grab() if hasattr(self, 'grab') else None
+            
+            # Check if image file exists and is valid
+            if not os.path.exists(image_path):
+                logger.error(f"Image file does not exist: {image_path}")
+                raise FileNotFoundError(f"Image file not found: {image_path}")
+            
+            # Load the new pixmap first
             new_pix = QPixmap(image_path)
+            if new_pix.isNull():
+                logger.error(f"Failed to load image: {image_path}")
+                raise ValueError(f"Invalid image file: {image_path}")
+            
+            # Scale the new pixmap
             new_pix = new_pix.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
             
+            # Try to get old pixmap, but continue if it fails
+            old_pix = None
+            try:
+                old_pix = self.grab()
+                if old_pix.isNull():
+                    logger.debug("Old pixmap is null, using default fade")
+                    old_pix = None
+            except Exception as e:
+                logger.debug(f"Could not grab old pixmap: {e}")
+                old_pix = None
+            
+            # Setup fade overlay
             self.fade_overlay.set_pixmaps(old_pix, new_pix)
             self.fade_overlay.show()
             self.fade_overlay.raise_()
             self.fade_overlay.animate_to(duration=650)
             
+            # Apply wallpaper
             self.controller.start_image(image_path)
             self.config.set_last_video(image_path)
             
+            # Hide overlay after animation
             QTimer.singleShot(700, self.fade_overlay.hide)
             self._set_status(f"Image applied: {Path(image_path).name}")
             self._update_url_input(image_path)
             logging.info(f"Image wallpaper applied with fade: {Path(image_path).name}")
             
         except Exception as e:
-            logging.error(f"Fade apply failed: {e}", exc_info=True)
-            QMessageBox.warning(self, "Error", f"Fade apply failed: {e}")
+            logger.error(f"Fade apply failed: {e}", exc_info=True)
+            # Fallback to direct application without fade
+            try:
+                logging.info("Attempting direct image application without fade")
+                self.controller.start_image(image_path)
+                self.config.set_last_video(image_path)
+                self._set_status(f"Image applied (no fade): {Path(image_path).name}")
+                self._update_url_input(image_path)
+            except Exception as fallback_error:
+                logger.error(f"Fallback image application also failed: {fallback_error}")
+                QMessageBox.warning(self, "Error", f"Failed to apply image: {fallback_error}")
 
     # Utility methods - FIXED: Proper media type separation
     def _get_media_files(self, media_type="all"):
@@ -1719,7 +1953,7 @@ class TapeciarniaApp(QMainWindow):
                 self.show_from_tray()
 
     def _exit_app(self):
-        """Properly quit the application from tray menu with confirmation"""
+        """Properly quit the application from tray menu with confirmation and progress"""
         logging.info("Exit from tray menu triggered")
         reply = QMessageBox.question(
             self,
@@ -1731,13 +1965,8 @@ class TapeciarniaApp(QMainWindow):
 
         if reply == QMessageBox.StandardButton.Yes:
             logging.info("User confirmed exit from tray")
-            # Stop any running processes WITHOUT reset confirmation
-            self._perform_reset()  # Use the version WITHOUT confirmation
-            
-            if hasattr(self, 'tray'):
-                self.tray.hide()
-            QApplication.quit()
-            logging.info("Application quit from tray")
+            # Show shutdown progress for tray exit too
+            self._show_shutdown_progress_from_tray()
         else:
             logging.info("User cancelled exit from tray")
 

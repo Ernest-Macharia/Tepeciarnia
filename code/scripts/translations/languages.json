@@ -20,7 +20,6 @@
       "urlHelperText": "Paete a dirick link to a .jpg/.png or mp4 file",
       "setAsWallpaperButton" : "Set as Wallpaper",
       "selected_text":"Selected"
-
     },
     "settings": {
       "autoChangeHeader": "Automatic wallpaper change",
@@ -44,8 +43,9 @@
       "confirm_exit_title": "Confirm Exit",
       "confirm_exit_dialog": "Are you sure you want to exit Tapeciarnia?\n\nThis will stop all wallpapers and background processes.",
       "icon_tray_title": "Tapeciarnia is still running",
-      "icon_tray_message": "Tapeciarnia is minimized to the system tray. Right-click the tray icon to restore or exit."
-
+      "icon_tray_message": "Tapeciarnia is minimized to the system tray. Right-click the tray icon to restore or exit.",
+      "reset_success_title": "Reset Successful",
+      "reset_success_message": "All wallpapers have been stopped and settings have been reset to default.\n\nYour original wallpaper has been restored."
     }
   },
   "es": {
@@ -68,7 +68,6 @@
       "loadButton": "Cargar",
       "urlHelperText": "Pegue un enlace directo a un archivo .jpg/.png o mp4",
       "setAsWallpaperButton" : "Establecer como Fondo de Pantalla"
-
     },
     "settings": {
       "autoChangeHeader": "Cambio automático de fondo de pantalla",
@@ -92,7 +91,9 @@
       "confirm_exit_title": "Confirmar Salida",
       "confirm_exit_dialog": "¿Está seguro de que desea salir de Tapeciarnia?\n\nEsto detendrá todos los fondos de pantalla y procesos en segundo plano.",
       "icon_tray_title": "Tapeciarnia sigue funcionando",
-      "icon_tray_message": "Tapeciarnia está minimizado en la bandeja del sistema. Haga clic derecho en el icono de la bandeja para restaurar o salir."
+      "icon_tray_message": "Tapeciarnia está minimizado en la bandeja del sistema. Haga clic derecho en el icono de la bandeja para restaurar o salir.",
+      "reset_success_title": "Restablecimiento Exitoso",
+      "reset_success_message": "Todos los fondos de pantalla han sido detenidos y la configuración ha sido restablecida a los valores predeterminados."
     }
   },
   "fr": {
@@ -115,7 +116,6 @@
       "loadButton": "Charger",
       "urlHelperText": "Collez un lien direct vers un fichier .jpg/.png ou mp4",
       "setAsWallpaperButton" : "Définir comme fond d'écran"
-
     },
     "settings": {
       "autoChangeHeader": "Changement automatique du fond d'écran",
@@ -139,7 +139,9 @@
       "confirm_exit_title": "Confirmer la sortie",
       "confirm_exit_dialog": "Êtes-vous sûr de vouloir quitter Tapeciarnia ?\n\nCela arrêtera tous les fonds d'écran et les processus en arrière-plan.",
       "icon_tray_title": "Tapeciarnia fonctionne toujours",
-      "icon_tray_message": "Tapeciarnia est réduit dans la barre d'état système. Faites un clic droit sur l'icône de la barre pour restaurer ou quitter."
+      "icon_tray_message": "Tapeciarnia est réduit dans la barre d'état système. Faites un clic droit sur l'icône de la barre pour restaurer ou quitter.",
+      "reset_success_title": "Réinitialisation Réussie",
+      "reset_success_message": "Tous les fonds d'écran ont été arrêtés et les paramètres ont été réinitialisés aux valeurs par défaut."
     }
   },
   "de": {
@@ -162,7 +164,6 @@
       "loadButton": "Laden",
       "urlHelperText": "Fügen Sie einen direkten Link zu einer .jpg/.png- oder mp4-Datei ein",
       "setAsWallpaperButton" : "Als Hintergrundbild festlegen"
-
     },
     "settings": {
       "autoChangeHeader": "Automatischer Hintergrundbildwechsel",
@@ -186,7 +187,9 @@
       "confirm_exit_title": "Beenden bestätigen",
       "confirm_exit_dialog": "Sind Sie sicher, dass Sie Tapeciarnia beenden möchten?\n\nDies stoppt alle Hintergrundbilder und Hintergrundprozesse.",
       "icon_tray_title": "Tapeciarnia läuft weiterhin",
-      "icon_tray_message": "Tapeciarnia ist auf das Systemtray minimiert. Klicken Sie mit der rechten Maustaste auf das Tray-Symbol, um es wiederherzustellen oder zu beenden."
+      "icon_tray_message": "Tapeciarnia ist auf das Systemtray minimiert. Klicken Sie mit der rechten Maustaste auf das Tray-Symbol, um es wiederherzustellen oder zu beenden.",
+      "reset_success_title": "Zurücksetzen Erfolgreich",
+      "reset_success_message": "Alle Hintergrundbilder wurden gestoppt und die Einstellungen wurden auf die Standardwerte zurückgesetzt."
     }
   },
   "zh-cn": {
@@ -209,7 +212,6 @@
       "loadButton": "加载",
       "urlHelperText": "粘贴.jpg/.png或mp4文件的直接链接",
       "setAsWallpaperButton" : "设为壁纸"
-
     },
     "settings": {
       "autoChangeHeader": "自动更换壁纸",
@@ -233,7 +235,9 @@
       "confirm_exit_title": "确认退出",
       "confirm_exit_dialog": "您确定要退出Tapeciarnia吗？\n\n这将停止所有壁纸和后台进程。",
       "icon_tray_title": "Tapeciarnia仍在运行",
-      "icon_tray_message": "Tapeciarnia已最小化到系统托盘。右键单击托盘图标以恢复或退出。"
+      "icon_tray_message": "Tapeciarnia已最小化到系统托盘。右键单击托盘图标以恢复或退出。",
+      "reset_success_title": "重置成功",
+      "reset_success_message": "所有壁纸已停止，设置已重置为默认值。"
     }
   },
   "ru": {
@@ -256,7 +260,6 @@
       "loadButton": "Загрузить",
       "urlHelperText": "Вставьте прямую ссылку на файл .jpg/.png или mp4",
       "setAsWallpaperButton" : "Установить как обои"
-
     },
     "settings": {
       "autoChangeHeader": "Автоматическая смена обоев",
@@ -280,7 +283,9 @@
       "confirm_exit_title": "Подтвердите выход",
       "confirm_exit_dialog": "Вы уверены, что хотите выйти из Tapeciarnia?\n\nЭто остановит все обои и фоновые процессы.",
       "icon_tray_title": "Tapeciarnia все еще работает",
-      "icon_tray_message": "Tapeciarnia свернута в системный трей. Щелкните правой кнопкой мыши значок трея, чтобы восстановить или выйти." 
+      "icon_tray_message": "Tapeciarnia свернута в системный трей. Щелкните правой кнопкой мыши значок трея, чтобы восстановить или выйти.",
+      "reset_success_title": "Сброс Успешно",
+      "reset_success_message": "Все обои были остановлены и настройки были сброшены к значениям по умолчанию."
     }
   }
 }
