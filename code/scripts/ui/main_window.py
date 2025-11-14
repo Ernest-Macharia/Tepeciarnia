@@ -1,6 +1,7 @@
 import os
 import sys
 import random
+import logging
 import shutil
 import logging
 from pathlib import Path
@@ -18,6 +19,8 @@ from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize,qIsNull, 
 current_dir = os.path.dirname(__file__)
 ui_path = os.path.join(current_dir, 'mainUI.py')
 sys.path.append(os.path.dirname(current_dir))
+
+logger = logging.getLogger(__name__)
 
 try:
     from ui.mainUI import Ui_MainWindow
@@ -1306,19 +1309,28 @@ class TapeciarniaApp(QMainWindow):
             QMessageBox.critical(self, "Error", f"Download setup failed: {e}")
 
     def _on_direct_download_done(self, file_path: str):
-        """Handle completion of direct video download"""
-        logging.info(f"Direct download completed: {file_path}")
+        """Handle completion of direct video download - FIXED to not set wallpaper on failure"""
+        logger.info(f"Direct download completed: {file_path}")
         if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
             self.progress_dialog.close()
         
-        if file_path and os.path.exists(file_path):
-            logging.info(f"Direct download successful: {file_path}")
-            self._apply_wallpaper_from_path(Path(file_path))
-            self._set_status(f"Video downloaded: {os.path.basename(file_path)}")
-        else:
-            logging.error("Direct download failed - file not found")
-            self._set_status("Download failed - file not found")
-            QMessageBox.critical(self, "Download Error", "Download failed - file not found")
+        # Check if download actually succeeded
+        if not file_path or not os.path.exists(file_path):
+            logger.error("Direct download failed - file not found")
+            self._set_status("Direct download failed - file not found")
+            # Don't set any wallpaper
+            return
+        
+        file_size = os.path.getsize(file_path)
+        if file_size == 0:
+            logger.error("Direct download failed - file is empty")
+            self._set_status("Direct download failed - empty file")
+            # Don't set any wallpaper
+            return
+            
+        logger.info(f"Direct download successful: {file_path}")
+        self._apply_wallpaper_from_path(Path(file_path))
+        self._set_status(f"Video downloaded and set: {os.path.basename(file_path)}")
 
     def _get_safe_filename(self, filename):
         """Remove invalid characters for both Windows and Linux"""
@@ -1332,20 +1344,33 @@ class TapeciarniaApp(QMainWindow):
         return filename
 
     def _on_download_done(self, path: str):
-        """Handle download completion"""
-        logging.info(f"Download completed, path: {path}")
-        if self.progress_dialog and self.progress_dialog.isVisible():
+        """Handle download completion - FIXED to not set wallpaper on failure"""
+        logger.info(f"Download completed, path: {path}")
+        
+        # Close progress dialog
+        if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
             self.progress_dialog.close()
-
+        
+        # Check if download actually succeeded
         if not path:
-            logging.warning("Download failed or produced no usable file")
-            self._set_status("Download failed or produced no usable file.")
+            logger.warning("Download failed - no path provided")
+            self._set_status("Download failed")
+            # Don't set any wallpaper - just show the error status
             return
-
+        
         p = Path(path)
         if not p.exists():
-            logging.error(f"Downloaded file missing: {path}")
-            self._set_status("Downloaded file missing.")
+            logger.error(f"Downloaded file missing: {path}")
+            self._set_status("Download failed - file missing")
+            # Don't set any wallpaper
+            return
+
+        # Verify file has content
+        file_size = p.stat().st_size
+        if file_size == 0:
+            logger.error(f"Downloaded file is empty: {path}")
+            self._set_status("Download failed - empty file")
+            # Don't set any wallpaper  
             return
 
         # Determine destination folder
@@ -1363,11 +1388,14 @@ class TapeciarniaApp(QMainWindow):
         collection_dest = dest_folder / p.name
         if not collection_dest.exists():
             shutil.copy2(p, collection_dest)
-            logging.info(f"Downloaded {file_type} copied to collection: {collection_dest}")
+            logger.info(f"Downloaded {file_type} copied to collection: {collection_dest}")
         else:
-            logging.debug(f"Downloaded {file_type} already exists in collection: {collection_dest}")
+            logger.debug(f"Downloaded {file_type} already exists in collection: {collection_dest}")
 
+        # Only set wallpaper if download was successful
         self._apply_wallpaper_from_path(collection_dest)
+        self._set_status(f"{file_type.capitalize()} downloaded and set: {p.name}")
+        logger.info(f"Download successful and wallpaper set: {p.name}")
 
     def _apply_wallpaper_from_path(self, file_path: Path):
         """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""
