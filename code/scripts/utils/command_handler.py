@@ -3,8 +3,6 @@ import logging
 import platform
 import os
 
-# Get logger for this module
-logger = logging.getLogger(__name__)
 
 # --- Constants for Windows-Specific Flags ---
 # We use this to prevent the console window from showing up.
@@ -25,24 +23,24 @@ def run_blocking_silent_command(command_parts, cwd=None, timeout=None):
         subprocess.CompletedProcess: An object containing the command result.
                                      Returns None if the platform is not Windows.
     """
-    logger.debug(f"Starting blocking silent command: {command_parts}")
-    logger.debug(f"Working directory: {cwd}, Timeout: {timeout}")
+    logging.debug(f"Starting blocking silent command: {command_parts}")
+    logging.debug(f"Working directory: {cwd}, Timeout: {timeout}")
     
     if platform.system() != "Windows":
-        logger.debug("Non-Windows platform, using standard subprocess.run")
+        logging.debug("Non-Windows platform, using standard subprocess.run")
         try:
             result = subprocess.run(command_parts, capture_output=True, text=True, cwd=cwd, timeout=timeout)
-            logger.debug(f"Non-Windows command completed - returncode: {result.returncode}")
+            logging.debug(f"Non-Windows command completed - returncode: {result.returncode}")
             return result
         except Exception as e:
-            logger.error(f"Non-Windows command failed: {e}", exc_info=True)
+            logging.error(f"Non-Windows command failed: {e}", exc_info=True)
             return None
     
     # --- Windows-Specific Execution (Blocking) ---
-    logger.info(f"Executing Windows blocking command: {' '.join(command_parts)}")
+    logging.info(f"Executing Windows blocking command: {' '.join(command_parts)}")
     try:
         # Popen starts the process
-        logger.debug("Creating subprocess with CREATE_NO_WINDOW flag")
+        logging.debug("Creating subprocess with CREATE_NO_WINDOW flag")
         process = subprocess.Popen(
             command_parts,
             creationflags=CREATE_NO_WINDOW,
@@ -51,19 +49,19 @@ def run_blocking_silent_command(command_parts, cwd=None, timeout=None):
             cwd=cwd,
             text=True
         )
-        logger.debug(f"Process created with PID: {process.pid}")
+        logging.debug(f"Process created with PID: {process.pid}")
 
         # CRITICAL: communicate() waits for the process to terminate.
-        logger.debug(f"Waiting for process completion with timeout: {timeout}")
+        logging.debug(f"Waiting for process completion with timeout: {timeout}")
         stdout, stderr = process.communicate(timeout=timeout)
         
-        logger.info(f"Blocking command completed - PID: {process.pid}, returncode: {process.returncode}")
-        logger.debug(f"Command stdout length: {len(stdout)}, stderr length: {len(stderr)}")
+        logging.info(f"Blocking command completed - PID: {process.pid}, returncode: {process.returncode}")
+        logging.debug(f"Command stdout length: {len(stdout)}, stderr length: {len(stderr)}")
         
         if process.returncode != 0:
-            logger.warning(f"Command returned non-zero exit code: {process.returncode}")
+            logging.warning(f"Command returned non-zero exit code: {process.returncode}")
             if stderr:
-                logger.warning(f"Command stderr: {stderr.strip()}")
+                logging.warning(f"Command stderr: {stderr.strip()}")
         
         return subprocess.CompletedProcess(
             args=command_parts,
@@ -73,23 +71,23 @@ def run_blocking_silent_command(command_parts, cwd=None, timeout=None):
         )
 
     except FileNotFoundError as e:
-        logger.error(f"Executable not found for command: {command_parts[0]}", exc_info=True)
-        logger.error(f"Full command: {command_parts}")
+        logging.error(f"Executable not found for command: {command_parts[0]}", exc_info=True)
+        logging.error(f"Full command: {command_parts}")
         return None
     except subprocess.TimeoutExpired as e:
-        logger.error(f"Command timed out after {timeout} seconds: {' '.join(command_parts)}")
+        logging.error(f"Command timed out after {timeout} seconds: {' '.join(command_parts)}")
         if 'process' in locals():
-            logger.warning(f"Terminating timed out process: {process.pid}")
+            logging.warning(f"Terminating timed out process: {process.pid}")
             process.kill()
             try:
                 process.wait(timeout=5)
-                logger.debug("Timed out process terminated successfully")
+                logging.debug("Timed out process terminated successfully")
             except subprocess.TimeoutExpired:
-                logger.error("Failed to terminate timed out process")
+                logging.error("Failed to terminate timed out process")
         return None
     except Exception as e:
-        logger.error(f"Unexpected error executing blocking command: {e}", exc_info=True)
-        logger.error(f"Command that failed: {' '.join(command_parts)}")
+        logging.error(f"Unexpected error executing blocking command: {e}", exc_info=True)
+        logging.error(f"Command that failed: {' '.join(command_parts)}")
         return None
 
 
@@ -106,44 +104,44 @@ def run_and_forget_silent(command_parts, cwd=None):
     Returns:
         subprocess.Popen or None: The process object if successful, None otherwise.
     """
-    logger.debug(f"Starting non-blocking silent command: {command_parts}")
-    logger.debug(f"Working directory: {cwd}")
+    logging.debug(f"Starting non-blocking silent command: {command_parts}")
+    logging.debug(f"Working directory: {cwd}")
     
     if platform.system() != "Windows":
-        logger.debug("Non-Windows platform, using standard subprocess.Popen")
+        logging.debug("Non-Windows platform, using standard subprocess.Popen")
         try:
             process = subprocess.Popen(command_parts, cwd=cwd)
-            logger.info(f"Non-Windows background process started - PID: {process.pid}")
+            logging.info(f"Non-Windows background process started - PID: {process.pid}")
             return process
         except Exception as e:
-            logger.error(f"Non-Windows background process failed: {e}", exc_info=True)
+            logging.error(f"Non-Windows background process failed: {e}", exc_info=True)
             return None
 
     # --- Windows-Specific Execution (Non-Blocking) ---
-    logger.info(f"Starting Windows non-blocking command: {' '.join(command_parts)}")
+    logging.info(f"Starting Windows non-blocking command: {' '.join(command_parts)}")
     try:
         # CRITICAL: Popen is used without communicate/wait. The process runs independently.
-        logger.debug("Creating non-blocking subprocess with CREATE_NO_WINDOW flag")
+        logging.debug("Creating non-blocking subprocess with CREATE_NO_WINDOW flag")
         process = subprocess.Popen(
             command_parts,
             creationflags=CREATE_NO_WINDOW,
             cwd=cwd
         )
-        logger.info(f"Background process started successfully - PID: {process.pid}")
-        logger.debug(f"Process object created: {process}")
+        logging.info(f"Background process started successfully - PID: {process.pid}")
+        logging.debug(f"Process object created: {process}")
         return process
         
     except FileNotFoundError as e:
-        logger.error(f"Executable not found for background command: {command_parts[0]}", exc_info=True)
-        logger.error(f"Full background command: {command_parts}")
+        logging.error(f"Executable not found for background command: {command_parts[0]}", exc_info=True)
+        logging.error(f"Full background command: {command_parts}")
         return None
     except PermissionError as e:
-        logger.error(f"Permission denied executing background command: {command_parts[0]}")
-        logger.error(f"Full background command: {command_parts}")
+        logging.error(f"Permission denied executing background command: {command_parts[0]}")
+        logging.error(f"Full background command: {command_parts}")
         return None
     except Exception as e:
-        logger.error(f"Unexpected error starting background command: {e}", exc_info=True)
-        logger.error(f"Command that failed: {' '.join(command_parts)}")
+        logging.error(f"Unexpected error starting background command: {e}", exc_info=True)
+        logging.error(f"Command that failed: {' '.join(command_parts)}")
         return None
 
 
@@ -158,28 +156,28 @@ def terminate_process(process):
         bool: True if termination was successful, False otherwise
     """
     if process is None:
-        logger.warning("Attempted to terminate None process")
+        logging.warning("Attempted to terminate None process")
         return False
         
-    logger.info(f"Terminating process: {process.pid}")
+    logging.info(f"Terminating process: {process.pid}")
     try:
         process.terminate()
-        logger.debug(f"Terminate signal sent to process: {process.pid}")
+        logging.debug(f"Terminate signal sent to process: {process.pid}")
         
         # Wait a bit for graceful termination
         try:
             process.wait(timeout=5)
-            logger.info(f"Process terminated successfully: {process.pid}")
+            logging.info(f"Process terminated successfully: {process.pid}")
             return True
         except subprocess.TimeoutExpired:
-            logger.warning(f"Process did not terminate gracefully, killing: {process.pid}")
+            logging.warning(f"Process did not terminate gracefully, killing: {process.pid}")
             process.kill()
             process.wait()
-            logger.info(f"Process killed: {process.pid}")
+            logging.info(f"Process killed: {process.pid}")
             return True
             
     except Exception as e:
-        logger.error(f"Failed to terminate process {process.pid}: {e}", exc_info=True)
+        logging.error(f"Failed to terminate process {process.pid}: {e}", exc_info=True)
         return False
 
 
@@ -199,6 +197,6 @@ def check_process_running(process):
     return_code = process.poll()
     is_running = return_code is None
     
-    logger.debug(f"Process {process.pid} running: {is_running}, returncode: {return_code}")
+    logging.debug(f"Process {process.pid} running: {is_running}, returncode: {return_code}")
     return is_running
 

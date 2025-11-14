@@ -2,13 +2,11 @@ from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QProgressBar
 from PySide6.QtCore import Qt
 import logging
 
-# Get logger for this module
-logger = logging.getLogger(__name__)
 
 
 class DownloadProgressDialog(QDialog):
     def __init__(self, parent=None):
-        logger.debug("Initializing DownloadProgressDialog")
+        logging.debug("Initializing DownloadProgressDialog")
         super().__init__(parent)
         self.setWindowTitle("Downloading Video")
         self.setModal(True)
@@ -37,12 +35,12 @@ class DownloadProgressDialog(QDialog):
         layout.addWidget(self.percentage_label)
         layout.addWidget(self.details_label)
         
-        logger.info("DownloadProgressDialog initialized successfully")
+        logging.info("DownloadProgressDialog initialized successfully")
 
     def update_progress(self, percent: float, status_msg: str = ""):
         """Update download progress with logging"""
         percent_int = int(percent)
-        logger.debug(f"Updating progress: {percent_int}% - {status_msg}")
+        logging.debug(f"Updating progress: {percent_int}% - {status_msg}")
         
         # Update progress bar
         self.progress.setValue(percent_int)
@@ -52,35 +50,35 @@ class DownloadProgressDialog(QDialog):
             if "Downloading..." in status_msg:
                 details = status_msg.replace("Downloading... ", "")
                 self.details_label.setText(details)
-                logger.debug(f"Download progress details: {details}")
+                logging.debug(f"Download progress details: {details}")
             else:
                 self.details_label.setText(status_msg)
-                logger.debug(f"Download status: {status_msg}")
+                logging.debug(f"Download status: {status_msg}")
         
         # Log significant progress milestones
         if percent_int in [0, 25, 50, 75, 90, 100]:
-            logger.info(f"Download progress milestone: {percent_int}% - {status_msg}")
+            logging.info(f"Download progress milestone: {percent_int}% - {status_msg}")
         
         # Log when download is complete
         if percent_int == 100:
-            logger.info("Download progress reached 100% - download complete")
+            logging.info("Download progress reached 100% - download complete")
 
     def show(self):
         """Override show method to log when dialog is displayed"""
-        logger.info("Showing DownloadProgressDialog")
+        logging.info("Showing DownloadProgressDialog")
         super().show()
 
     def close(self):
         """Override close method to log when dialog is closed"""
-        logger.info("Closing DownloadProgressDialog")
+        logging.info("Closing DownloadProgressDialog")
         super().close()
 
     def reject(self):
         """Handle dialog cancellation with logging"""
-        logger.warning("DownloadProgressDialog cancelled by user")
+        logging.warning("DownloadProgressDialog cancelled by user")
         super().reject()
 
     def accept(self):
         """Handle dialog acceptance with logging"""
-        logger.info("DownloadProgressDialog accepted")
+        logging.info("DownloadProgressDialog accepted")
         super().accept()

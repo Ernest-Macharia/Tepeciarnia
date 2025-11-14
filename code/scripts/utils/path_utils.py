@@ -7,7 +7,6 @@ import os
 import logging
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
 
 def get_app_root():
     """
@@ -98,7 +97,7 @@ def open_folder_in_explorer(folder_path: Path):
             subprocess.run(["xdg-open", folder_path])
         return True
     except Exception as e:
-        logger.error(f"Failed to open folder {folder_path}: {e}")
+        logging.error(f"Failed to open folder {folder_path}: {e}")
         return False
 
 def get_folder_for_source(source_type: str) -> Path:

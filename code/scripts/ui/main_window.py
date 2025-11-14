@@ -14,8 +14,6 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
 from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize,qIsNull, Signal, QThread
 
-# Get logger for this module
-logger = logging.getLogger(__name__)
 
 current_dir = os.path.dirname(__file__)
 ui_path = os.path.join(current_dir, 'mainUI.py')
@@ -23,15 +21,15 @@ sys.path.append(os.path.dirname(current_dir))
 
 try:
     from ui.mainUI import Ui_MainWindow
-    logger.info("Successfully imported Ui_MainWindow from ui.mainUI")
+    logging.info("Successfully imported Ui_MainWindow from ui.mainUI")
 except ImportError as e:
-    logger.error(f"UI import error: {e}")
+    logging.error(f"UI import error: {e}")
     try:
         sys.path.append(current_dir)
         from mainUI import Ui_MainWindow
-        logger.info("Successfully imported Ui_MainWindow from local directory")
+        logging.info("Successfully imported Ui_MainWindow from local directory")
     except ImportError:
-        logger.critical("Cannot import Ui_MainWindow. Make sure mainUI.py exists in the ui folder.")
+        logging.critical("Cannot import Ui_MainWindow. Make sure mainUI.py exists in the ui folder.")
         raise ImportError("Cannot import Ui_MainWindow. Make sure mainUI.py exists in the ui folder.")
 
 # Import core modules
@@ -57,7 +55,7 @@ from .dialogs import DownloadProgressDialog
 class EnhancedDragDropWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        logger.debug("Initializing EnhancedDragDropWidget")
+        logging.debug("Initializing EnhancedDragDropWidget")
         self.dropped_file_path = None
         self.original_wallpaper = None
         self.parent_app = parent
@@ -66,7 +64,7 @@ class EnhancedDragDropWidget(QWidget):
     
     # Function for toggling visibility of buttons and upload icon
     def toggle_buttons_visibility(self, visible: bool):
-        logger.debug(f"Toggling buttons visibility: {visible}")
+        logging.debug(f"Toggling buttons visibility: {visible}")
         if visible:
             self.buttons_widget.show()
             self.uploadIcon.hide()
@@ -75,7 +73,7 @@ class EnhancedDragDropWidget(QWidget):
             self.uploadIcon.show()
 
     def setup_ui(self):
-        logger.debug("Setting up EnhancedDragDropWidget UI")
+        logging.debug("Setting up EnhancedDragDropWidget UI")
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         # spacers
@@ -148,31 +146,31 @@ class EnhancedDragDropWidget(QWidget):
         # layout.addItem(self.spacer_down)
 
         self.setLayout(layout)
-        logger.debug("EnhancedDragDropWidget UI setup completed")
+        logging.debug("EnhancedDragDropWidget UI setup completed")
     
     def update_language(self):
         """Update UI text based on selected language"""
-        logger.info("Updating EnhancedDragDropWidget language")
+        logging.info("Updating EnhancedDragDropWidget language")
         self.upload_text.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
         self.supported_label.setText(self.parent_app.lang["uploadSection"]["supportedFormatsHint"])
         self.upload_btn.setText(self.parent_app.lang["uploadSection"]["setAsWallpaperButton"])
         self.reset_btn.setText(self.parent_app.lang["settings"]["resetButton"])
     
     def dragEnterEvent(self, event):
-        logger.debug("Drag enter event detected")
+        logging.debug("Drag enter event detected")
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
-            logger.debug("Drag event accepted - URLs detected")
+            logging.debug("Drag event accepted - URLs detected")
     
     def dragLeaveEvent(self, event):
-        logger.debug("Drag leave event detected")
+        logging.debug("Drag leave event detected")
 
     def dropEvent(self, event):
-        logger.debug("Drop event detected")
+        logging.debug("Drop event detected")
         urls = event.mimeData().urls()
         if urls:
             file_path = urls[0].toLocalFile()
-            logger.info(f"File dropped: {file_path}")
+            logging.info(f"File dropped: {file_path}")
             if self.is_valid_wallpaper_file(file_path):
                 self.dropped_file_path = file_path
                 filename = os.path.basename(file_path)
@@ -185,21 +183,21 @@ class EnhancedDragDropWidget(QWidget):
                 self.uploadIcon.hide()
                 self.buttons_widget.show()
                 self.upload_btn.setEnabled(True)
-                logger.info(f"Valid {file_type.lower()} file selected: {filename}")
+                logging.info(f"Valid {file_type.lower()} file selected: {filename}")
                 
             else:
                 self.upload_text.setText("Invalid file type!\nSupported: Images, Videos")
                 self.upload_btn.setEnabled(False)
-                logger.warning(f"Invalid file type dropped: {file_path}")
+                logging.warning(f"Invalid file type dropped: {file_path}")
     
     def set_as_wallpaper(self):
-        logger.info("Set as Wallpaper button clicked")
+        logging.info("Set as Wallpaper button clicked")
         if self.dropped_file_path:
             try:
                 # Store current wallpaper before setting new one (only first time)
                 if not hasattr(self, 'previous_wallpaper') or not self.previous_wallpaper:
                     self.previous_wallpaper = self.get_current_wallpaper()
-                    logger.info(f"Stored original wallpaper: {self.previous_wallpaper}")
+                    logging.info(f"Stored original wallpaper: {self.previous_wallpaper}")
                 
                 # Update URL input field
                 if hasattr(self.parent_app, 'ui') and hasattr(self.parent_app.ui, 'urlInput'):
@@ -207,10 +205,10 @@ class EnhancedDragDropWidget(QWidget):
                 
                 # Apply the wallpaper - this works for BOTH images and videos
                 if self.is_video_file(self.dropped_file_path):
-                    logger.info(f"Setting video wallpaper: {self.dropped_file_path}")
+                    logging.info(f"Setting video wallpaper: {self.dropped_file_path}")
                     self.parent_app.controller.start_video(self.dropped_file_path)
                 else:
-                    logger.info(f"Setting image wallpaper: {self.dropped_file_path}")
+                    logging.info(f"Setting image wallpaper: {self.dropped_file_path}")
                     self.parent_app.controller.start_image(self.dropped_file_path)
                 
                 # Show success message
@@ -222,24 +220,24 @@ class EnhancedDragDropWidget(QWidget):
                 
                 # Store in config
                 self.parent_app.config.set_last_video(self.dropped_file_path)
-                logger.info(f"Wallpaper set successfully and saved to config: {os.path.basename(self.dropped_file_path)}")
+                logging.info(f"Wallpaper set successfully and saved to config: {os.path.basename(self.dropped_file_path)}")
                 
                 # Hide buttons after successful set with delay
                 QTimer.singleShot(3000, self.reset_selection)
                 
             except Exception as e:
-                logger.error(f"Failed to set wallpaper: {e}", exc_info=True)
+                logging.error(f"Failed to set wallpaper: {e}", exc_info=True)
                 self.upload_text.setText("Failed to set wallpaper!")
                 QMessageBox.critical(self, "Error", f"Failed to set wallpaper: {str(e)}")
     
     def reset_selection(self):
         """Reset to original selection state"""
-        logger.info("Reset selection triggered")
+        logging.info("Reset selection triggered")
         self.dropped_file_path = None
         self.upload_text.setText(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
         self.supported_label.show()
         self.toggle_buttons_visibility(False)  # HIDE THE BUTTONS
-        logger.debug("Drag drop widget reset to initial state")
+        logging.debug("Drag drop widget reset to initial state")
     
     def is_video_file(self, file_path):
         """Check if file is a video"""
@@ -248,17 +246,17 @@ class EnhancedDragDropWidget(QWidget):
 
     def restore_original_wallpaper(self):
         """Restore the original wallpaper that was set before any changes"""
-        logger.info("Restoring original wallpaper")
+        logging.info("Restoring original wallpaper")
         if hasattr(self, 'previous_wallpaper') and self.previous_wallpaper:
             try:
-                logger.info(f"Attempting to restore original wallpaper: {self.previous_wallpaper}")
+                logging.info(f"Attempting to restore original wallpaper: {self.previous_wallpaper}")
                 
                 if os.path.exists(self.previous_wallpaper):
                     if self.is_video_file(self.previous_wallpaper):
-                        logger.info("Restoring original video wallpaper")
+                        logging.info("Restoring original video wallpaper")
                         self.parent_app.controller.start_video(self.previous_wallpaper)
                     else:
-                        logger.info("Restoring original image wallpaper")
+                        logging.info("Restoring original image wallpaper")
                         self.parent_app.controller.start_image(self.previous_wallpaper)
                     
                     if hasattr(self.parent_app, '_set_status'):
@@ -268,13 +266,13 @@ class EnhancedDragDropWidget(QWidget):
                     if hasattr(self.parent_app.ui, 'urlInput'):
                         self.parent_app.ui.urlInput.setText(self.previous_wallpaper)
                     
-                    logger.info("Original wallpaper restored successfully")
+                    logging.info("Original wallpaper restored successfully")
                 else:
-                    logger.warning(f"Original wallpaper file not found: {self.previous_wallpaper}")
+                    logging.warning(f"Original wallpaper file not found: {self.previous_wallpaper}")
                     self.parent_app._set_status("Original wallpaper file not found")
                     
             except Exception as e:
-                logger.error(f"Failed to restore original wallpaper: {e}", exc_info=True)
+                logging.error(f"Failed to restore original wallpaper: {e}", exc_info=True)
                 self.parent_app._set_status("Failed to restore original wallpaper")
     
     def get_current_wallpaper(self):
@@ -282,28 +280,28 @@ class EnhancedDragDropWidget(QWidget):
         try:
             from utils.system_utils import get_current_desktop_wallpaper
             wallpaper = get_current_desktop_wallpaper()
-            logger.info(f"Retrieved current wallpaper: {wallpaper}")
+            logging.info(f"Retrieved current wallpaper: {wallpaper}")
             return wallpaper
         except Exception as e:
-            logger.error(f"Could not get current wallpaper: {e}", exc_info=True)
+            logging.error(f"Could not get current wallpaper: {e}", exc_info=True)
         return None
     
     def is_valid_wallpaper_file(self, file_path):
         valid_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', 
                           '.mp4', '.avi', '.mov', '.mkv', '.webm')
         is_valid = file_path.lower().endswith(valid_extensions)
-        logger.debug(f"File validation for {file_path}: {is_valid}")
+        logging.debug(f"File validation for {file_path}: {is_valid}")
         return is_valid
     
-class MP4WallApp(QMainWindow):
+class TapeciarniaApp(QMainWindow):
     def __init__(self):
-        logger.info("Initializing MP4WallApp")
+        logging.info("Initializing TapeciarniaApp")
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
         # Initialize controllers
-        logger.debug("Initializing controllers")
+        logging.debug("Initializing controllers")
         self.controller = WallpaperController()
         self.scheduler = WallpaperScheduler()
         self.language_controller = LanguageController()
@@ -345,7 +343,7 @@ class MP4WallApp(QMainWindow):
         # Ensure status bar is always visible
         self._ensure_status_visible()
         
-        logger.info("MP4WallApp initialization completed successfully")
+        logging.info("TapeciarniaApp initialization completed successfully")
 
     def _update_lang(self, lang:dict):
         """Update UI language based on selected language"""
@@ -378,7 +376,7 @@ class MP4WallApp(QMainWindow):
 
     def _ensure_status_visible(self):
         """Make sure status bar is always visible"""
-        logger.debug("Ensuring status bar visibility")
+        logging.debug("Ensuring status bar visibility")
         if hasattr(self.ui, 'bottomFrame'):
             self.ui.bottomFrame.setVisible(True)
             self.ui.bottomFrame.setMinimumHeight(30)  # Force minimum height
@@ -396,11 +394,11 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, 'bottomFrame'):
             self.ui.bottomFrame.update()
             self.ui.bottomFrame.repaint()
-        logger.debug("Status bar visibility ensured")
+        logging.debug("Status bar visibility ensured")
 
     def _set_status(self, message: str):
         """Update status label and ensure it's visible"""
-        logger.debug(f"Setting status: {message}")
+        logging.debug(f"Setting status: {message}")
         if hasattr(self.ui, "statusLabel"):
             self.ui.statusLabel.setText(message)
             self.ui.statusLabel.setVisible(True)
@@ -410,29 +408,29 @@ class MP4WallApp(QMainWindow):
 
     def _setup_enhanced_features(self):
         """Setup the enhanced wallpaper features"""
-        logger.debug("Setting up enhanced features")
+        logging.debug("Setting up enhanced features")
         # Connect shuffle buttons for mutual exclusivity
         if hasattr(self.ui, 'randomButton') and hasattr(self.ui, 'randomAnimButton'):
             self.ui.randomButton.toggled.connect(self.on_shuffle_wallpaper_toggled)
             self.ui.randomAnimButton.toggled.connect(self.on_shuffle_animation_toggled)
-            logger.debug("Shuffle buttons connected for mutual exclusivity")
+            logging.debug("Shuffle buttons connected for mutual exclusivity")
         
         # Connect auto-change checkbox to show/hide interval controls
         if hasattr(self.ui, 'enabledCheck'):
             self.ui.enabledCheck.toggled.connect(self.toggle_interval_controls)
             # Set initial state
             self.toggle_interval_controls(self.ui.enabledCheck.isChecked())
-            logger.debug("Auto-change checkbox connected")
-        logger.debug("Enhanced features setup completed")
+            logging.debug("Auto-change checkbox connected")
+        logging.debug("Enhanced features setup completed")
 
     def on_shuffle_wallpaper_toggled(self, checked):
         """Handle shuffle wallpaper toggle - only non-animated wallpapers"""
         if checked:
-            logger.info("Shuffle Wallpaper activated")
+            logging.info("Shuffle Wallpaper activated")
             if hasattr(self.ui, 'randomAnimButton'):
                 self.ui.randomAnimButton.setChecked(False)
             self.current_shuffle_mode = 'wallpaper'
-            logger.info("Shuffle Wallpaper activated - non-animated only")
+            logging.info("Shuffle Wallpaper activated - non-animated only")
             
             # Apply first shuffle immediately
             self._apply_shuffled_wallpaper('wallpaper')
@@ -440,18 +438,18 @@ class MP4WallApp(QMainWindow):
     def on_shuffle_animation_toggled(self, checked):
         """Handle shuffle animation toggle - only animated wallpapers"""
         if checked:
-            logger.info("Shuffle Animation activated")
+            logging.info("Shuffle Animation activated")
             if hasattr(self.ui, 'randomButton'):
                 self.ui.randomButton.setChecked(False)
             self.current_shuffle_mode = 'animation'
-            logger.info("Shuffle Animation activated - animated only")
+            logging.info("Shuffle Animation activated - animated only")
             
             # Apply first shuffle immediately
             self._apply_shuffled_wallpaper('animation')
 
     def toggle_interval_controls(self, enabled):
         """Show/hide interval and range controls based on auto-change setting"""
-        logger.debug(f"Toggling interval controls visibility: {enabled}")
+        logging.debug(f"Toggling interval controls visibility: {enabled}")
         interval_controls = [
             'interval_spinBox', 'interval_label', 'interval_value_label',
             'range_label', 'range_combo', 'range_frame'
@@ -465,27 +463,27 @@ class MP4WallApp(QMainWindow):
                 if enabled:
                     visible_count += 1
         
-        logger.debug(f"Set {visible_count} interval controls to visible: {enabled}")
+        logging.debug(f"Set {visible_count} interval controls to visible: {enabled}")
 
     def _apply_shuffled_wallpaper(self, shuffle_mode):
         """Apply a shuffled wallpaper based on the current mode"""
-        logger.info(f"Applying shuffled wallpaper in mode: {shuffle_mode}")
+        logging.info(f"Applying shuffled wallpaper in mode: {shuffle_mode}")
         available_wallpapers = self.get_shuffled_wallpapers(shuffle_mode)
-        logger.debug(f"Found {len(available_wallpapers)} wallpapers for shuffling")
+        logging.debug(f"Found {len(available_wallpapers)} wallpapers for shuffling")
         
         if available_wallpapers:
             next_wallpaper = self.ensure_wallpaper_change(available_wallpapers)
             if next_wallpaper:
                 self.change_wallpaper_with_optimization(next_wallpaper)
-                logger.info(f"Shuffled wallpaper applied: {os.path.basename(next_wallpaper)}")
+                logging.info(f"Shuffled wallpaper applied: {os.path.basename(next_wallpaper)}")
             else:
-                logger.warning("No suitable wallpaper found for shuffling")
+                logging.warning("No suitable wallpaper found for shuffling")
         else:
-            logger.warning("No wallpapers available for shuffling")
+            logging.warning("No wallpapers available for shuffling")
 
     def get_shuffled_wallpapers(self, shuffle_mode):
         """Get appropriate wallpapers based on shuffle mode"""
-        logger.debug(f"Getting shuffled wallpapers for mode: {shuffle_mode}")
+        logging.debug(f"Getting shuffled wallpapers for mode: {shuffle_mode}")
         if shuffle_mode == 'wallpaper':
             filter_func = self.get_non_animated_filter()
             filter_type = "non-animated (images)"
@@ -499,7 +497,7 @@ class MP4WallApp(QMainWindow):
         all_wallpapers = self._get_media_files("all")  # Use existing method
         filtered_wallpapers = [str(wp) for wp in all_wallpapers if filter_func(str(wp))]
         
-        logger.debug(f"Filtered {len(filtered_wallpapers)} {filter_type} wallpapers from {len(all_wallpapers)} total")
+        logging.debug(f"Filtered {len(filtered_wallpapers)} {filter_type} wallpapers from {len(all_wallpapers)} total")
         random.shuffle(filtered_wallpapers)
         return filtered_wallpapers
 
@@ -515,36 +513,36 @@ class MP4WallApp(QMainWindow):
 
     def ensure_wallpaper_change(self, available_wallpapers):
         """Ensure wallpaper actually changes, don't select the same one"""
-        logger.debug(f"Ensuring wallpaper change from {len(available_wallpapers)} options")
+        logging.debug(f"Ensuring wallpaper change from {len(available_wallpapers)} options")
         if len(available_wallpapers) <= 1:
-            logger.debug("Only one wallpaper available, no choice needed")
+            logging.debug("Only one wallpaper available, no choice needed")
             return available_wallpapers[0] if available_wallpapers else None
             
         # Filter out current wallpaper
         other_wallpapers = [wp for wp in available_wallpapers if wp != self.last_wallpaper_path]
-        logger.debug(f"Filtered out current wallpaper, {len(other_wallpapers)} options remain")
+        logging.debug(f"Filtered out current wallpaper, {len(other_wallpapers)} options remain")
         
         if not other_wallpapers:
             # If all wallpapers are the same as current, still change to force update
-            logger.debug("All wallpapers are the same as current, forcing change")
+            logging.debug("All wallpapers are the same as current, forcing change")
             return available_wallpapers[0]
             
         selected = random.choice(other_wallpapers)
-        logger.debug(f"Selected new wallpaper: {os.path.basename(selected)}")
+        logging.debug(f"Selected new wallpaper: {os.path.basename(selected)}")
         return selected
 
     def change_wallpaper_with_optimization(self, new_wallpaper_path):
         """Optimized wallpaper change with minimal process management"""
-        logger.info(f"Changing wallpaper with optimization: {os.path.basename(new_wallpaper_path)}")
+        logging.info(f"Changing wallpaper with optimization: {os.path.basename(new_wallpaper_path)}")
         new_wallpaper_type = self.get_wallpaper_type(new_wallpaper_path)
-        logger.debug(f"New wallpaper type: {new_wallpaper_type}")
+        logging.debug(f"New wallpaper type: {new_wallpaper_type}")
         
         # Determine if process stop is needed
         needs_process_stop = self.needs_process_stop(self.current_wallpaper_type, new_wallpaper_type)
-        logger.debug(f"Process stop needed: {needs_process_stop} (current: {self.current_wallpaper_type}, new: {new_wallpaper_type})")
+        logging.debug(f"Process stop needed: {needs_process_stop} (current: {self.current_wallpaper_type}, new: {new_wallpaper_type})")
         
         if needs_process_stop:
-            logger.debug("Stopping current wallpaper processes")
+            logging.debug("Stopping current wallpaper processes")
             self.controller.stop()
         
         # Set new wallpaper using existing method
@@ -560,14 +558,14 @@ class MP4WallApp(QMainWindow):
         Don't stop for: image->image
         """
         if current_type is None:
-            logger.debug("First wallpaper, no process stop needed")
+            logging.debug("First wallpaper, no process stop needed")
             return False  # First wallpaper, no need to stop
             
         if current_type == 'image' and new_type == 'image':
-            logger.debug("Image to image transition, no process stop needed")
+            logging.debug("Image to image transition, no process stop needed")
             return False  # Image to image transition - no stop needed
             
-        logger.debug(f"Process stop needed for transition: {current_type} -> {new_type}")
+        logging.debug(f"Process stop needed for transition: {current_type} -> {new_type}")
         return True  # All other transitions need process stop
 
     def get_wallpaper_type(self, file_path):
@@ -575,28 +573,28 @@ class MP4WallApp(QMainWindow):
         video_extensions = {'.mp4', '.webm', '.avi', '.mov', '.mkv'}
         file_ext = os.path.splitext(file_path)[1].lower()
         wallpaper_type = 'video' if file_ext in video_extensions else 'image'
-        logger.debug(f"File {os.path.basename(file_path)} identified as: {wallpaper_type}")
+        logging.debug(f"File {os.path.basename(file_path)} identified as: {wallpaper_type}")
         return wallpaper_type
 
 
     # Modified existing methods to use enhanced functionality
     def on_shuffle_animated(self):
         """Shuffle through animated wallpapers ONLY - using enhanced system"""
-        logger.info("Shuffle animated button clicked")
+        logging.info("Shuffle animated button clicked")
         if hasattr(self.ui, 'randomAnimButton'):
             self.ui.randomAnimButton.setChecked(True)
         # The actual work is handled by on_shuffle_animation_toggled
 
     def on_shuffle_wallpaper(self):
         """Shuffle through static wallpapers ONLY - using enhanced system"""
-        logger.info("Shuffle wallpaper button clicked")
+        logging.info("Shuffle wallpaper button clicked")
         if hasattr(self.ui, 'randomButton'):
             self.ui.randomButton.setChecked(True)
         # The actual work is handled by on_shuffle_wallpaper_toggled
 
     def _apply_wallpaper_from_path(self, file_path: Path):
         """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""
-        logger.info(f"Applying wallpaper from path: {file_path}")
+        logging.info(f"Applying wallpaper from path: {file_path}")
         current_is_video = self.controller.current_is_video
         new_is_video = file_path.suffix.lower() in (".mp4", ".mkv", ".webm", ".avi", ".mov")
         
@@ -606,7 +604,7 @@ class MP4WallApp(QMainWindow):
         needs_stop = self.needs_process_stop(current_type, new_type)
         
         if needs_stop:
-            logger.debug("Stopping current wallpaper due to type change")
+            logging.debug("Stopping current wallpaper due to type change")
             self.controller.stop()
         
         
@@ -616,15 +614,15 @@ class MP4WallApp(QMainWindow):
         
         # Use existing application logic
         if new_is_video:
-            logger.debug("Applying video wallpaper")
+            logging.debug("Applying video wallpaper")
             self._apply_video(str(file_path))
         else:
-            logger.debug("Applying image wallpaper with fade")
+            logging.debug("Applying image wallpaper with fade")
             self._apply_image_with_fade(str(file_path))
 
     def _perform_reset(self):
         """Reset to default wallpaper WITHOUT confirmation"""
-        logger.info("Performing reset without confirmation")
+        logging.info("Performing reset without confirmation")
         self.controller.stop()
         self.scheduler.stop()
         
@@ -662,20 +660,20 @@ class MP4WallApp(QMainWindow):
             self.ui.urlInput.clear()
         
         self._set_status("Reset completed")
-        logger.info("Reset completed successfully")
+        logging.info("Reset completed successfully")
 
     def cleanup(self):
         """Enhanced cleanup on app close"""
-        logger.info("Performing application cleanup")
+        logging.info("Performing application cleanup")
         self.controller.stop()
         self.stop_auto_pause_process()
-        logger.info("Application cleanup completed")
+        logging.info("Application cleanup completed")
 
     # Rest of your existing methods remain the same...
     def changeEvent(self, event):
         if event.type() == QEvent.WindowStateChange:
             if self.isMinimized() and not self.is_minimized_to_tray:
-                logger.debug("Window minimize event detected, hiding to tray")
+                logging.debug("Window minimize event detected, hiding to tray")
                 event.ignore()
                 self.hide_to_tray()
         super().changeEvent(event)
@@ -684,7 +682,7 @@ class MP4WallApp(QMainWindow):
         """
         Handle window close event - Show confirmation dialog before closing
         """
-        logger.info("Close event triggered")
+        logging.info("Close event triggered")
         reply = QMessageBox.question(
             self,
             "Confirm Exit",
@@ -694,7 +692,7 @@ class MP4WallApp(QMainWindow):
         )
         
         if reply == QMessageBox.StandardButton.Yes:
-            logger.info("User confirmed exit")
+            logging.info("User confirmed exit")
             # Stop any running processes WITHOUT reset confirmation
             self._perform_reset()  # Use the version WITHOUT confirmation
             
@@ -706,13 +704,13 @@ class MP4WallApp(QMainWindow):
             QApplication.quit()
             
             event.accept()
-            logger.info("Application quit initiated")
+            logging.info("Application quit initiated")
         else:
-            logger.info("User cancelled exit")
+            logging.info("User cancelled exit")
             event.ignore()
 
     def hide_to_tray(self):
-        logger.info("Hiding window to system tray")
+        logging.info("Hiding window to system tray")
         self.hide()
         self.is_minimized_to_tray = True
         if hasattr(self, 'tray'):
@@ -722,27 +720,27 @@ class MP4WallApp(QMainWindow):
                 QSystemTrayIcon.Information,
                 3000
             )
-        logger.debug("Window hidden to tray")
+        logging.debug("Window hidden to tray")
 
     def show_from_tray(self):
-        logger.info("Showing window from system tray")
+        logging.info("Showing window from system tray")
         self.show()
         self.raise_()
         self.activateWindow()
         if self.isMinimized():
             self.showNormal()
         self.is_minimized_to_tray = False
-        logger.debug("Window restored from tray")
+        logging.debug("Window restored from tray")
 
 
     def _setup_ui(self):
         """Setup UI connections and initial state"""
-        logger.debug("Setting up UI")
+        logging.debug("Setting up UI")
         self.setAcceptDrops(True)
         
         # Replace the upload area with enhanced drag & drop - FIXED VERSION
         if hasattr(self.ui, 'uploadArea'):
-            logger.debug("Replacing upload area with enhanced drag drop widget")
+            logging.debug("Replacing upload area with enhanced drag drop widget")
             # Clear existing upload area safely without setParent
             existing_layout = self.ui.uploadArea.layout()
             if existing_layout:
@@ -763,7 +761,7 @@ class MP4WallApp(QMainWindow):
             
             # Add our enhanced widget
             existing_layout.addWidget(self.drag_drop_widget)
-            logger.debug("Enhanced drag drop widget added to upload area")
+            logging.debug("Enhanced drag drop widget added to upload area")
         
         
         # Connect signals
@@ -771,132 +769,132 @@ class MP4WallApp(QMainWindow):
         
         # Initial UI state
         self._update_scheduler_ui_state()
-        logger.debug("UI setup completed")
+        logging.debug("UI setup completed")
 
     def on_source_double_clicked(self, source_type):
         """Handle double-click on source buttons to open corresponding folder"""
-        logger.info(f"Double-click detected on source: {source_type}")
+        logging.info(f"Double-click detected on source: {source_type}")
         folder_path = get_folder_for_source(source_type)
         
         if folder_path.exists():
             success = open_folder_in_explorer(folder_path)
             if success:
                 self._set_status(f"Opened {source_type} folder")
-                logger.info(f"Successfully opened folder: {folder_path}")
+                logging.info(f"Successfully opened folder: {folder_path}")
             else:
                 self._set_status(f"Failed to open {source_type} folder")
-                logger.error(f"Failed to open folder: {folder_path}")
+                logging.error(f"Failed to open folder: {folder_path}")
         else:
-            logger.warning(f"Folder does not exist: {folder_path}")
+            logging.warning(f"Folder does not exist: {folder_path}")
             QMessageBox.warning(self, "Folder Not Found", 
                             f"The {source_type} folder does not exist:\n{folder_path}")
 
     def on_range_double_clicked(self, range_type):
         """Handle double-click on range buttons to open corresponding folder"""
-        logger.info(f"Double-click detected on range: {range_type}")
+        logging.info(f"Double-click detected on range: {range_type}")
         folder_path = get_folder_for_range(range_type)
         
         if folder_path.exists():
             success = open_folder_in_explorer(folder_path)
             if success:
                 self._set_status(f"Opened {range_type} range folder")
-                logger.info(f"Successfully opened folder: {folder_path}")
+                logging.info(f"Successfully opened folder: {folder_path}")
             else:
                 self._set_status(f"Failed to open {range_type} folder")
-                logger.error(f"Failed to open folder: {folder_path}")
+                logging.error(f"Failed to open folder: {folder_path}")
         else:
-            logger.warning(f"Folder does not exist: {folder_path}")
+            logging.warning(f"Folder does not exist: {folder_path}")
             QMessageBox.warning(self, "Folder Not Found", 
                             f"The {range_type} folder does not exist:\n{folder_path}")
 
     def _bind_ui_controls(self):
         """Bind UI controls to their handlers"""
-        logger.debug("Binding UI controls")
+        logging.debug("Binding UI controls")
         # Main controls
         if hasattr(self.ui, "loadUrlButton"):
             self.ui.loadUrlButton.clicked.connect(self.on_apply_clicked)
-            logger.debug("Load URL button connected")
+            logging.debug("Load URL button connected")
         
         if hasattr(self.ui, "urlInput"):
             self.ui.urlInput.returnPressed.connect(self.on_apply_clicked)
-            logger.debug("URL input return pressed connected")
+            logging.debug("URL input return pressed connected")
 
         # Start/Reset buttons (now in Range section)
         if hasattr(self.ui, "startButton"):
             self.ui.startButton.clicked.connect(self.on_start_clicked)
-            logger.debug("Start button connected")
+            logging.debug("Start button connected")
         
         if hasattr(self.ui, "resetButton"):
             # Use the version WITH confirmation
             self.ui.resetButton.clicked.connect(self._perform_reset_with_confirmation)
-            logger.debug("Reset button connected with confirmation")
+            logging.debug("Reset button connected with confirmation")
 
         # Browse button
         if hasattr(self.ui, "browseButton"):
             self.ui.browseButton.clicked.connect(self.on_browse_clicked)
-            logger.debug("Browse button connected")
+            logging.debug("Browse button connected")
 
         # Shuffle buttons - only one can be active at a time
         if hasattr(self.ui, "randomAnimButton"):
             self.ui.randomAnimButton.clicked.connect(self.on_shuffle_animated)
-            logger.debug("Shuffle animated button connected")
+            logging.debug("Shuffle animated button connected")
         
         if hasattr(self.ui, "randomButton"):
             self.ui.randomButton.clicked.connect(self.on_shuffle_wallpaper)
-            logger.debug("Shuffle wallpaper button connected")
+            logging.debug("Shuffle wallpaper button connected")
 
         # Source buttons - with double-click support
         if hasattr(self.ui, "super_wallpaper_btn"):
             self.ui.super_wallpaper_btn.clicked.connect(self.on_super_wallpaper)
             self.ui.super_wallpaper_btn.mouseDoubleClickEvent = lambda e: self.on_source_double_clicked("super")
-            logger.debug("Super wallpaper button connected")
+            logging.debug("Super wallpaper button connected")
         
         if hasattr(self.ui, "fvrt_wallpapers_btn"):
             self.ui.fvrt_wallpapers_btn.clicked.connect(self.on_favorite_wallpapers)
             self.ui.fvrt_wallpapers_btn.mouseDoubleClickEvent = lambda e: self.on_source_double_clicked("favorites")
-            logger.debug("Favorite wallpapers button connected")
+            logging.debug("Favorite wallpapers button connected")
         
         if hasattr(self.ui, "added_wallpaper_btn"):
             self.ui.added_wallpaper_btn.clicked.connect(self.on_added_wallpapers)
             self.ui.added_wallpaper_btn.mouseDoubleClickEvent = lambda e: self.on_source_double_clicked("added")
-            logger.debug("Added wallpapers button connected")
+            logging.debug("Added wallpapers button connected")
 
         # Range buttons - with double-click support
         if hasattr(self.ui, "range_all_bnt"):
             self.ui.range_all_bnt.clicked.connect(lambda: self.on_range_changed("all"))
             self.ui.range_all_bnt.mouseDoubleClickEvent = lambda e: self.on_range_double_clicked("all")
-            logger.debug("Range all button connected")
+            logging.debug("Range all button connected")
         
         if hasattr(self.ui, "range_wallpaper_bnt"):
             self.ui.range_wallpaper_bnt.clicked.connect(lambda: self.on_range_changed("wallpaper"))
             self.ui.range_wallpaper_bnt.mouseDoubleClickEvent = lambda e: self.on_range_double_clicked("wallpaper")
-            logger.debug("Range wallpaper button connected")
+            logging.debug("Range wallpaper button connected")
         
         if hasattr(self.ui, "range_mp4_bnt"):
             self.ui.range_mp4_bnt.clicked.connect(lambda: self.on_range_changed("mp4"))
             self.ui.range_mp4_bnt.mouseDoubleClickEvent = lambda e: self.on_range_double_clicked("mp4")
-            logger.debug("Range MP4 button connected")
+            logging.debug("Range MP4 button connected")
 
         # Scheduler controls
         if hasattr(self.ui, "enabledCheck"):
             self.ui.enabledCheck.toggled.connect(self.on_scheduler_toggled)
-            logger.debug("Scheduler enabled checkbox connected")
+            logging.debug("Scheduler enabled checkbox connected")
         
         if hasattr(self.ui, "interval_spinBox"):
             self.ui.interval_spinBox.valueChanged.connect(self._on_interval_changed)
-            logger.debug("Interval spinbox connected")
+            logging.debug("Interval spinbox connected")
         
         # connect language combo box
         if hasattr(self.ui, "langCombo"):
             logging.debug("Language combo box connected")
             self.ui.langCombo.currentTextChanged.connect(self.language_controller.on_language_changed)
 
-        logger.debug("All UI controls bound successfully")
+        logging.debug("All UI controls bound successfully")
 
     def _update_scheduler_ui_state(self):
         """Show/hide interval and range based on scheduler state"""
         enabled = hasattr(self.ui, "enabledCheck") and self.ui.enabledCheck.isChecked()
-        logger.debug(f"Updating scheduler UI state: enabled={enabled}")
+        logging.debug(f"Updating scheduler UI state: enabled={enabled}")
         
         # Show/hide interval and range controls
         if hasattr(self.ui, "source_n_interval_frame"):
@@ -904,58 +902,58 @@ class MP4WallApp(QMainWindow):
         if hasattr(self.ui, "range_frame"):
             self.ui.range_frame.setVisible(enabled)
         
-        logger.debug(f"Scheduler UI controls set to visible: {enabled}")
+        logging.debug(f"Scheduler UI controls set to visible: {enabled}")
 
     # Main application methods
     def on_apply_clicked(self):
         """Handle apply/load button click"""
-        logger.info("Apply/Load button clicked")
+        logging.info("Apply/Load button clicked")
         if not hasattr(self.ui, "urlInput"):
-            logger.error("No URL input field available in UI")
+            logging.error("No URL input field available in UI")
             QMessageBox.warning(self, "Error", "No input field available in UI")
             return
         
         url = self.ui.urlInput.text().strip()
         if not url:
-            logger.warning("No URL/path provided for apply")
+            logging.warning("No URL/path provided for apply")
             QMessageBox.warning(self, "Error", "No URL/path provided")
             return
         
-        logger.info(f"Applying input string: {url}")
+        logging.info(f"Applying input string: {url}")
         self._apply_input_string(url)
 
     def on_start_clicked(self):
         """Start the current wallpaper"""
-        logger.info("Start button clicked")
+        logging.info("Start button clicked")
         if hasattr(self.ui, "urlInput"):
             current_url = self.ui.urlInput.text().strip()
             if current_url:
                 self._set_status("Starting wallpaper...")
-                logger.info(f"Starting wallpaper from URL: {current_url}")
+                logging.info(f"Starting wallpaper from URL: {current_url}")
                 self._apply_input_string(current_url)
             else:
-                logger.warning("No wallpaper URL available for start")
+                logging.warning("No wallpaper URL available for start")
                 QMessageBox.warning(self, "No Wallpaper", "Please load a wallpaper first.")
 
     def on_browse_clicked(self):
         """Browse for local files"""
-        logger.info("Browse button clicked")
+        logging.info("Browse button clicked")
         path, _ = QFileDialog.getOpenFileName(
             self, "Select video or image", str(Path.home()),
             "Media (*.mp4 *.mkv *.webm *.avi *.mov *.jpg *.jpeg *.png)"
         )
         if path:
-            logger.info(f"File selected via browse: {path}")
+            logging.info(f"File selected via browse: {path}")
             if hasattr(self.ui, "urlInput"):
                 self.ui.urlInput.setText(path)
             self._apply_input_string(path)
         else:
-            logger.debug("Browse dialog cancelled")
+            logging.debug("Browse dialog cancelled")
 
     # Shuffle functionality - FIXED: Only one active at a time
     def on_shuffle_animated(self):
         """Shuffle through animated wallpapers ONLY"""
-        logger.info("Shuffle animated triggered")
+        logging.info("Shuffle animated triggered")
         self.current_shuffle_type = 'animated'
         self._set_status("Shuffling animated wallpapers...")
         
@@ -963,10 +961,10 @@ class MP4WallApp(QMainWindow):
         self._update_shuffle_button_states('animated')
         
         video_files = self._get_media_files(media_type="mp4")
-        logger.debug(f"Found {len(video_files)} animated wallpapers for shuffling")
+        logging.debug(f"Found {len(video_files)} animated wallpapers for shuffling")
         
         if not video_files:
-            logger.warning(f"No animated wallpapers found in {self._get_range_display_name()} collection")
+            logging.warning(f"No animated wallpapers found in {self._get_range_display_name()} collection")
             QMessageBox.information(self, "No Videos", 
                                 f"No animated wallpapers found in {self._get_range_display_name()} collection.")
             self.current_shuffle_type = None
@@ -974,13 +972,13 @@ class MP4WallApp(QMainWindow):
             return
         
         selected = random.choice(video_files)
-        logger.info(f"Selected animated wallpaper: {selected.name}")
+        logging.info(f"Selected animated wallpaper: {selected.name}")
         self._apply_wallpaper_from_path(selected)
         self._update_url_input(str(selected))
 
     def on_shuffle_wallpaper(self):
         """Shuffle through static wallpapers ONLY"""
-        logger.info("Shuffle wallpaper triggered")
+        logging.info("Shuffle wallpaper triggered")
         self.current_shuffle_type = 'wallpaper'
         self._set_status("Shuffling wallpapers...")
         
@@ -988,10 +986,10 @@ class MP4WallApp(QMainWindow):
         self._update_shuffle_button_states('wallpaper')
         
         image_files = self._get_media_files(media_type="wallpaper")
-        logger.debug(f"Found {len(image_files)} static wallpapers for shuffling")
+        logging.debug(f"Found {len(image_files)} static wallpapers for shuffling")
         
         if not image_files:
-            logger.warning(f"No static wallpapers found in {self._get_range_display_name()} collection")
+            logging.warning(f"No static wallpapers found in {self._get_range_display_name()} collection")
             QMessageBox.information(self, "No Images", 
                                 f"No wallpapers found in {self._get_range_display_name()} collection.")
             self.current_shuffle_type = None
@@ -999,13 +997,13 @@ class MP4WallApp(QMainWindow):
             return
         
         selected = random.choice(image_files)
-        logger.info(f"Selected static wallpaper: {selected.name}")
+        logging.info(f"Selected static wallpaper: {selected.name}")
         self._apply_wallpaper_from_path(selected)
         self._update_url_input(str(selected))
 
     def _update_shuffle_button_states(self, active_type):
         """Update shuffle button states - only one can be active"""
-        logger.debug(f"Updating shuffle button states: {active_type}")
+        logging.debug(f"Updating shuffle button states: {active_type}")
         if hasattr(self.ui, "randomAnimButton"):
             if active_type == 'animated':
                 self.ui.randomAnimButton.setProperty("class", "primary")
@@ -1026,23 +1024,23 @@ class MP4WallApp(QMainWindow):
             self.ui.randomButton.style().unpolish(self.ui.randomButton)
             self.ui.randomButton.style().polish(self.ui.randomButton)
         
-        logger.debug(f"Shuffle button states updated for: {active_type}")
+        logging.debug(f"Shuffle button states updated for: {active_type}")
 
     # Source selection
     def on_super_wallpaper(self):
         """Super Wallpaper source"""
-        logger.info("Super Wallpaper source selected")
+        logging.info("Super Wallpaper source selected")
         self._set_status("Super Wallpaper source selected")
         QMessageBox.information(self, "Super Wallpaper", 
                             "Super Wallpaper feature - Premium curated wallpapers coming soon!")
 
     def on_favorite_wallpapers(self):
         """Favorite wallpapers source"""
-        logger.info("Favorite wallpapers source selected")
+        logging.info("Favorite wallpapers source selected")
         self._set_status("Favorite wallpapers source selected")
         
         if not FAVS_DIR.exists() or not any(FAVS_DIR.iterdir()):
-            logger.warning("No favorite wallpapers found")
+            logging.warning("No favorite wallpapers found")
             QMessageBox.information(self, "No Favorites", 
                                 "No favorite wallpapers found. Add some wallpapers to favorites first.")
             return
@@ -1050,11 +1048,11 @@ class MP4WallApp(QMainWindow):
         self.scheduler.source = str(FAVS_DIR)
         self._set_status("Scheduler set to use favorite wallpapers")
         self._update_source_buttons_active("favorites")
-        logger.info("Scheduler set to use favorite wallpapers")
+        logging.info("Scheduler set to use favorite wallpapers")
 
     def on_added_wallpapers(self):
         """My Collection source"""
-        logger.info("My Collection source selected")
+        logging.info("My Collection source selected")
         self._set_status("My Collection source selected")
         
         has_videos = VIDEOS_DIR.exists() and any(VIDEOS_DIR.iterdir())
@@ -1062,7 +1060,7 @@ class MP4WallApp(QMainWindow):
         has_favorites = FAVS_DIR.exists() and any(FAVS_DIR.iterdir())
         
         if not (has_videos or has_images or has_favorites):
-            logger.warning("Empty collection - no wallpapers found")
+            logging.warning("Empty collection - no wallpapers found")
             QMessageBox.information(self, "Empty Collection", 
                                 "No wallpapers found in your collection. Download or add some wallpapers first.")
             return
@@ -1070,23 +1068,23 @@ class MP4WallApp(QMainWindow):
         self.scheduler.source = str(COLLECTION_DIR)
         self._set_status("Scheduler set to use entire collection")
         self._update_source_buttons_active("added")
-        logger.info("Scheduler set to use entire collection")
+        logging.info("Scheduler set to use entire collection")
 
     # Range selection
     def on_range_changed(self, range_type):
         """Handle range selection"""
-        logger.info(f"Range changed to: {range_type}")
+        logging.info(f"Range changed to: {range_type}")
         self.current_range = range_type
         self.scheduler.set_range(range_type)
         self._set_status(f"Range set to: {range_type}")
         self._update_range_buttons_active(range_type)
         self.config.set_range_preference(range_type)
-        logger.debug(f"Range preference saved: {range_type}")
+        logging.debug(f"Range preference saved: {range_type}")
 
     # Scheduler controls
     def on_scheduler_toggled(self, enabled):
         """Handle scheduler enable/disable"""
-        logger.info(f"Scheduler toggled: {enabled}")
+        logging.info(f"Scheduler toggled: {enabled}")
         # Update UI visibility
         self._update_scheduler_ui_state()
         
@@ -1101,15 +1099,15 @@ class MP4WallApp(QMainWindow):
             
             self.scheduler.start(self.scheduler.source, interval)
             self._set_status(f"Scheduler started - changing every {interval} minutes")
-            logger.info(f"Scheduler started with interval: {interval} minutes")
+            logging.info(f"Scheduler started with interval: {interval} minutes")
         else:
             self.scheduler.stop()
             self._set_status("Scheduler stopped")
-            logger.info("Scheduler stopped")
+            logging.info("Scheduler stopped")
 
     def _on_interval_changed(self, val):
         """Handle interval change"""
-        logger.info(f"Interval changed to: {val} minutes")
+        logging.info(f"Interval changed to: {val} minutes")
         self.scheduler.interval_minutes = val
         if self.scheduler.is_active():
             self.scheduler.stop()
@@ -1151,80 +1149,80 @@ class MP4WallApp(QMainWindow):
     # Core wallpaper application logic
     def _apply_input_string(self, text: str):
         """Main method to apply wallpaper from various inputs"""
-        logger.info(f"Applying input string: {text}")
+        logging.info(f"Applying input string: {text}")
         text = (text or "").strip()
         if not text:
-            logger.warning("Empty input string provided")
+            logging.warning("Empty input string provided")
             QMessageBox.warning(self, "Warning", "Please enter a valid URL or file path.")
             return
 
         validated = validate_url_or_path(text)
         if not validated:
-            logger.warning(f"Input not recognized: {text}")
+            logging.warning(f"Input not recognized: {text}")
             QMessageBox.warning(self, "Error", f"Input not recognized: {text}")
             return
 
         # Handle local files
         p = Path(validated)
         if p.exists():
-            logger.info(f"Handling local file: {p}")
+            logging.info(f"Handling local file: {p}")
             self._handle_local_file(p)
             return
 
         # Handle remote URLs - USING get_media_type
         if validated.lower().startswith("http"):
-            logger.info(f"Handling remote URL: {validated}")
+            logging.info(f"Handling remote URL: {validated}")
             
             media_type = get_media_type(validated)
-            logger.debug(f"Detected media type: {media_type}")
+            logging.debug(f"Detected media type: {media_type}")
             
             if media_type == "image":
-                logger.info(f"Handling as image URL: {validated}")
+                logging.info(f"Handling as image URL: {validated}")
                 self._handle_remote_image(validated)
             elif media_type == "video":
-                logger.info(f"Handling as video URL: {validated}")
+                logging.info(f"Handling as video URL: {validated}")
                 self._handle_remote_video(validated)
             else:
-                logger.warning(f"Unsupported URL type: {validated}")
+                logging.warning(f"Unsupported URL type: {validated}")
                 QMessageBox.warning(self, "Unsupported URL", 
                                 "The URL doesn't appear to be a supported image or video.")
             return
 
-        logger.warning(f"Unsupported input type: {text}")
+        logging.warning(f"Unsupported input type: {text}")
         QMessageBox.warning(self, "Invalid Input", "Unsupported input type.")
 
     def _handle_local_file(self, file_path: Path):
         """Handle local file application"""
-        logger.info(f"Processing local file: {file_path}")
+        logging.info(f"Processing local file: {file_path}")
         if file_path.suffix.lower() in (".mp4", ".mkv", ".webm", ".avi", ".mov"):
-            logger.debug("Local file is video, copying to videos directory")
+            logging.debug("Local file is video, copying to videos directory")
             dest = copy_to_collection(file_path, VIDEOS_DIR)
             self._apply_video(str(dest))
         elif file_path.suffix.lower() in (".jpg", ".jpeg", ".png", ".bmp", ".gif"):
-            logger.debug("Local file is image, copying to images directory")
+            logging.debug("Local file is image, copying to images directory")
             dest = copy_to_collection(file_path, IMAGES_DIR)
             self._apply_image_with_fade(str(dest))
         else:
-            logger.warning(f"Unsupported local file type: {file_path.suffix}")
+            logging.warning(f"Unsupported local file type: {file_path.suffix}")
             QMessageBox.warning(self, "Unsupported", "Unsupported local file type.")
 
     def _handle_remote_image(self, url: str):
         """Handle remote image download and application"""
-        logger.info(f"Downloading remote image: {url}")
+        logging.info(f"Downloading remote image: {url}")
         self._set_status("Downloading image...")
         try:
             local_path = download_image(url)
             self._apply_image_with_fade(local_path)
             self.config.set_last_video(local_path)
             self._set_status(f"Image saved to collection: {Path(local_path).name}")
-            logger.info(f"Remote image downloaded successfully: {local_path}")
+            logging.info(f"Remote image downloaded successfully: {local_path}")
         except Exception as e:
-            logger.error(f"Failed to download image: {e}", exc_info=True)
+            logging.error(f"Failed to download image: {e}", exc_info=True)
             QMessageBox.critical(self, "Error", f"Failed to download image: {e}")
 
     def _handle_remote_video(self, url: str):
         """Handle remote video download - FIXED for direct video links"""
-        logger.info(f"Downloading remote video: {url}")
+        logging.info(f"Downloading remote video: {url}")
         self._set_status("Downloading video...")
         cleanup_temp_marker()
 
@@ -1233,10 +1231,10 @@ class MP4WallApp(QMainWindow):
         is_direct_link = any(url.lower().endswith(ext) for ext in direct_video_extensions)
         
         if is_direct_link:
-            logger.info(f"Detected direct video link: {url}")
+            logging.info(f"Detected direct video link: {url}")
             self._handle_direct_video_download(url)
         else:
-            logger.info(f"Using yt-dlp for video URL: {url}")
+            logging.info(f"Using yt-dlp for video URL: {url}")
             self._handle_ytdlp_video_download(url)
 
     def _handle_direct_video_download(self, url: str):
@@ -1245,7 +1243,7 @@ class MP4WallApp(QMainWindow):
             import requests
             from urllib.parse import urlparse
             
-            logger.info(f"Starting direct video download: {url}")
+            logging.info(f"Starting direct video download: {url}")
             
             # Create progress dialog
             self.progress_dialog = DownloadProgressDialog(self)
@@ -1262,7 +1260,7 @@ class MP4WallApp(QMainWindow):
             filename = self._get_safe_filename(filename)
             download_path = VIDEOS_DIR / filename
             
-            logger.info(f"Downloading to: {download_path}")
+            logging.info(f"Downloading to: {download_path}")
             
             # Start download in a thread to avoid blocking UI
             self.direct_download_thread = DirectDownloadThread(url, str(download_path))
@@ -1276,10 +1274,10 @@ class MP4WallApp(QMainWindow):
             self.direct_download_thread.done.connect(self._on_direct_download_done)
             
             self.direct_download_thread.start()
-            logger.info("Direct download thread started")
+            logging.info("Direct download thread started")
             
         except Exception as e:
-            logger.error(f"Direct download setup failed: {e}", exc_info=True)
+            logging.error(f"Direct download setup failed: {e}", exc_info=True)
             if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
                 self.progress_dialog.close()
             QMessageBox.critical(self, "Error", f"Download setup failed: {e}")
@@ -1301,52 +1299,52 @@ class MP4WallApp(QMainWindow):
 
             self.downloader.start()
             self.progress_dialog.show()
-            logger.info("YouTube downloader thread started")
+            logging.info("YouTube downloader thread started")
 
         except Exception as e:
-            logger.error(f"YouTube download setup failed: {e}", exc_info=True)
+            logging.error(f"YouTube download setup failed: {e}", exc_info=True)
             QMessageBox.critical(self, "Error", f"Download setup failed: {e}")
 
     def _on_direct_download_done(self, file_path: str):
         """Handle completion of direct video download"""
-        logger.info(f"Direct download completed: {file_path}")
+        logging.info(f"Direct download completed: {file_path}")
         if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
             self.progress_dialog.close()
         
         if file_path and os.path.exists(file_path):
-            logger.info(f"Direct download successful: {file_path}")
+            logging.info(f"Direct download successful: {file_path}")
             self._apply_wallpaper_from_path(Path(file_path))
             self._set_status(f"Video downloaded: {os.path.basename(file_path)}")
         else:
-            logger.error("Direct download failed - file not found")
+            logging.error("Direct download failed - file not found")
             self._set_status("Download failed - file not found")
             QMessageBox.critical(self, "Download Error", "Download failed - file not found")
 
     def _get_safe_filename(self, filename):
         """Remove invalid characters for both Windows and Linux"""
-        logger.debug(f"Sanitizing filename: {filename}")
+        logging.debug(f"Sanitizing filename: {filename}")
         # Characters invalid on Windows: < > : " | ? *
         # Characters to avoid on Linux: / and null bytes
         invalid_chars = '<>:"|?*/\0'
         for char in invalid_chars:
             filename = filename.replace(char, '_')
-        logger.debug(f"Sanitized filename: {filename}")
+        logging.debug(f"Sanitized filename: {filename}")
         return filename
 
     def _on_download_done(self, path: str):
         """Handle download completion"""
-        logger.info(f"Download completed, path: {path}")
+        logging.info(f"Download completed, path: {path}")
         if self.progress_dialog and self.progress_dialog.isVisible():
             self.progress_dialog.close()
 
         if not path:
-            logger.warning("Download failed or produced no usable file")
+            logging.warning("Download failed or produced no usable file")
             self._set_status("Download failed or produced no usable file.")
             return
 
         p = Path(path)
         if not p.exists():
-            logger.error(f"Downloaded file missing: {path}")
+            logging.error(f"Downloaded file missing: {path}")
             self._set_status("Downloaded file missing.")
             return
 
@@ -1365,15 +1363,15 @@ class MP4WallApp(QMainWindow):
         collection_dest = dest_folder / p.name
         if not collection_dest.exists():
             shutil.copy2(p, collection_dest)
-            logger.info(f"Downloaded {file_type} copied to collection: {collection_dest}")
+            logging.info(f"Downloaded {file_type} copied to collection: {collection_dest}")
         else:
-            logger.debug(f"Downloaded {file_type} already exists in collection: {collection_dest}")
+            logging.debug(f"Downloaded {file_type} already exists in collection: {collection_dest}")
 
         self._apply_wallpaper_from_path(collection_dest)
 
     def _apply_wallpaper_from_path(self, file_path: Path):
         """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""
-        logger.info(f"Applying wallpaper from path: {file_path}")
+        logging.info(f"Applying wallpaper from path: {file_path}")
         current_is_video = self.controller.current_is_video
         new_is_video = file_path.suffix.lower() in (".mp4", ".mkv", ".webm", ".avi", ".mov")
         
@@ -1381,7 +1379,7 @@ class MP4WallApp(QMainWindow):
         needs_stop = (current_is_video and new_is_video) or (current_is_video and not new_is_video) or (not current_is_video and new_is_video)
         # No need to stop here, as the controller methods handle it
         # if needs_stop:
-        #     logger.debug("Stopping current wallpaper due to type change")
+        #     logging.debug("Stopping current wallpaper due to type change")
         #     self.controller.stop()
         
         if new_is_video:
@@ -1392,20 +1390,20 @@ class MP4WallApp(QMainWindow):
     def _apply_video(self, video_path: str):
         """Apply video wallpaper"""
         try:
-            logger.info(f"Applying video wallpaper: {video_path}")
+            logging.info(f"Applying video wallpaper: {video_path}")
             self.controller.start_video(video_path)
             self.config.set_last_video(video_path)
             self._set_status(f"Playing video: {Path(video_path).name}")
             self._update_url_input(video_path)
-            logger.info(f"Video wallpaper applied successfully: {Path(video_path).name}")
+            logging.info(f"Video wallpaper applied successfully: {Path(video_path).name}")
         except Exception as e:
-            logger.error(f"Failed to play video: {e}", exc_info=True)
+            logging.error(f"Failed to play video: {e}", exc_info=True)
             QMessageBox.critical(self, "Error", f"Failed to play video: {e}")
 
     def _apply_image_with_fade(self, image_path: str):
         """Apply image wallpaper with fade effect"""
         try:
-            logger.info(f"Applying image wallpaper with fade: {image_path}")
+            logging.info(f"Applying image wallpaper with fade: {image_path}")
             old_pix = self.grab() if hasattr(self, 'grab') else None
             new_pix = QPixmap(image_path)
             new_pix = new_pix.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
@@ -1421,16 +1419,16 @@ class MP4WallApp(QMainWindow):
             QTimer.singleShot(700, self.fade_overlay.hide)
             self._set_status(f"Image applied: {Path(image_path).name}")
             self._update_url_input(image_path)
-            logger.info(f"Image wallpaper applied with fade: {Path(image_path).name}")
+            logging.info(f"Image wallpaper applied with fade: {Path(image_path).name}")
             
         except Exception as e:
-            logger.error(f"Fade apply failed: {e}", exc_info=True)
+            logging.error(f"Fade apply failed: {e}", exc_info=True)
             QMessageBox.warning(self, "Error", f"Fade apply failed: {e}")
 
     # Utility methods - FIXED: Proper media type separation
     def _get_media_files(self, media_type="all"):
         """Get media files based on current range and media type"""
-        logger.debug(f"Getting media files - type: {media_type}, range: {self.current_range}")
+        logging.debug(f"Getting media files - type: {media_type}, range: {self.current_range}")
         files = []
         
         # Define search folders based on current range
@@ -1456,26 +1454,26 @@ class MP4WallApp(QMainWindow):
                     if f.is_file() and f.suffix.lower() in extensions
                 ]
                 files.extend(folder_files)
-                logger.debug(f"Found {len(folder_files)} files in {folder}")
+                logging.debug(f"Found {len(folder_files)} files in {folder}")
         
-        logger.debug(f"Total media files found: {len(files)}")
+        logging.debug(f"Total media files found: {len(files)}")
         return files
 
     def _get_range_display_name(self):
         range_names = {"all": "All", "wallpaper": "Wallpaper", "mp4": "MP4"}
         display_name = range_names.get(self.current_range, "All")
-        logger.debug(f"Range display name: {display_name}")
+        logging.debug(f"Range display name: {display_name}")
         return display_name
 
     def _update_url_input(self, text: str):
         """Update URL input field"""
-        logger.debug(f"Updating URL input field: {text}")
+        logging.debug(f"Updating URL input field: {text}")
         if hasattr(self.ui, "urlInput"):
             self.ui.urlInput.setText(text)
 
     def _update_source_buttons_active(self, active_source):
         """Update source button styles"""
-        logger.debug(f"Updating source button styles for: {active_source}")
+        logging.debug(f"Updating source button styles for: {active_source}")
         sources = {
             "super": getattr(self.ui, "super_wallpaper_btn", None),
             "favorites": getattr(self.ui, "fvrt_wallpapers_btn", None),
@@ -1495,11 +1493,11 @@ class MP4WallApp(QMainWindow):
             sources[active_source].style().unpolish(sources[active_source])
             sources[active_source].style().polish(sources[active_source])
         
-        logger.debug(f"Source button {active_source} set to active")
+        logging.debug(f"Source button {active_source} set to active")
 
     def _update_range_buttons_active(self, active_range):
         """Update range button styles"""
-        logger.debug(f"Updating range button styles for: {active_range}")
+        logging.debug(f"Updating range button styles for: {active_range}")
         range_buttons = {
             "all": getattr(self.ui, "range_all_bnt", None),
             "wallpaper": getattr(self.ui, "range_wallpaper_bnt", None),
@@ -1519,11 +1517,11 @@ class MP4WallApp(QMainWindow):
             range_buttons[active_range].style().unpolish(range_buttons[active_range])
             range_buttons[active_range].style().polish(range_buttons[active_range])
         
-        logger.debug(f"Range button {active_range} set to active")
+        logging.debug(f"Range button {active_range} set to active")
 
     def _perform_reset_with_confirmation(self):
         """Reset to default wallpaper WITH confirmation"""
-        logger.info("Reset with confirmation triggered")
+        logging.info("Reset with confirmation triggered")
         reply = QMessageBox.question(
             self,
             self.lang["dialog"]["confirm_reset_title"],
@@ -1533,16 +1531,16 @@ class MP4WallApp(QMainWindow):
         )
         
         if reply == QMessageBox.StandardButton.Yes:
-            logger.info("User confirmed reset")
+            logging.info("User confirmed reset")
             self._perform_reset()
             self._set_status("Reset completed successfully")
         else:
-            logger.info("User cancelled reset")
+            logging.info("User cancelled reset")
             self._set_status("Reset cancelled")
 
     def _on_download_error(self, error_msg: str):
         """Handle download errors"""
-        logger.error(f"Download error: {error_msg}")
+        logging.error(f"Download error: {error_msg}")
         if hasattr(self, "progress_dialog") and self.progress_dialog.isVisible():
             self.progress_dialog.close()
         QMessageBox.critical(self, "Download Error", error_msg)
@@ -1552,19 +1550,19 @@ class MP4WallApp(QMainWindow):
     def dragEnterEvent(self, e: QDragEnterEvent):
         if e.mimeData().hasUrls():
             e.acceptProposedAction()
-            logger.debug("Drag enter event accepted")
+            logging.debug("Drag enter event accepted")
         else:
             e.ignore()
-            logger.debug("Drag enter event ignored - no URLs")
+            logging.debug("Drag enter event ignored - no URLs")
 
     def dropEvent(self, e: QDropEvent):
         urls = e.mimeData().urls()
         if not urls:
-            logger.debug("Drop event ignored - no URLs")
+            logging.debug("Drop event ignored - no URLs")
             return
         path = urls[0].toLocalFile()
         if path:
-            logger.info(f"File dropped on main window: {path}")
+            logging.info(f"File dropped on main window: {path}")
             self._set_status(f"Dropped: {Path(path).name}")
             self._apply_input_string(path)
 
@@ -1572,32 +1570,32 @@ class MP4WallApp(QMainWindow):
     def _handle_cli_args(self):
         if len(sys.argv) > 1:
             arg = sys.argv[1]
-            logger.info(f"Processing CLI argument: {arg}")
+            logging.info(f"Processing CLI argument: {arg}")
             parsed = validate_url_or_path(arg)
             if parsed:
                 self._set_status("Applying from URI...")
                 self._apply_input_string(parsed)
-                logger.info("CLI argument processed successfully")
+                logging.info("CLI argument processed successfully")
             else:
-                logger.warning(f"Invalid CLI argument: {arg}")
+                logging.warning(f"Invalid CLI argument: {arg}")
         else:
-            logger.debug("No CLI arguments provided")
+            logging.debug("No CLI arguments provided")
 
     # Settings management
     def _load_settings(self):
         """Load saved settings"""
-        logger.info("Loading saved settings")
+        logging.info("Loading saved settings")
         # Load last video
         last_video = self.config.get_last_video()
         if last_video and hasattr(self.ui, "urlInput"):
             self.ui.urlInput.setText(last_video)
-            logger.info(f"Loaded last video from config: {last_video}")
+            logging.info(f"Loaded last video from config: {last_video}")
 
         # Load range preference
         self.current_range = self.config.get_range_preference()
         self.scheduler.set_range(self.current_range)
         self._update_range_buttons_active(self.current_range)
-        logger.info(f"Loaded range preference: {self.current_range}")
+        logging.info(f"Loaded range preference: {self.current_range}")
 
         # Load scheduler settings
         source, interval, enabled = self.config.get_scheduler_settings()
@@ -1612,21 +1610,21 @@ class MP4WallApp(QMainWindow):
             if enabled and source:
                 self.scheduler.start(self.scheduler.source, interval)
         
-        logger.info(f"Loaded scheduler settings - source: {source}, interval: {interval}, enabled: {enabled}")
+        logging.info(f"Loaded scheduler settings - source: {source}, interval: {interval}, enabled: {enabled}")
         
         # Update UI state based on scheduler
         self._update_scheduler_ui_state()
-        logger.info("Settings loaded successfully")
+        logging.info("Settings loaded successfully")
 
     # System tray
     def _setup_tray(self):
-        logger.debug("Setting up system tray")
+        logging.debug("Setting up system tray")
         # Don't quit when last window is closed
         QApplication.setQuitOnLastWindowClosed(False)
         
         # Check if system tray is available
         if not QSystemTrayIcon.isSystemTrayAvailable():
-            logger.error("System tray is not available on this system")
+            logging.error("System tray is not available on this system")
             QMessageBox.critical(None, "System Tray", "System tray is not available on this system.")
             return
         
@@ -1638,11 +1636,11 @@ class MP4WallApp(QMainWindow):
         cand = Path(__file__).parent.parent / "ui" / "icons" / "logo_biale.svg"
         if cand.exists():
             icon = QIcon(str(cand))
-            logger.debug("Using custom tray icon")
+            logging.debug("Using custom tray icon")
         else:
             # Fallback to standard icon
             icon = self.style().standardIcon(QStyle.SP_ComputerIcon)
-            logger.debug("Using fallback system tray icon")
+            logging.debug("Using fallback system tray icon")
         
         self.tray.setIcon(icon)
         self.tray.setToolTip("MP4Wall - Desktop Wallpaper Manager")
@@ -1672,21 +1670,21 @@ class MP4WallApp(QMainWindow):
         # Show the tray icon
         self.tray.show()
         self.tray.setVisible(True)
-        logger.info("System tray setup completed")
+        logging.info("System tray setup completed")
 
     def _on_tray_activated(self, reason):
         """Handle tray icon clicks"""
-        logger.debug(f"Tray icon activated with reason: {reason}")
+        logging.debug(f"Tray icon activated with reason: {reason}")
         if reason == QSystemTrayIcon.DoubleClick:
             # Double-click toggles window visibility
-            logger.debug("Tray icon double-clicked")
+            logging.debug("Tray icon double-clicked")
             if self.isVisible():
                 self.hide_to_tray()
             else:
                 self.show_from_tray()
         elif reason == QSystemTrayIcon.Trigger:
             # Single click also toggles window
-            logger.debug("Tray icon single-clicked")
+            logging.debug("Tray icon single-clicked")
             if self.isVisible():
                 self.hide_to_tray()
             else:
@@ -1694,7 +1692,7 @@ class MP4WallApp(QMainWindow):
 
     def _exit_app(self):
         """Properly quit the application from tray menu with confirmation"""
-        logger.info("Exit from tray menu triggered")
+        logging.info("Exit from tray menu triggered")
         reply = QMessageBox.question(
             self,
             self.lang["dialog"]["confirm_exit_title"],
@@ -1704,16 +1702,16 @@ class MP4WallApp(QMainWindow):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            logger.info("User confirmed exit from tray")
+            logging.info("User confirmed exit from tray")
             # Stop any running processes WITHOUT reset confirmation
             self._perform_reset()  # Use the version WITHOUT confirmation
             
             if hasattr(self, 'tray'):
                 self.tray.hide()
             QApplication.quit()
-            logger.info("Application quit from tray")
+            logging.info("Application quit from tray")
         else:
-            logger.info("User cancelled exit from tray")
+            logging.info("User cancelled exit from tray")
 
 class DirectDownloadThread(QThread):
     progress = Signal(float, str)   # percent, status message
@@ -1721,7 +1719,7 @@ class DirectDownloadThread(QThread):
     error = Signal(str)
 
     def __init__(self, url: str, file_path: str, parent=None):
-        logger.info(f"Initializing DirectDownloadThread for URL: {url}")
+        logging.info(f"Initializing DirectDownloadThread for URL: {url}")
         super().__init__(parent)
         self.url = url
         self.file_path = file_path
@@ -1730,7 +1728,7 @@ class DirectDownloadThread(QThread):
     def run(self):
         try:
             import requests
-            logger.info(f"Starting direct download: {self.url} -> {self.file_path}")
+            logging.info(f"Starting direct download: {self.url} -> {self.file_path}")
             
             self.progress.emit(0, "Connecting...")
             
@@ -1746,7 +1744,7 @@ class DirectDownloadThread(QThread):
             with open(self.file_path, 'wb') as file:
                 for chunk in response.iter_content(chunk_size=8192):
                     if self._cancelled:
-                        logger.info("Download cancelled by user")
+                        logging.info("Download cancelled by user")
                         if os.path.exists(self.file_path):
                             os.remove(self.file_path)
                         return
@@ -1769,16 +1767,16 @@ class DirectDownloadThread(QThread):
             # Verify download
             if os.path.exists(self.file_path) and os.path.getsize(self.file_path) > 0:
                 self.progress.emit(100, "Download completed!")
-                logger.info(f"Direct download completed successfully: {self.file_path}")
+                logging.info(f"Direct download completed successfully: {self.file_path}")
                 self.done.emit(self.file_path)
             else:
                 error_msg = "Downloaded file is empty or missing"
-                logger.error(error_msg)
+                logging.error(error_msg)
                 self.error.emit(error_msg)
                 
         except Exception as e:
             error_msg = f"Direct download failed: {str(e)}"
-            logger.error(error_msg, exc_info=True)
+            logging.error(error_msg, exc_info=True)
             
             # Clean up partial download
             if os.path.exists(self.file_path):
@@ -1792,4 +1790,4 @@ class DirectDownloadThread(QThread):
     def cancel(self):
         """Cancel the download"""
         self._cancelled = True
-        logger.info("Download cancellation requested")
+        logging.info("Download cancellation requested")

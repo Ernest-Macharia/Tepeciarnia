@@ -1,9 +1,9 @@
-from .main_window import MP4WallApp
+from .main_window import TapeciarniaApp
 from .widgets import FadeOverlay, DownloadProgressDialog
 from .dialogs import DownloadProgressDialog
 
 __all__ = [
-    'MP4WallApp',
+    'TapeciarniaApp',
     'FadeOverlay',
     'DownloadProgressDialog'
 ]
