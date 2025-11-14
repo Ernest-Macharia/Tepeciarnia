@@ -466,6 +466,11 @@ class TapeciarniaApp(QMainWindow):
                 if enabled:
                     visible_count += 1
         
+        # Show/hide start button based on scheduler enabled state
+        if hasattr(self.ui, 'startButton'):
+            self.ui.startButton.setVisible(enabled)
+            logging.debug(f"Start button visibility set to: {enabled}")
+        
         logging.debug(f"Set {visible_count} interval controls to visible: {enabled}")
 
     def _apply_shuffled_wallpaper(self, shuffle_mode):
@@ -1092,10 +1097,14 @@ class TapeciarniaApp(QMainWindow):
             logging.debug("Language combo box connected")
             self.ui.langCombo.currentTextChanged.connect(self.language_controller.on_language_changed)
 
+        if hasattr(self.ui, "logInBnt"):
+            self.ui.logInBnt.clicked.connect(self.on_login_clicked)
+            logging.debug("Login button connected")
+
         logging.debug("All UI controls bound successfully")
 
     def _update_scheduler_ui_state(self):
-        """Show/hide interval and range based on scheduler state"""
+        """Show/hide interval, range, and start button based on scheduler state"""
         enabled = hasattr(self.ui, "enabledCheck") and self.ui.enabledCheck.isChecked()
         logging.debug(f"Updating scheduler UI state: enabled={enabled}")
         
@@ -1104,6 +1113,11 @@ class TapeciarniaApp(QMainWindow):
             self.ui.source_n_interval_frame.setVisible(enabled)
         if hasattr(self.ui, "range_frame"):
             self.ui.range_frame.setVisible(enabled)
+        
+        # Show/hide start button
+        if hasattr(self.ui, "startButton"):
+            self.ui.startButton.setVisible(enabled)
+            logging.debug(f"Start button visibility: {enabled}")
         
         logging.debug(f"Scheduler UI controls set to visible: {enabled}")
 
@@ -1126,17 +1140,29 @@ class TapeciarniaApp(QMainWindow):
         self._apply_input_string(url)
 
     def on_start_clicked(self):
-        """Start the current wallpaper"""
-        logging.info("Start button clicked")
-        if hasattr(self.ui, "urlInput"):
-            current_url = self.ui.urlInput.text().strip()
-            if current_url:
-                self._set_status("Starting wallpaper...")
-                logging.info(f"Starting wallpaper from URL: {current_url}")
-                self._apply_input_string(current_url)
-            else:
-                logging.warning("No wallpaper URL available for start")
-                QMessageBox.warning(self, "No Wallpaper", "Please load a wallpaper first.")
+        """Start the scheduler (not load URL)"""
+        logging.info("Start button clicked - starting scheduler")
+        
+        # Check if scheduler is enabled
+        if hasattr(self.ui, 'enabledCheck') and not self.ui.enabledCheck.isChecked():
+            logging.warning("Scheduler not enabled, enabling it first")
+            self.ui.enabledCheck.setChecked(True)
+        
+        # Get interval from UI
+        interval = 30  # default
+        if hasattr(self.ui, 'interval_spinBox'):
+            interval = self.ui.interval_spinBox.value()
+        
+        # Get current source
+        source = self.scheduler.source
+        if not source:
+            source = str(COLLECTION_DIR)
+            self.scheduler.source = source
+        
+        # Start the scheduler
+        self.scheduler.start(source, interval)
+        self._set_status(f"Scheduler started - changing every {interval} minutes")
+        logging.info(f"Scheduler started with source: {source}, interval: {interval} minutes")
 
     def on_browse_clicked(self):
         """Browse for local files"""
@@ -1238,7 +1264,7 @@ class TapeciarniaApp(QMainWindow):
                             "Super Wallpaper feature - Premium curated wallpapers coming soon!")
 
     def on_favorite_wallpapers(self):
-        """Favorite wallpapers source"""
+        """Favorite wallpapers source - ONLY uses FAVS_DIR"""
         logging.info("Favorite wallpapers source selected")
         self._set_status("Favorite wallpapers source selected")
         
@@ -1248,13 +1274,14 @@ class TapeciarniaApp(QMainWindow):
                                 "No favorite wallpapers found. Add some wallpapers to favorites first.")
             return
         
+        # Set scheduler to use ONLY FAVS_DIR
         self.scheduler.source = str(FAVS_DIR)
-        self._set_status("Scheduler set to use favorite wallpapers")
+        self._set_status("Scheduler set to use favorite wallpapers only")
         self._update_source_buttons_active("favorites")
-        logging.info("Scheduler set to use favorite wallpapers")
+        logging.info("Scheduler set to use FAVS_DIR only")
 
     def on_added_wallpapers(self):
-        """My Collection source"""
+        """My Collection source - includes ALL folders"""
         logging.info("My Collection source selected")
         self._set_status("My Collection source selected")
         
@@ -1268,8 +1295,9 @@ class TapeciarniaApp(QMainWindow):
                                 "No wallpapers found in your collection. Download or add some wallpapers first.")
             return
         
+        # Set scheduler to use ALL collection folders
         self.scheduler.source = str(COLLECTION_DIR)
-        self._set_status("Scheduler set to use entire collection")
+        self._set_status("Scheduler set to use entire collection (Videos + Images + Favorites)")
         self._update_source_buttons_active("added")
         logging.info("Scheduler set to use entire collection")
 
@@ -1951,6 +1979,18 @@ class TapeciarniaApp(QMainWindow):
                 self.hide_to_tray()
             else:
                 self.show_from_tray()
+    
+    def on_login_clicked(self):
+        """Handle login button click - show Coming Soon message"""
+        logging.info("Login button clicked - showing coming soon message")
+        
+        QMessageBox.information(
+            self,
+            "Coming Soon",
+            "Login functionality will be available in a future update!\n\n"
+            "For now, enjoy all the wallpaper features without an account.",
+            QMessageBox.StandardButton.Ok
+        )
 
     def _exit_app(self):
         """Properly quit the application from tray menu with confirmation and progress"""

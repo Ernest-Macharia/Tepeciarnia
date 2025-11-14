@@ -134,18 +134,21 @@ class WallpaperScheduler:
             return None
 
     def _get_media_files(self):
-        """Get media files based on current range"""
+        """Get media files based on current source and range"""
         logging.debug(f"Getting media files - Source: {self.source}, Range: {self.range_type}")
         files = []
         
         # Define search folders based on source
         if self.source == str(FAVS_DIR):
+            # Favorites should ONLY use FAVS_DIR
             search_folders = [FAVS_DIR]
             source_type = "favorites"
         elif self.source == str(COLLECTION_DIR):
+            # My Collection should include ALL folders
             search_folders = [VIDEOS_DIR, IMAGES_DIR, FAVS_DIR]
             source_type = "collection"
         else:
+            # Custom source
             search_folders = [Path(self.source)]
             source_type = "custom"
         
@@ -187,7 +190,7 @@ class WallpaperScheduler:
             ext = file.suffix.lower()
             file_types[ext] = file_types.get(ext, 0) + 1
         
-        logging.info(f"Media files search completed: {len(files)} total files found")
+        logging.info(f"Media files search completed: {len(files)} total files found from {source_type} with range {self.range_type}")
         if file_types:
             type_summary = ", ".join([f"{count} {ext}" for ext, count in file_types.items()])
             logging.debug(f"File type breakdown: {type_summary}")
