@@ -1138,10 +1138,9 @@ class TapeciarniaApp(QMainWindow):
         
         logging.info(f"Applying input string: {url}")
         self._apply_input_string(url)
-
     def on_start_clicked(self):
-        """Start the scheduler (not load URL)"""
-        logging.info("Start button clicked - starting scheduler")
+        """Start the scheduler with selected settings and random wallpaper"""
+        logging.info("Start button clicked - starting scheduler with current settings")
         
         # Check if scheduler is enabled
         if hasattr(self.ui, 'enabledCheck') and not self.ui.enabledCheck.isChecked():
@@ -1153,16 +1152,102 @@ class TapeciarniaApp(QMainWindow):
         if hasattr(self.ui, 'interval_spinBox'):
             interval = self.ui.interval_spinBox.value()
         
-        # Get current source
+        # Get current source and range
         source = self.scheduler.source
         if not source:
-            source = str(COLLECTION_DIR)
+            source = str(COLLECTION_DIR)  # default to collection
             self.scheduler.source = source
         
-        # Start the scheduler
+        range_type = self.current_range
+        self.scheduler.set_range(range_type)
+        
+        # Check if there are any files matching the current settings
+        logging.info(f"Checking for files with source: {source}, range: {range_type}")
+        available_files = self.scheduler._get_media_files()
+        
+        if not available_files:
+            # No files found for current settings - show error popup
+            logging.warning(f"No files found for source: {source}, range: {range_type}")
+            
+            # Determine the error message based on settings
+            if source == str(FAVS_DIR):
+                if range_type == "mp4":
+                    error_msg = "No videos found in your favorites collection!\n\nPlease add some videos to your favorites first."
+                elif range_type == "wallpaper":
+                    error_msg = "No images found in your favorites collection!\n\nPlease add some images to your favorites first."
+                else:  # all
+                    error_msg = "No wallpapers found in your favorites collection!\n\nPlease add some wallpapers to your favorites first."
+            elif source == str(COLLECTION_DIR):
+                if range_type == "mp4":
+                    error_msg = "No videos found in your collection!\n\nPlease download or add some videos first."
+                elif range_type == "wallpaper":
+                    error_msg = "No images found in your collection!\n\nPlease download or add some images first."
+                else:  # all
+                    error_msg = "No wallpapers found in your collection!\n\nPlease download or add some wallpapers first."
+            else:
+                error_msg = f"No wallpapers found for current settings!\n\nSource: {source}\nRange: {range_type}"
+            
+            QMessageBox.warning(
+                self,
+                "No Wallpapers Found",
+                error_msg,
+                QMessageBox.StandardButton.Ok
+            )
+            self._set_status("Scheduler failed - no matching wallpapers")
+            return
+        
+        # Files available - start the scheduler
+        logging.info(f"Found {len(available_files)} files for scheduler, starting...")
         self.scheduler.start(source, interval)
-        self._set_status(f"Scheduler started - changing every {interval} minutes")
-        logging.info(f"Scheduler started with source: {source}, interval: {interval} minutes")
+        
+        # Apply a random wallpaper immediately from the available files
+        try:
+            random_wallpaper = random.choice(available_files)
+            logging.info(f"Applying random wallpaper: {random_wallpaper.name}")
+            self._apply_wallpaper_from_path(random_wallpaper)
+            self._set_status(f"Scheduler started - {len(available_files)} wallpapers, changing every {interval} minutes")
+            
+            # Show success message
+            QMessageBox.information(
+                self,
+                "Scheduler Started",
+                f"Scheduler started successfully!\n\n"
+                f"• Source: {self._get_source_display_name(source)}\n"
+                f"• Range: {self._get_range_display_name(range_type)}\n"
+                f"• Interval: {interval} minutes\n"
+                f"• Available wallpapers: {len(available_files)}\n\n"
+                f"First wallpaper: {random_wallpaper.name}",
+                QMessageBox.StandardButton.Ok
+            )
+            
+        except Exception as e:
+            logging.error(f"Failed to apply random wallpaper: {e}")
+            self._set_status("Scheduler started but failed to apply first wallpaper")
+            QMessageBox.warning(
+                self,
+                "Scheduler Started with Warning",
+                f"Scheduler started but there was an issue applying the first wallpaper:\n{str(e)}",
+                QMessageBox.StandardButton.Ok
+            )
+    
+    def _get_source_display_name(self, source):
+        """Get display name for source"""
+        source_names = {
+            str(FAVS_DIR): "Favorite Wallpapers",
+            str(COLLECTION_DIR): "My Collection",
+            "super": "Super Wallpaper"
+        }
+        return source_names.get(source, "Custom Source")
+
+    def _get_range_display_name(self, range_type):
+        """Get display name for range"""
+        range_names = {
+            "all": "All Types",
+            "wallpaper": "Images Only", 
+            "mp4": "Videos Only"
+        }
+        return range_names.get(range_type, "All Types")
+
 
     def on_browse_clicked(self):
         """Browse for local files"""
@@ -1266,17 +1351,23 @@ class TapeciarniaApp(QMainWindow):
     def on_favorite_wallpapers(self):
         """Favorite wallpapers source - ONLY uses FAVS_DIR"""
         logging.info("Favorite wallpapers source selected")
-        self._set_status("Favorite wallpapers source selected")
         
+        # Check if favorites folder has any files
         if not FAVS_DIR.exists() or not any(FAVS_DIR.iterdir()):
             logging.warning("No favorite wallpapers found")
-            QMessageBox.information(self, "No Favorites", 
-                                "No favorite wallpapers found. Add some wallpapers to favorites first.")
+            QMessageBox.information(
+                self, 
+                "No Favorites", 
+                "No favorite wallpapers found.\n\nAdd some wallpapers to favorites first by:\n"
+                "1. Loading a wallpaper from URL or file\n"
+                "2. Using the 'Add to Favorites' feature",
+                QMessageBox.StandardButton.Ok
+            )
             return
         
         # Set scheduler to use ONLY FAVS_DIR
         self.scheduler.source = str(FAVS_DIR)
-        self._set_status("Scheduler set to use favorite wallpapers only")
+        self._set_status("Favorite wallpapers source selected")
         self._update_source_buttons_active("favorites")
         logging.info("Scheduler set to use FAVS_DIR only")
 
@@ -1303,11 +1394,23 @@ class TapeciarniaApp(QMainWindow):
 
     # Range selection
     def on_range_changed(self, range_type):
-        """Handle range selection"""
+        """Handle range selection with validation"""
         logging.info(f"Range changed to: {range_type}")
         self.current_range = range_type
         self.scheduler.set_range(range_type)
-        self._set_status(f"Range set to: {range_type}")
+
+        # Check if current source + range combination has files
+        if self.scheduler.source:
+            available_files = self.scheduler._get_media_files()
+            if not available_files:
+                # Warn user but don't prevent the change
+                logging.warning(f"No files found for source: {self.scheduler.source}, range: {range_type}")
+                self._set_status(f"Range set to {range_type} (no files found)")
+            else:
+                self._set_status(f"Range set to: {range_type} ({len(available_files)} files)")
+        else:
+            self._set_status(f"Range set to: {range_type}")
+
         self._update_range_buttons_active(range_type)
         self.config.set_range_preference(range_type)
         logging.debug(f"Range preference saved: {range_type}")
