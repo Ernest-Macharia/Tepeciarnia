@@ -160,20 +160,32 @@ class EnhancedDragDropWidget(QWidget):
         self.reset_btn.setText(self.parent_app.lang["settings"]["resetButton"])
     
     def dragEnterEvent(self, event):
-        logging.debug("Drag enter event detected")
+        logging.debug("Drag enter event in EnhancedDragDropWidget")
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
-            logging.debug("Drag event accepted - URLs detected")
+            
+            # Visual feedback that this area accepts drops
+            self.setStyleSheet("background-color: rgba(76, 175, 80, 0.1); border: 2px dashed #4CAF50; border-radius: 8px;")
+            logging.debug("Drag event accepted in drag & drop area")
+        else:
+            event.ignore()
+            logging.debug("Drag event ignored - no URLs")
     
     def dragLeaveEvent(self, event):
-        logging.debug("Drag leave event detected")
-
+        logging.debug("Drag leave event in EnhancedDragDropWidget")
+        # Remove visual feedback
+        self.setStyleSheet("")
+        super().dragLeaveEvent(event)
+    
     def dropEvent(self, event):
-        logging.debug("Drop event detected")
+        logging.debug("Drop event in EnhancedDragDropWidget")
+        # Remove visual feedback
+        self.setStyleSheet("")
+        
         urls = event.mimeData().urls()
         if urls:
             file_path = urls[0].toLocalFile()
-            logging.info(f"File dropped: {file_path}")
+            logging.info(f"File dropped in drag & drop area: {file_path}")
             if self.is_valid_wallpaper_file(file_path):
                 self.dropped_file_path = file_path
                 filename = os.path.basename(file_path)
@@ -199,6 +211,8 @@ class EnhancedDragDropWidget(QWidget):
                 self.upload_text.setText("Invalid file type!\nSupported: Images, Videos")
                 self.upload_btn.setEnabled(False)
                 logging.warning(f"Invalid file type dropped: {file_path}")
+        
+        event.acceptProposedAction()
 
     def add_to_collection(self):
         """Add dropped file to collection"""
@@ -1336,19 +1350,56 @@ class TapeciarniaApp(QMainWindow):
 
 
     def on_browse_clicked(self):
-        """Browse for local files"""
+        """Browse for local files with enhanced destination selection"""
         logging.info("Browse button clicked")
         path, _ = QFileDialog.getOpenFileName(
             self, "Select video or image", str(Path.home()),
             "Media (*.mp4 *.mkv *.webm *.avi *.mov *.jpg *.jpeg *.png)"
         )
+        
         if path:
             logging.info(f"File selected via browse: {path}")
-            if hasattr(self.ui, "urlInput"):
-                self.ui.urlInput.setText(path)
-            self._apply_input_string(path)
+            
+            # Show the same interface as drag & drop
+            self._handle_browsed_file(path)
         else:
             logging.debug("Browse dialog cancelled")
+
+    def _handle_browsed_file(self, file_path: str):
+        """Handle browsed file with destination selection"""
+        logging.info(f"Handling browsed file: {file_path}")
+        
+        if not os.path.exists(file_path):
+            logging.error(f"Browsed file does not exist: {file_path}")
+            QMessageBox.warning(self, "Error", "Selected file does not exist.")
+            return
+        
+        # Update URL input
+        if hasattr(self.ui, 'urlInput'):
+            self.ui.urlInput.setText(file_path)
+        
+        # Show the same interface as drag & drop area
+        if hasattr(self, 'drag_drop_widget'):
+            # Simulate a file drop in the drag & drop area
+            self.drag_drop_widget.dropped_file_path = file_path
+            filename = os.path.basename(file_path)
+            file_type = "Video" if self.drag_drop_widget.is_video_file(file_path) else "Image"
+            
+            # Update UI to show file is ready
+            self.drag_drop_widget.upload_text.setText(f" {file_type} Ready!\n\n{filename}")
+            self.drag_drop_widget.supported_label.hide()
+            
+            # Show buttons: Add to Collection, Add to Favorites, Reset
+            self.drag_drop_widget.toggle_buttons_visibility(True)
+            self.drag_drop_widget.uploadIcon.hide()
+            
+            # Show collection/favorites buttons, hide set as wallpaper initially
+            self.drag_drop_widget.add_to_collection_btn.show()
+            self.drag_drop_widget.add_to_favorites_btn.show()
+            self.drag_drop_widget.upload_btn.hide()  # Hidden until user selects destination
+            self.drag_drop_widget.reset_btn.show()   # Always show reset when file is selected
+            
+            logging.info(f"Browsed file ready for destination selection: {filename}")
 
     # Shuffle functionality - FIXED: Only one active at a time
     def on_shuffle_animated(self):
@@ -2207,24 +2258,24 @@ class TapeciarniaApp(QMainWindow):
         self._set_status(f"Download failed: {error_msg}")
 
     # Drag and drop
-    def dragEnterEvent(self, e: QDragEnterEvent):
-        if e.mimeData().hasUrls():
-            e.acceptProposedAction()
-            logging.debug("Drag enter event accepted")
-        else:
-            e.ignore()
-            logging.debug("Drag enter event ignored - no URLs")
+    # def dragEnterEvent(self, e: QDragEnterEvent):
+    #     if e.mimeData().hasUrls():
+    #         e.acceptProposedAction()
+    #         logging.debug("Drag enter event accepted")
+    #     else:
+    #         e.ignore()
+    #         logging.debug("Drag enter event ignored - no URLs")
 
-    def dropEvent(self, e: QDropEvent):
-        urls = e.mimeData().urls()
-        if not urls:
-            logging.debug("Drop event ignored - no URLs")
-            return
-        path = urls[0].toLocalFile()
-        if path:
-            logging.info(f"File dropped on main window: {path}")
-            self._set_status(f"Dropped: {Path(path).name}")
-            self._apply_input_string(path)
+    # def dropEvent(self, e: QDropEvent):
+    #     urls = e.mimeData().urls()
+    #     if not urls:
+    #         logging.debug("Drop event ignored - no URLs")
+    #         return
+    #     path = urls[0].toLocalFile()
+    #     if path:
+    #         logging.info(f"File dropped on main window: {path}")
+    #         self._set_status(f"Dropped: {Path(path).name}")
+    #         self._apply_input_string(path)
 
     # CLI handling
     def _handle_cli_args(self):
