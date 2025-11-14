@@ -43,7 +43,7 @@ from  core.language_controller import LanguageController
 # Import utilities
 from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR, get_folder_for_range, get_folder_for_source, open_folder_in_explorer
 from utils.system_utils import get_current_desktop_wallpaper
-from utils.validators import get_media_type, validate_url_or_path, is_image_url_or_path
+from utils.validators import _get_media_files, validate_url_or_path, is_image_url_or_path
 from utils.file_utils import download_image, copy_to_collection, cleanup_temp_marker
 
 # Import models
@@ -83,6 +83,7 @@ class EnhancedDragDropWidget(QWidget):
         # Drag & drop area
         self.parent_app.ui.uploadArea.dragEnterEvent = self.dragEnterEvent
         self.parent_app.ui.uploadArea.dropEvent = self.dropEvent
+        self.parent_app.ui.uploadArea.dragLeaveEvent = self.dragLeaveEvent
         
         # Upload text
         self.upload_text = QLabel(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
@@ -160,18 +161,34 @@ class EnhancedDragDropWidget(QWidget):
         self.reset_btn.setText(self.parent_app.lang["settings"]["resetButton"])
     
     def dragEnterEvent(self, event):
+        """Check for valid file types when file enters the drop area"""
         logging.debug("Drag enter event in EnhancedDragDropWidget")
+        
         if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-            
-            # Visual feedback that this area accepts drops
-            self.setStyleSheet("background-color: rgba(76, 175, 80, 0.1); border: 2px dashed #4CAF50; border-radius: 8px;")
-            logging.debug("Drag event accepted in drag & drop area")
+            urls = event.mimeData().urls()
+            if urls:
+                file_path = urls[0].toLocalFile()
+                
+                # Check if it's a valid wallpaper file type
+                if self.is_valid_wallpaper_file(file_path):
+                    event.acceptProposedAction()
+                    
+                    # Visual feedback that this area accepts drops
+                    self.setStyleSheet(
+                        "background-color: rgba(255, 255, 255, 0.1); border: 0px dashed #4CAF50; border-radius: 5px;")
+                    logging.debug(f"Drag event accepted - valid file type: {file_path}")
+                else:
+                    event.ignore()
+                    logging.debug(f"Drag event ignored - invalid file type: {file_path}")
+            else:
+                event.ignore()
+                logging.debug("Drag event ignored - no valid file URLs")
         else:
             event.ignore()
             logging.debug("Drag event ignored - no URLs")
-    
+
     def dragLeaveEvent(self, event):
+        """Handle drag leave event"""
         logging.debug("Drag leave event in EnhancedDragDropWidget")
         # Remove visual feedback
         self.setStyleSheet("")
@@ -390,10 +407,23 @@ class EnhancedDragDropWidget(QWidget):
         return None
     
     def is_valid_wallpaper_file(self, file_path):
-        valid_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', 
-                          '.mp4', '.avi', '.mov', '.mkv', '.webm')
-        is_valid = file_path.lower().endswith(valid_extensions)
-        logging.debug(f"File validation for {file_path}: {is_valid}")
+        """Check if file is a valid wallpaper type with comprehensive validation"""
+        valid_extensions = (
+            # Images
+            '.jpg', '.jpeg', '.png', '.bmp', '.gif', '.webp', '.tiff',
+            # Videos  
+            '.mp4', '.avi', '.mov', '.mkv', '.webm', '.flv', '.wmv', '.m4v'
+        )
+
+        if not file_path or not isinstance(file_path, str):
+            logging.debug(f"Invalid file path: {file_path}")
+            return False
+        
+        # Check extension
+        file_ext = os.path.splitext(file_path)[1].lower()
+        is_valid = file_ext in valid_extensions
+        
+        logging.debug(f"File validation for {file_path}: {is_valid} (extension: {file_ext})")
         return is_valid
     
 class TapeciarniaApp(QMainWindow):
@@ -590,8 +620,9 @@ class TapeciarniaApp(QMainWindow):
             logging.warning("No wallpapers available for shuffling")
 
     def get_shuffled_wallpapers(self, shuffle_mode):
-        """Get appropriate wallpapers based on shuffle mode"""
-        logging.debug(f"Getting shuffled wallpapers for mode: {shuffle_mode}")
+        """Get appropriate wallpapers based on shuffle mode - from ALL sources"""
+        logging.debug(f"Getting shuffled wallpapers for mode: {shuffle_mode} from ALL sources")
+        
         if shuffle_mode == 'wallpaper':
             filter_func = self.get_non_animated_filter()
             filter_type = "non-animated (images)"
@@ -602,10 +633,11 @@ class TapeciarniaApp(QMainWindow):
             filter_func = lambda x: True  # No filter
             filter_type = "all"
         
-        all_wallpapers = self._get_media_files("all")  # Use existing method
+        # Get files from ALL sources (Collection + Favorites)
+        all_wallpapers = self._get_media_files("all")
         filtered_wallpapers = [str(wp) for wp in all_wallpapers if filter_func(str(wp))]
         
-        logging.debug(f"Filtered {len(filtered_wallpapers)} {filter_type} wallpapers from {len(all_wallpapers)} total")
+        logging.debug(f"Filtered {len(filtered_wallpapers)} {filter_type} wallpapers from {len(all_wallpapers)} total across ALL sources")
         random.shuffle(filtered_wallpapers)
         return filtered_wallpapers
 
@@ -685,20 +717,57 @@ class TapeciarniaApp(QMainWindow):
         return wallpaper_type
 
 
-    # Modified existing methods to use enhanced functionality
     def on_shuffle_animated(self):
-        """Shuffle through animated wallpapers ONLY - using enhanced system"""
-        logging.info("Shuffle animated button clicked")
-        if hasattr(self.ui, 'randomAnimButton'):
-            self.ui.randomAnimButton.setChecked(True)
-        # The actual work is handled by on_shuffle_animation_toggled
+        """Shuffle through animated wallpapers ONLY - from ALL sources"""
+        logging.info("Shuffle animated triggered - searching ALL sources")
+        self.current_shuffle_type = 'animated'
+        self._set_status("Shuffling animated wallpapers from all sources...")
+        
+        # Update button states
+        self._update_shuffle_button_states('animated')
+        
+        # Get videos from ALL sources (Collection + Favorites)
+        video_files = self._get_media_files(media_type="mp4")
+        logging.debug(f"Found {len(video_files)} animated wallpapers from ALL sources for shuffling")
+        
+        if not video_files:
+            logging.warning("No animated wallpapers found in any source")
+            QMessageBox.information(self, "No Videos", 
+                                "No animated wallpapers found in your collection or favorites.")
+            self.current_shuffle_type = None
+            self._update_shuffle_button_states(None)
+            return
+        
+        selected = random.choice(video_files)
+        logging.info(f"Selected animated wallpaper from all sources: {selected.name}")
+        self._apply_wallpaper_from_path(selected)
+        self._update_url_input(str(selected))
 
     def on_shuffle_wallpaper(self):
-        """Shuffle through static wallpapers ONLY - using enhanced system"""
-        logging.info("Shuffle wallpaper button clicked")
-        if hasattr(self.ui, 'randomButton'):
-            self.ui.randomButton.setChecked(True)
-        # The actual work is handled by on_shuffle_wallpaper_toggled
+        """Shuffle through static wallpapers ONLY - from ALL sources"""
+        logging.info("Shuffle wallpaper triggered - searching ALL sources")
+        self.current_shuffle_type = 'wallpaper'
+        self._set_status("Shuffling wallpapers from all sources...")
+        
+        # Update button states
+        self._update_shuffle_button_states('wallpaper')
+        
+        # Get images from ALL sources (Collection + Favorites)
+        image_files = self._get_media_files(media_type="wallpaper")
+        logging.debug(f"Found {len(image_files)} static wallpapers from ALL sources for shuffling")
+        
+        if not image_files:
+            logging.warning("No static wallpapers found in any source")
+            QMessageBox.information(self, "No Images", 
+                                "No wallpapers found in your collection or favorites.")
+            self.current_shuffle_type = None
+            self._update_shuffle_button_states(None)
+            return
+        
+        selected = random.choice(image_files)
+        logging.info(f"Selected static wallpaper from all sources: {selected.name}")
+        self._apply_wallpaper_from_path(selected)
+        self._update_url_input(str(selected))
 
     def _apply_wallpaper_from_path(self, file_path: Path):
         """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""
@@ -1640,11 +1709,11 @@ class TapeciarniaApp(QMainWindow):
             self._handle_local_file(p)
             return
 
-        # Handle remote URLs - USING get_media_type
+        # Handle remote URLs - USING get_media_files
         if validated.lower().startswith("http"):
             logging.info(f"Handling remote URL: {validated}")
             
-            media_type = get_media_type(validated)
+            media_type = _get_media_files(validated)
             logging.debug(f"Detected media type: {media_type}")
             
             if media_type == "image":
@@ -2344,7 +2413,7 @@ class TapeciarniaApp(QMainWindow):
         
         # Set icon
         icon = QIcon()
-        cand = Path(__file__).parent.parent / "ui" / "icons" / "logo_biale.svg"
+        cand = Path(_file_).parent.parent / "bin" / "media" / "icon.ico"
         if cand.exists():
             icon = QIcon(str(cand))
             logging.debug("Using custom tray icon")
