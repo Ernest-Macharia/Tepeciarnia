@@ -1213,7 +1213,7 @@ class TapeciarniaApp(QMainWindow):
                 "Scheduler Started",
                 f"Scheduler started successfully!\n\n"
                 f"• Source: {self._get_source_display_name(source)}\n"
-                f"• Range: {self._get_range_display_name(range_type)}\n"
+                f"• Range: {self._get_range_display_name()}\n"
                 f"• Interval: {interval} minutes\n"
                 f"• Available wallpapers: {len(available_files)}\n\n"
                 f"First wallpaper: {random_wallpaper.name}",
@@ -1239,14 +1239,14 @@ class TapeciarniaApp(QMainWindow):
         }
         return source_names.get(source, "Custom Source")
 
-    def _get_range_display_name(self, range_type):
-        """Get display name for range"""
+    def _get_range_display_name(self):
+        """Get display name for current range"""
         range_names = {
             "all": "All Types",
             "wallpaper": "Images Only", 
             "mp4": "Videos Only"
         }
-        return range_names.get(range_type, "All Types")
+        return range_names.get(self.current_range, "All Types")
 
 
     def on_browse_clicked(self):
