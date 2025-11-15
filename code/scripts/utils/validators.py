@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from code.scripts.utils.path_utils import VIDEOS_DIR, IMAGES_DIR, FAVS_DIR
+from utils.path_utils import VIDEOS_DIR, IMAGES_DIR, FAVS_DIR
 
 def is_image_url_or_path(s: str) -> bool:
     """Check if string is an image URL or path - IMPROVED"""
@@ -86,34 +86,3 @@ def validate_cli_arg(arg: str) -> Optional[str]:
             return m.group(1).strip()
     
     return None
-
-def _get_media_files(self, media_type="all"):
-    """Get media files from ALL sources (My Collection + Favorites)"""
-    logging.debug(f"Getting media files - type: {media_type}, range: {self.current_range}")
-    files = []
-    
-    # ALWAYS search both My Collection AND Favorites folders for shuffle
-    search_folders = [VIDEOS_DIR, IMAGES_DIR, FAVS_DIR]
-    source_type = "all sources (collection + favorites)"
-    
-    logging.debug(f"Using ALL sources for shuffle: {[str(f) for f in search_folders]}")
-    
-    # Define extensions based on media type
-    if media_type == "mp4":
-        extensions = ('.mp4', '.mkv', '.webm', '.avi', '.mov')
-    elif media_type == "wallpaper":
-        extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif')
-    else:
-        extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.gif', '.mp4', '.mkv', '.webm', '.avi', '.mov')
-    
-    for folder in search_folders:
-        if folder.exists():
-            folder_files = [
-                f for f in folder.iterdir() 
-                if f.is_file() and f.suffix.lower() in extensions
-            ]
-            files.extend(folder_files)
-            logging.debug(f"Found {len(folder_files)} files in {folder}")
-    
-    logging.debug(f"Total media files found from {source_type}: {len(files)}")
-    return files

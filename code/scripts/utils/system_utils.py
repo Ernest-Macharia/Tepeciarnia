@@ -9,6 +9,17 @@ from typing import Optional
 
 
 
+def isBundle() -> bool:
+    """
+    Determines the path of the running application/script's directory, 
+    handling both source code and bundled executables.
+    """
+    if getattr(sys, 'frozen', False):
+        return True
+    else:
+        return False
+
+
 def which(cmd: str) -> Optional[str]:
     """Find executable in system PATH with logging"""
     logging.debug(f"Searching for executable in PATH: {cmd}")

@@ -1,7 +1,7 @@
 import sys
 import logging
 import colorlog
-
+from utils.system_utils import isBundle
 # --- Custom Logging Handler for QListWidget ---
 
 class InitLogging:
@@ -12,12 +12,16 @@ class InitLogging:
         an optional file, and/or the console (with optional color).
         """
         LOG_FILE_NAME = 'app.log'
-        LOGGING_MODE = 'both'  # Options: 'file', 'console', 'both'
         logging_style = True  # If True, use colored console output 
         
         # Get the root logger instance
         logger = logging.getLogger()
-        logger.setLevel(logging.WARNING)  # Set the base logging level
+        if isBundle():
+            logger.setLevel(logging.INFO)  # Set the base logging level
+            LOGGING_MODE = 'both'  # Options: 'file', 'console', 'both'
+        else:
+            logger.setLevel(logging.DEBUG)  # Set the base logging level
+            LOGGING_MODE = 'both'  # Options: 'file', 'console', 'both'
 
         # Clear any existing handlers to prevent duplicate log messages
         if logger.hasHandlers():

@@ -121,6 +121,12 @@ def get_folder_for_range(range_type: str) -> Path:
     }
     return folder_map.get(range_type, COLLECTION_DIR)
 
+def get_icon_absolute_path(icon_filename):
+    """
+    Returns the absolute path to a specific icon file within the bundled assets.
+    """
+    return os.path.join(BASE_DIR, 'ui', 'icons', icon_filename)
+
 # Backward compatibility
 get_app_root = get_app_root
 get_weebp_path = get_weebp_path

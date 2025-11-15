@@ -5,7 +5,7 @@ from PySide6.QtCore import Signal,qIsNull
 import logging
 # import config
 from models.config import Config
-
+from PySide6.QtWidgets import QMessageBox
 class LanguageController(QObject):
     # emit a signal when language is changed
     language_changed = Signal(dict)
@@ -78,6 +78,15 @@ class LanguageController(QObject):
             self.language_changed.emit(lang)
         else:
             logging.warning(f"Language code '{lang_code}' not found in combo box.")
+            logging.warning("Defaulting to EN language")
+            lang = self.get_language_by_name("en")
+            self.config.set_language("en")
+            QMessageBox.warning(
+                self,
+                title = "Unsupported langauge",
+                text = f"Language code '{lang_code}' not supported by the app.\n\nDefauting to EN language",
+                buttons= QMessageBox.StandardButton.Ok
+            )
         
         return lang
 

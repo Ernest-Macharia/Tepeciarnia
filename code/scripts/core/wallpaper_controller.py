@@ -296,7 +296,7 @@ class WallpaperController:
         except Exception:
             return "0"
         
-        logging.debug(f"Command wp.exe ls:\n {output}")
+        logging.info(f"Command wp.exe ls:\n {output}")
         # First try to find 'mpv' line
         pattern = r'\[([0-9A-Fa-f]{8})\].*?mpv'
         m = re.search(pattern, output)

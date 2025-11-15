@@ -43,7 +43,7 @@ from  core.language_controller import LanguageController
 # Import utilities
 from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR, get_folder_for_range, get_folder_for_source, open_folder_in_explorer
 from utils.system_utils import get_current_desktop_wallpaper
-from utils.validators import _get_media_files, validate_url_or_path, is_image_url_or_path
+from utils.validators import validate_url_or_path, is_image_url_or_path
 from utils.file_utils import download_image, copy_to_collection, cleanup_temp_marker
 
 # Import models
@@ -468,7 +468,7 @@ class TapeciarniaApp(QMainWindow):
         self._setup_ui()
         self._setup_tray()
         self._load_settings()
-        self._handle_cli_args()
+        # self._handle_cli_args()
         
         # Setup enhanced features
         self._setup_enhanced_features()
@@ -1713,7 +1713,7 @@ class TapeciarniaApp(QMainWindow):
         if validated.lower().startswith("http"):
             logging.info(f"Handling remote URL: {validated}")
             
-            media_type = _get_media_files(validated)
+            media_type = self._get_media_files(validated)
             logging.debug(f"Detected media type: {media_type}")
             
             if media_type == "image":
@@ -2347,19 +2347,19 @@ class TapeciarniaApp(QMainWindow):
     #         self._apply_input_string(path)
 
     # CLI handling
-    def _handle_cli_args(self):
-        if len(sys.argv) > 1:
-            arg = sys.argv[1]
-            logging.info(f"Processing CLI argument: {arg}")
-            parsed = validate_url_or_path(arg)
-            if parsed:
-                self._set_status("Applying from URI...")
-                self._apply_input_string(parsed)
-                logging.info("CLI argument processed successfully")
-            else:
-                logging.warning(f"Invalid CLI argument: {arg}")
-        else:
-            logging.debug("No CLI arguments provided")
+    # def _handle_cli_args(self):
+    #     if len(sys.argv) > 1:
+    #         arg = sys.argv[1]
+    #         logging.info(f"Processing CLI argument: {arg}")
+    #         parsed = validate_url_or_path(arg)
+    #         if parsed:
+    #             self._set_status("Applying from URI...")
+    #             self._apply_input_string(parsed)
+    #             logging.info("CLI argument processed successfully")
+    #         else:
+    #             logging.warning(f"Invalid CLI argument: {arg}")
+    #     else:
+            # logging.debug("No CLI arguments provided")
 
     # Settings management
     def _load_settings(self):
@@ -2423,7 +2423,7 @@ class TapeciarniaApp(QMainWindow):
             logging.debug("Using fallback system tray icon")
         
         self.tray.setIcon(icon)
-        self.tray.setToolTip("MP4Wall - Desktop Wallpaper Manager")
+        self.tray.setToolTip("Tapeciarnia - Desktop Wallpaper Manager")
         
         # Create context menu
         tray_menu = QMenu()
@@ -2499,6 +2499,80 @@ class TapeciarniaApp(QMainWindow):
             self._show_shutdown_progress_from_tray()
         else:
             logging.info("User cancelled exit from tray")
+
+    def handle_startup_uri(self, action, params):
+        """
+        Processes the URI command received upon application launch.
+        
+        Args:
+            action (str): The primary command (e.g., 'setwallpaper').
+            params (dict): Dictionary of query parameters (e.g., {'url': 'http://...'}).
+        """
+        logging.info(f"Handling startup URI. Action: {action}, Params: {params}")
+
+        if action == "setwallpaper":
+            if 'url' in params:
+                wallpaper_url = params['url']
+                logging.info(f"Executing setwallpaper command for URL: {wallpaper_url}")
+
+                
+                # Show a confirmation message to the user
+                reply = QMessageBox.question(
+                    self,
+                    "Confirm Wallpaper Change",
+                    f"Do you want to set the wallpaper from this URI?\n\n{wallpaper_url}",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No
+                )
+
+                # store the user's decision for later inspection or logging
+                confirmed = reply == QMessageBox.StandardButton.Yes
+                self.last_uri_command = {
+                    "action": action,
+                    "url": wallpaper_url,
+                    "confirmed": confirmed
+                }
+                logging.info(f"URI command confirmation stored: {self.last_uri_command}")
+
+                # act on the user's choice
+                if confirmed:
+                    # proceed to apply the wallpaper (reuse existing input handling)
+                    try:
+                        self.ui.urlInput.setText(wallpaper_url)
+                        self._set_status("Applying wallpaper from URI...")
+                        self._apply_input_string(wallpaper_url)
+                    except Exception as e:
+                        logging.error(f"Failed to apply wallpaper from URI: {e}", exc_info=True)
+                        QMessageBox.critical(self, "Error", f"Failed to apply wallpaper: {e}")
+                else:
+                    self._set_status("Wallpaper change from URI was cancelled by user")
+            else:
+                logging.error("setwallpaper action received, but 'url' parameter is missing.")
+                QMessageBox.warning(self, "URI Error", "The 'setwallpaper' command is missing the required URL parameter.")
+        
+        elif action == "openfavorites":
+            logging.info("Executing openfavorites command.")
+            try:
+                folder = get_folder_for_source("favorites")
+                if not folder.exists():
+                    logging.warning(f"Favorites folder does not exist: {folder}")
+                    QMessageBox.warning(self, "Folder Not Found", f"The favorites folder does not exist:\n{folder}")
+                else:
+                    success = open_folder_in_explorer(folder)
+                    if success:
+                        self._set_status("Opened Favorites folder")
+                        QMessageBox.information(self, "Opened Favorites", f"Opened favorites folder:\n{folder}")
+                    else:
+                        logging.error(f"Failed to open favorites folder in explorer: {folder}")
+                        QMessageBox.warning(self, "Open Failed", f"Could not open folder in file explorer:\n{folder}")
+            except Exception as e:
+                logging.error(f"Failed to open favorites folder: {e}", exc_info=True)
+                QMessageBox.critical(self, "Error", f"Failed to open favorites folder: {e}")
+            
+        else:
+            logging.warning(f"Unknown URI action received: {action}")
+            QMessageBox.warning(self, "URI Error", f"Unknown command: '{action}'.")
+
 
 class DirectDownloadThread(QThread):
     progress = Signal(float, str)   # percent, status message
@@ -2578,3 +2652,4 @@ class DirectDownloadThread(QThread):
         """Cancel the download"""
         self._cancelled = True
         logging.info("Download cancellation requested")
+
