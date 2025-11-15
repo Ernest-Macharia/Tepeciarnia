@@ -1709,23 +1709,18 @@ class TapeciarniaApp(QMainWindow):
             self._handle_local_file(p)
             return
 
-        # Handle remote URLs - USING get_media_files
+        # Handle remote URLs
         if validated.lower().startswith("http"):
             logging.info(f"Handling remote URL: {validated}")
             
-            media_type = self._get_media_files(validated)
-            logging.debug(f"Detected media type: {media_type}")
-            
-            if media_type == "image":
+            # FIX: Use the correct function to detect media type
+            if is_image_url_or_path(validated):
                 logging.info(f"Handling as image URL: {validated}")
                 self._handle_remote_image(validated)
-            elif media_type == "video":
+            else:
+                # Assume it's a video URL (YouTube, etc.)
                 logging.info(f"Handling as video URL: {validated}")
                 self._handle_remote_video(validated)
-            else:
-                logging.warning(f"Unsupported URL type: {validated}")
-                QMessageBox.warning(self, "Unsupported URL", 
-                                "The URL doesn't appear to be a supported image or video.")
             return
 
         logging.warning(f"Unsupported input type: {text}")
