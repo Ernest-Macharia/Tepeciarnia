@@ -82,10 +82,10 @@ class LanguageController(QObject):
             lang = self.get_language_by_name("en")
             self.config.set_language("en")
             QMessageBox.warning(
-                self,
-                title = "Unsupported langauge",
-                text = f"Language code '{lang_code}' not supported by the app.\n\nDefauting to EN language",
-                buttons= QMessageBox.StandardButton.Ok
+                None,
+                "Unsupported langauge",
+                f"Language code '{lang_code}' not supported by the app.\n\nDefauting to EN language",
+                QMessageBox.StandardButton.Ok
             )
         
         return lang

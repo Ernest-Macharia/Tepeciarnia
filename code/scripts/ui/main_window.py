@@ -6,6 +6,7 @@ import shutil
 import logging
 from pathlib import Path
 import time
+import webbrowser
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QMessageBox, 
@@ -84,6 +85,7 @@ class EnhancedDragDropWidget(QWidget):
         self.parent_app.ui.uploadArea.dragEnterEvent = self.dragEnterEvent
         self.parent_app.ui.uploadArea.dropEvent = self.dropEvent
         self.parent_app.ui.uploadArea.dragLeaveEvent = self.dragLeaveEvent
+        
         
         # Upload text
         self.upload_text = QLabel(self.parent_app.lang["uploadSection"]["dragDropInstruction"])
@@ -445,6 +447,7 @@ class TapeciarniaApp(QMainWindow):
         # connect to the language controller signals
         self.language_controller.language_changed.connect(self._update_lang)
         # set initial language
+        self.ui.uploadArea.mousePressEvent = self.upload_area_mousePressEvent
 
         # Enhanced wallpaper state
         self.current_wallpaper_type = None
@@ -1416,23 +1419,36 @@ class TapeciarniaApp(QMainWindow):
             "mp4": "Videos Only"
         }
         return range_names.get(self.current_range, "All Types")
+    
+    def upload_area_mousePressEvent(self, event):
+        """
+        This is the overridden method that captures the click event.
+        """
+        # Call the base class implementation first (important)
+        super().mousePressEvent(event)
+        logging.debug("Lanuching file browser...")
+        
+        # Check if the left mouse button was pressed
+        if event.button() == Qt.MouseButton.LeftButton:
 
+            path, _ = QFileDialog.getOpenFileName(
+                self, "Select video or image", str(Path.home()),
+                "Media (*.mp4 *.mkv *.webm *.avi *.mov *.jpg *.jpeg *.png)"
+            )
+            
+            if path:
+                logging.info(f"File selected via browse: {path}")
+                
+                # Show the same interface as drag & drop
+                self._handle_browsed_file(path)
+            else:
+                logging.debug("Browse dialog cancelled")
 
     def on_browse_clicked(self):
-        """Browse for local files with enhanced destination selection"""
+        """Browse web for wallpapers"""
         logging.info("Browse button clicked")
-        path, _ = QFileDialog.getOpenFileName(
-            self, "Select video or image", str(Path.home()),
-            "Media (*.mp4 *.mkv *.webm *.avi *.mov *.jpg *.jpeg *.png)"
-        )
-        
-        if path:
-            logging.info(f"File selected via browse: {path}")
-            
-            # Show the same interface as drag & drop
-            self._handle_browsed_file(path)
-        else:
-            logging.debug("Browse dialog cancelled")
+        webbrowser.open_new_tab("https://www.tapeciarnia.pl/")
+        logging.debug("opening tapeciarnia")
 
     def _handle_browsed_file(self, file_path: str):
         """Handle browsed file with destination selection"""
