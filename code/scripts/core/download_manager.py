@@ -61,6 +61,7 @@ class DownloaderThread(QThread):
                 'ignoreerrors': False,  # Don't ignore errors
                 'socket_timeout': 30,
                 'retries': 3,
+                'restrictfilenames': True,  # Restrict to safe filenames
             }
             
             # Custom progress hook

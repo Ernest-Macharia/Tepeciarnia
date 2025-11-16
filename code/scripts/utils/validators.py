@@ -86,3 +86,10 @@ def validate_cli_arg(arg: str) -> Optional[str]:
             return m.group(1).strip()
     
     return None
+
+def get_media_type(s: str) -> str:
+    """Determine media type (image, video, or unknown)"""
+    if is_image_url_or_path(s):
+        return "image"
+    elif is_video_url_or_path(s):
+        return "video"

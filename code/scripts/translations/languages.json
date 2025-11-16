@@ -18,8 +18,8 @@
       "imagesOrVideoURLHeader": "Images or Video URL",
       "loadButton": "Load",
       "urlHelperText": "Paete a dirick link to a .jpg/.png or mp4 file",
-      "setAsWallpaperButton" : "Set as Wallpaper",
-      "selected_text":"Selected",
+      "setAsWallpaperButton": "Set as Wallpaper",
+      "selected_text": "Selected",
       "addToCollectionButton": "Add to Collection",
       "addToFavoritesButton": "Add to Favorites"
     },
@@ -69,7 +69,9 @@
       "imagesOrVideoURLHeader": "URL de Imágenes o Video",
       "loadButton": "Cargar",
       "urlHelperText": "Pegue un enlace directo a un archivo .jpg/.png o mp4",
-      "setAsWallpaperButton" : "Establecer como Fondo de Pantalla"
+      "setAsWallpaperButton": "Establecer como Fondo de Pantalla",
+      "addToCollectionButton": "Añadir a Colección",
+      "addToFavoritesButton": "Añadir a Favoritos"
     },
     "settings": {
       "autoChangeHeader": "Cambio automático de fondo de pantalla",
@@ -117,7 +119,9 @@
       "imagesOrVideoURLHeader": "URL d'images ou de vidéos",
       "loadButton": "Charger",
       "urlHelperText": "Collez un lien direct vers un fichier .jpg/.png ou mp4",
-      "setAsWallpaperButton" : "Définir comme fond d'écran"
+      "setAsWallpaperButton": "Définir comme fond d'écran",
+      "addToCollectionButton": "Ajouter à la collection",
+      "addToFavoritesButton": "Ajouter aux favoris"
     },
     "settings": {
       "autoChangeHeader": "Changement automatique du fond d'écran",
@@ -165,7 +169,9 @@
       "imagesOrVideoURLHeader": "Bilder- oder Video-URL",
       "loadButton": "Laden",
       "urlHelperText": "Fügen Sie einen direkten Link zu einer .jpg/.png- oder mp4-Datei ein",
-      "setAsWallpaperButton" : "Als Hintergrundbild festlegen"
+      "setAsWallpaperButton": "Als Hintergrundbild festlegen",
+      "addToCollectionButton": "Zur Sammlung hinzufügen",
+      "addToFavoritesButton": "Zu Favoriten hinzufügen"
     },
     "settings": {
       "autoChangeHeader": "Automatischer Hintergrundbildwechsel",
@@ -213,7 +219,9 @@
       "imagesOrVideoURLHeader": "图片或视频URL",
       "loadButton": "加载",
       "urlHelperText": "粘贴.jpg/.png或mp4文件的直接链接",
-      "setAsWallpaperButton" : "设为壁纸"
+      "setAsWallpaperButton": "设为壁纸",
+      "addToCollectionButton": "添加到收藏",
+      "addToFavoritesButton": "添加到收藏夹"
     },
     "settings": {
       "autoChangeHeader": "自动更换壁纸",
@@ -242,6 +250,57 @@
       "reset_success_message": "所有壁纸已停止，设置已重置为默认值。"
     }
   },
+  "pl": {
+    "appName": "Tapeciaarnia",
+    "auth": {
+      "emailPlaceholder": "adres e-mail",
+      "passwordPlaceholder": "hasło",
+      "logInButton": "Zaloguj się"
+    },
+    "navigation": {
+      "shuffleAnimatedButton": "Losuj animowane",
+      "shuffleWallpaperButton": "Losuj tapety",
+      "browseWallpapersButton": "Przeglądaj tapety"
+    },
+    "uploadSection": {
+      "addFilesHeader": "Dodaj pliki",
+      "dragDropInstruction": "Przeciągnij i upuść zdjęcie lub wideo tutaj albo kliknij, aby wybrać plik",
+      "supportedFormatsHint": "Obsługiwane formaty: JPG, PNG, MP4",
+      "imagesOrVideoURLHeader": "URL obrazów lub wideo",
+      "loadButton": "Załaduj",
+      "urlHelperText": "Wklej bezpośredni link do pliku .jpg/.png lub mp4",
+      "setAsWallpaperButton": "Ustaw jako tapetę",
+      "selected_text": "Wybrane",
+      "addToCollectionButton": "Dodaj do kolekcji",
+      "addToFavoritesButton": "Dodaj do ulubionych"
+    },
+    "settings": {
+      "autoChangeHeader": "Automatyczna zmiana tapety",
+      "enabledLabel": "Włączone",
+      "intervalLabel": "Interwał (minuty)",
+      "wallpaperSourceLabel": "Źródło tapet",
+      "superWallpaperButton": "Super tapeta",
+      "favoriteWallpapersButton": "Ulubione tapety",
+      "myCollectionButton": "Moja kolekcja",
+      "rangeHeader": "Zakres",
+      "rangeAllButton": "Wszystkie",
+      "rangeWallpaperButton": "Tapeta",
+      "rangeMp4Button": "Mp4",
+      "schedulerStoppedStatus": "Harmonogram zatrzymany",
+      "startButton": "Start",
+      "resetButton": "Resetuj"
+    },
+    "dialog": {
+      "confirm_reset_title": "Potwierdź reset",
+      "confirm_reset_dia": "Czy na pewno chcesz zresetować?\n\nSpowoduje to zatrzymanie wszystkich aktualnych tapet i przywrócenie oryginalnej tapety.",
+      "confirm_exit_title": "Potwierdź wyjście",
+      "confirm_exit_dialog": "Czy na pewno chcesz zamknąć Tapeciarnia?\n\nSpowoduje to zatrzymanie wszystkich tapet i procesów w tle.",
+      "icon_tray_title": "Tapeciarnia nadal działa",
+      "icon_tray_message": "Tapeciarnia została zminimalizowana do zasobnika systemowego. Kliknij prawym przyciskiem myszy ikonę zasobnika, aby przywrócić lub zamknąć.",
+      "reset_success_title": "Reset zakończony",
+      "reset_success_message": "Wszystkie tapety zostały zatrzymane, a ustawienia zresetowane do wartości domyślnych.\n\nTwoja oryginalna tapeta została przywrócona."
+    }
+  },
   "ru": {
     "appName": "Tapeciaarnia",
     "auth": {
@@ -261,7 +320,9 @@
       "imagesOrVideoURLHeader": "URL изображений или видео",
       "loadButton": "Загрузить",
       "urlHelperText": "Вставьте прямую ссылку на файл .jpg/.png или mp4",
-      "setAsWallpaperButton" : "Установить как обои"
+      "setAsWallpaperButton": "Установить как обои",
+      "addToCollectionButton": "Добавить в коллекцию",
+      "addToFavoritesButton": "Добавить в избранное"
     },
     "settings": {
       "autoChangeHeader": "Автоматическая смена обоев",

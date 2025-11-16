@@ -8,6 +8,7 @@ from utils.path_utils import get_weebp_path, get_mpv_path, BASE_DIR,get_bin_path
 import time
 from utils.command_handler import run_and_forget_silent,run_blocking_silent_command
 import re
+import time
 
 from PySide6.QtWidgets import QMessageBox
 class WallpaperController:
@@ -17,6 +18,8 @@ class WallpaperController:
         self.tools_path = get_tools_path()
         self.weebp_path = get_weebp_path()
         self.mpv_path = get_mpv_path()
+        self.refresh_limit = 6
+        self.refresh_count = 0
         if not self._check_weebp_and_mpv():
             # show and error window
             QMessageBox.critical(None, "Error", "weebp or mpv executable not found. Video wallpaper functionality may be limited.")
@@ -37,9 +40,15 @@ class WallpaperController:
         logging.info("Launched autoPause.exe")
     
     def _run_refresh(self):
-        # Runs the refresh.exe tool to refresh the wallpaper
-        refresh_path = os.path.join(self.tools_path, "refresh.exe")
-        run_and_forget_silent([refresh_path, f"0x{self.get_view_id().strip()}"])
+        view_id = self.get_view_id().strip()
+        if view_id == "0" and self.refresh_count < self.refresh_limit:
+            self.refresh_count += 1
+            time.sleep(1)
+            self._run_refresh()
+        else:
+            # Runs the refresh.exe tool to refresh the wallpaper
+            refresh_path = os.path.join(self.tools_path, "refresh.exe")
+            run_and_forget_silent([refresh_path, f"0x{view_id}"])
         logging.info("Launched refresh.exe")
 
     def run_optional_tools(self):
@@ -180,6 +189,7 @@ class WallpaperController:
             ]
 
             run_mvp = run_and_forget_silent(mpv_run_command,cwd=self.mpv_path.parents[0])
+            time.sleep(1)  # Give mvp time to attach
             run_weebp = run_and_forget_silent(add_command,cwd=self.mpv_path.parents[0])
             time.sleep(1)  # Give weebp time to attach
 

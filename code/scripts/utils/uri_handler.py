@@ -81,5 +81,5 @@ def parse_uri_command(uri_string):
     
 if __name__ == "__main__":
 
-    action , param  = parse_uri_command("tapeciarnia:https://netplus.pl/comfyui/tmp/16692.mp4")
+    action , param  = parse_uri_command("tapeciarnia:https://netplus.pl/comfyui/tmp/16692.jpg")
     print(action,param)

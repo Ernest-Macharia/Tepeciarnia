@@ -1,13 +1,14 @@
 import sys
+import os
 import logging
-# Note: Using PySide6 imports as specified in your current code
+# Using PySide6 imports as specified in your current code
 from PySide6.QtWidgets import QApplication 
+from PySide6.QtCore import QCoreApplication 
 
 # --- DYNAMIC IMPORTS & CONTROLLER SETUP ---
+# Attempt to import modules using both 'code' package structure (absolute)
+# and relative structure to ensure compatibility in different environments.
 try:
-    # If you want, you can keep this to make sure 'code' package is found
-    # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-    
     # Absolute imports based on 'code' as top-level package
     from code.scripts.utils.path_utils import get_app_root, get_style_path
     from code.scripts.setLogging import InitLogging
@@ -64,57 +65,45 @@ def load_stylesheet(app_instance, filepath):
 
 
 def main():
-    logging.info("Starting Tapeciarnia application")
-    
     # 1. Initialize logging (Needs to be done first)
     logging.debug("Initializing logging system")
     InitLogging()
+    logging.info("Starting Tapeciarnia application")
 
-    # 2. Create the Qt application
+    # 2. Check for URI Command
+    uri_command = None
+    if len(sys.argv) > 1 and sys.argv[1].startswith('tapeciarnia:'): # Use tapeciarnia: to catch all forms
+        uri_command = sys.argv[1]
+        action, params = parse_uri_command(uri_command)
+    else:
+        action, params = None, None
+
+    # 3. Create the Qt application
     logging.debug("Creating QApplication instance")
     app = QApplication(sys.argv)
-
-    # 3. Check for URI Command
-    uri_command = None
-    if len(sys.argv) > 1 and sys.argv[1].startswith('tapeciarnia://'):
-        uri_command = sys.argv[1]
 
     # 4. Load stylesheet (Needed regardless of launch mode)
     stylesheet_path = get_style_path(get_app_root())
     logging.debug(f"Resolved stylesheet path: {stylesheet_path}")
     load_stylesheet(app, stylesheet_path)
 
-    # 5. Handle URI Launch (Priority Mode)
-    if uri_command:
-        logging.info(f"Detected URI launch: {uri_command}")
-        action, params = parse_uri_command(uri_command)
-        
-        if action:
-            # Create and show main window (Option B: Launch GUI and pass command)
-            window = TapeciarniaApp()
-            window.show()
-            
-            logging.info(f"Dispatching URI command: Action={action}, Params={params}")
-            
-            # This method will be implemented in ui/main_window.py
-            window.handle_startup_uri(action, params)
-            
-            # Start the event loop and return immediately 
-            
-            return sys.exit(app.exec()) 
-        else:
-            # Parsing failed (e.g., bad format or scheme mismatch), fall through to normal launch
-            logging.warning("URI command failed to parse. Proceeding to normal launch.")
-    
-    # 6. Normal Application Launch (Fallback Mode)
-
-    # Create and show main window
+    # 5. Create and show main window
     logging.debug("Creating main window")
     window = TapeciarniaApp()
     logging.debug("Showing main window")
     window.show()
 
-    # Run the Qt event loop
+    # 6. Handle URI Launch (Dispatch if a valid command was found)
+    if uri_command and action:
+        logging.info(f"Dispatching startup URI command: Action={action}, Params={params}")
+        # The main window handles the command AFTER it is fully initialized and visible
+        window.handle_startup_uri(action, params)
+    elif uri_command:
+        # URI was present but failed to parse (shouldn't happen with the new handler, but good fallback)
+        logging.warning(f"URI command failed to parse. Launching normally. URI: {uri_command}")
+
+
+    # 7. Run the Qt event loop
     logging.info("Starting Qt event loop")
     try:
         sys.exit(app.exec())
