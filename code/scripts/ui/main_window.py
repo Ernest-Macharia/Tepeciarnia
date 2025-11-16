@@ -1763,18 +1763,51 @@ class TapeciarniaApp(QMainWindow):
             QMessageBox.warning(self, "Unsupported", "Unsupported local file type.")
 
     def _handle_remote_image(self, url: str):
-        """Handle remote image download and application"""
+        """Handle remote image download and application with progress window"""
         logging.info(f"Downloading remote image: {url}")
-        self._set_status("Downloading image...")
+        
         try:
-            local_path = download_image(url)
-            self._apply_image_with_fade(local_path)
-            self.config.set_last_video(local_path)
-            self._set_status(f"Image saved to collection: {Path(local_path).name}")
-            logging.info(f"Remote image downloaded successfully: {local_path}")
+            # Create progress dialog for image download
+            self.progress_dialog = DownloadProgressDialog(self)
+            self.progress_dialog.show()
+            self.progress_dialog.update_progress(0, "Starting image download...")
+            
+            # Start download in a thread to show progress
+            self.image_download_thread = ImageDownloadThread(url)
+            self.image_download_thread.progress.connect(
+                lambda percent, status: (
+                    self.progress_dialog.update_progress(percent, status),
+                    self._set_status(status)
+                )
+            )
+            self.image_download_thread.error.connect(self._on_download_error)
+            self.image_download_thread.done.connect(self._on_image_download_done)
+            
+            self.image_download_thread.start()
+            logging.info("Image download thread started")
+            
         except Exception as e:
-            logging.error(f"Failed to download image: {e}", exc_info=True)
-            QMessageBox.critical(self, "Error", f"Failed to download image: {e}")
+            logging.error(f"Image download setup failed: {e}", exc_info=True)
+            if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
+                self.progress_dialog.close()
+            QMessageBox.critical(self, "Error", f"Image download setup failed: {e}")
+
+    def _on_image_download_done(self, file_path: str):
+        """Handle completion of image download"""
+        logging.info(f"Image download completed: {file_path}")
+        
+        # Close progress dialog
+        if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
+            self.progress_dialog.close()
+        
+        # Validate the downloaded image file
+        if not self._validate_downloaded_file(file_path):
+            logging.error(f"Image download validation failed for: {file_path}")
+            self._set_status("Image download failed - file validation error")
+            return
+        
+        # Ask user where to add the image file (same as video download)
+        self._ask_download_destination(Path(file_path))
 
     def _handle_remote_video(self, url: str):
         """Handle remote video download - FIXED for direct video links"""
@@ -2499,13 +2532,10 @@ class TapeciarniaApp(QMainWindow):
             wallpaper_url = params.get('url')
             
             if action == "setwallpaper":
-                # Handles: tapeciarnia://setwallpaper?url=... (Standard action)
+            # Handles: tapeciarnia://setwallpaper?url=... (Standard action)
                 if wallpaper_url:
                     logging.info(f"Executing standard setwallpaper command for URL: {wallpaper_url}")
                     
-                    # --- CORE LOGIC DISPATCH: Standard Wallpaper ---
-                    # e.g., self.controller.download_and_set_static_wallpaper(wallpaper_url)
-                    self.ui.logInBnt.setText(wallpaper_url)
                     # Show a confirmation message to the user
                     reply = QMessageBox.question(
                         self,
@@ -2514,6 +2544,27 @@ class TapeciarniaApp(QMainWindow):
                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                         QMessageBox.StandardButton.No
                     )
+                    
+                    # FIX: Add the missing execution logic (same as other actions)
+                    confirmed = reply == QMessageBox.StandardButton.Yes
+                    self.last_uri_command = {
+                        "action": action,
+                        "url": wallpaper_url,
+                        "confirmed": confirmed
+                    }
+                    logging.info(f"URI command confirmation stored: {self.last_uri_command}")
+
+                    # FIX: Add the missing action logic
+                    if confirmed:
+                        try:
+                            self.ui.urlInput.setText(wallpaper_url)
+                            self._set_status("Applying wallpaper from URI...")
+                            self._apply_input_string(wallpaper_url)
+                        except Exception as e:
+                            logging.error(f"Failed to apply wallpaper from URI: {e}", exc_info=True)
+                            QMessageBox.critical(self, "Error", f"Failed to apply wallpaper: {e}")
+                    else:
+                        self._set_status("Wallpaper change from URI was cancelled by user")
                 else:
                     logging.error("setwallpaper action received, but 'url' parameter is missing.")
                     QMessageBox.warning(self, "URI Error", "The 'setwallpaper' command is missing the required URL parameter.")
@@ -2703,3 +2754,96 @@ class DirectDownloadThread(QThread):
         self._cancelled = True
         logging.info("Download cancellation requested")
 
+
+class ImageDownloadThread(QThread):
+    progress = Signal(float, str)   # percent, status message
+    done = Signal(str)              # path to downloaded file
+    error = Signal(str)
+
+    def __init__(self, url: str, parent=None):
+        logging.info(f"Initializing ImageDownloadThread for URL: {url}")
+        super().__init__(parent)
+        self.url = url
+        self._cancelled = False
+
+    def run(self):
+        try:
+            import requests
+            from urllib.parse import urlparse
+            logging.info(f"Starting image download: {self.url}")
+            
+            self.progress.emit(0, "Connecting to image source...")
+            
+            # Get filename from URL
+            parsed_url = urlparse(self.url)
+            filename = os.path.basename(parsed_url.path)
+            if not filename or '.' not in filename:
+                filename = f"image_{int(time.time())}.jpg"
+            
+            # Sanitize filename
+            filename = self._get_safe_filename(filename)
+            download_path = IMAGES_DIR / filename
+            
+            # Stream download with progress
+            response = requests.get(self.url, stream=True, timeout=30)
+            response.raise_for_status()
+            
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded_size = 0
+            
+            self.progress.emit(0, f"Downloading image... (0%)")
+            
+            with open(download_path, 'wb') as file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if self._cancelled:
+                        logging.info("Image download cancelled by user")
+                        if os.path.exists(download_path):
+                            os.remove(download_path)
+                        return
+                    
+                    if chunk:
+                        file.write(chunk)
+                        downloaded_size += len(chunk)
+                        
+                        if total_size > 0:
+                            percent = (downloaded_size / total_size) * 100
+                            status = f"Downloading image... {percent:.1f}%"
+                            self.progress.emit(percent, status)
+                        else:
+                            status = f"Downloading image... {downloaded_size / 1024:.1f} KB"
+                            self.progress.emit(0, status)
+            
+            # Verify download
+            if os.path.exists(download_path) and os.path.getsize(download_path) > 0:
+                self.progress.emit(100, "Image download completed!")
+                logging.info(f"Image download completed successfully: {download_path}")
+                self.done.emit(str(download_path))
+            else:
+                error_msg = "Downloaded image file is empty or missing"
+                logging.error(error_msg)
+                self.error.emit(error_msg)
+                
+        except Exception as e:
+            error_msg = f"Image download failed: {str(e)}"
+            logging.error(error_msg, exc_info=True)
+            
+            # Clean up partial download
+            if 'download_path' in locals() and os.path.exists(download_path):
+                try:
+                    os.remove(download_path)
+                except:
+                    pass
+                    
+            self.error.emit(error_msg)
+
+    def _get_safe_filename(self, filename):
+        """Remove invalid characters for both Windows and Linux"""
+        invalid_chars = '<>:"|?*/\0'
+        for char in invalid_chars:
+            filename = filename.replace(char, '_')
+        return filename
+
+    def cancel(self):
+        """Cancel the download"""
+        self._cancelled = True
+        logging.info("Image download cancellation requested")
