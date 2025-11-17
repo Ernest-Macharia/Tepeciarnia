@@ -446,9 +446,11 @@ class TapeciarniaApp(QMainWindow):
         self._set_lang()
         # connect to the language controller signals
         self.language_controller.language_changed.connect(self._update_lang)
-        # set initial language
+        # add event handler to uplaod area
         self.ui.uploadArea.mousePressEvent = self.upload_area_mousePressEvent
-
+        # remove focuse from email input textEdit
+        self.ui.emailInput.clearFocus()
+        self.ui.card.setFocus()
         # Enhanced wallpaper state
         self.current_wallpaper_type = None
         self.auto_pause_process = None

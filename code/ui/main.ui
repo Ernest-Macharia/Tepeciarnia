@@ -278,31 +278,6 @@ QCheckBox::indicator:disabled {
             <number>9</number>
            </property>
            <item>
-            <widget class="QPushButton" name="logout_bnt">
-             <property name="font">
-              <font>
-               <pointsize>10</pointsize>
-              </font>
-             </property>
-             <property name="toolTip">
-              <string>log out</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../scripts/ui/icons_resource.qrc">
-               <normaloff>:/icons/icons/log-in.png</normaloff>:/icons/icons/log-in.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>40</width>
-               <height>40</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item>
             <widget class="QLineEdit" name="emailInput">
              <property name="font">
               <font>

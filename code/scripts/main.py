@@ -17,8 +17,8 @@ try:
     from code.scripts.setLogging import InitLogging
     from code.scripts.utils.pathResolver import *
     from code.scripts.ui.main_window import TapeciarniaApp
-    from code.scripts.ui import icons_resource_rc
     from code.scripts.utils.uri_handler import parse_uri_command
+    from code.scripts.ui import icons_resource_rc
 
     logging.debug("Loaded modules using absolute imports (code.*)")
 
@@ -28,8 +28,8 @@ except ImportError:
     from setLogging import InitLogging
     from utils.pathResolver import *
     from ui.main_window import TapeciarniaApp
-    from ui import icons_resource_rc
     from utils.uri_handler import parse_uri_command
+    from ui import icons_resource_rc
 
     logging.debug("Loaded modules using relative imports")
 
