@@ -13,8 +13,8 @@ from PySide6.QtWidgets import (
     QSystemTrayIcon, QMenu, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QStyle, QSizePolicy, QDialog
 )
-from PySide6.QtGui import QAction, QIcon, QDragEnterEvent, QDropEvent, QPixmap
-from PySide6.QtCore import QTimer, Qt, QEvent, QCoreApplication, QSize,qIsNull, Signal, QThread
+from PySide6.QtGui import QAction, QIcon, QPixmap
+from PySide6.QtCore import QTimer, Qt, QEvent, QSize,Signal, QThread
 
 
 current_dir = os.path.dirname(__file__)
@@ -43,9 +43,9 @@ from core.scheduler import WallpaperScheduler
 from  core.language_controller import LanguageController
 # Import utilities
 from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR, get_folder_for_range, get_folder_for_source, open_folder_in_explorer
-from utils.system_utils import get_current_desktop_wallpaper,fetch_shuffled_wallpaper,get_primary_screen_dimensions,is_connected_to_internet
-from utils.validators import validate_url_or_path, is_image_url_or_path, get_media_type
-from utils.file_utils import download_image, copy_to_collection, cleanup_temp_marker
+from utils.system_utils import get_current_desktop_wallpaper,resource_path
+from utils.validators import validate_url_or_path, get_media_type
+from utils.file_utils import copy_to_collection, cleanup_temp_marker
 
 # Import models
 from models.config import Config
@@ -2451,7 +2451,7 @@ class TapeciarniaApp(QMainWindow):
         
         # Set icon
         icon = QIcon()
-        cand = Path(__file__).parent.parent / "bin" / "media" / "icon.ico"
+        cand = resource_path("bin/media/icon.ico")
         if cand.exists():
             icon = QIcon(str(cand))
             logging.debug("Using custom tray icon")

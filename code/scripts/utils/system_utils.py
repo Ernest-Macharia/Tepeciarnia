@@ -27,6 +27,14 @@ def isBundle() -> bool:
     else:
         return False
 
+def resource_path(relative_path: str) -> Path:
+    """
+    Get the absolute path to a resource, compatible with PyInstaller.
+    """
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / relative_path
+    return Path(relative_path)
+
 
 def which(cmd: str) -> Optional[str]:
     """Find executable in system PATH with logging"""
