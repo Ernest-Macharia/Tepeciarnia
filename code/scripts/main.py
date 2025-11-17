@@ -3,9 +3,13 @@ import os
 import logging
 
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import Signal, QLockFile, QDir
+from PySide6.QtCore import Signal, QLockFile, QDir,Qt
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 
+
+QApplication.setHighDpiScaleFactorRoundingPolicy(
+    Qt.HighDpiScaleFactorRoundingPolicy.Floor
+)
 
 # ============================================================
 #  DYNAMIC IMPORTS (WORKS BOTH INSTALLED + DEV MODE)

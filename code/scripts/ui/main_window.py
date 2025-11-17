@@ -11,7 +11,7 @@ import webbrowser
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QFileDialog, QMessageBox, 
     QSystemTrayIcon, QMenu, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QPushButton, QStyle, QSizePolicy, QDialog
+    QLabel, QPushButton, QStyle, QSizePolicy, QDialog,QSpacerItem
 )
 from PySide6.QtGui import QAction, QIcon, QPixmap
 from PySide6.QtCore import QTimer, Qt, QEvent, QSize,Signal, QThread
@@ -1267,7 +1267,27 @@ class TapeciarniaApp(QMainWindow):
             self.ui.source_n_interval_frame.setVisible(enabled)
         if hasattr(self.ui, "range_frame"):
             self.ui.range_frame.setVisible(enabled)
-        
+        # insert a spacer  between them
+
+        if enabled:
+            # Remove the spacer only if it exists
+            if hasattr(self, "lowestVerticalSpacer") and self.lowestVerticalSpacer:
+                self.ui.cardLayout.removeItem(self.lowestVerticalSpacer)
+                self.lowestVerticalSpacer = None
+                logging.debug("Removing the spacer")
+
+        else:
+            # Create and insert spacer only if not already created
+            if not hasattr(self, "lowestVerticalSpacer") or self.lowestVerticalSpacer is None:
+                self.lowestVerticalSpacer = QSpacerItem(
+                    20, 40,
+                    QSizePolicy.Policy.Minimum,
+                    QSizePolicy.Policy.Expanding
+                )
+                index = self.ui.cardLayout.indexOf(self.ui.bottomFrame)
+                self.ui.cardLayout.insertItem(index, self.lowestVerticalSpacer)
+                logging.debug("Inserting spacer")
+
         # Show/hide start button
         if hasattr(self.ui, "startButton"):
             self.ui.startButton.setVisible(enabled)
