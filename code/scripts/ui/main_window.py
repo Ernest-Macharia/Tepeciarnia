@@ -43,7 +43,7 @@ from core.scheduler import WallpaperScheduler
 from  core.language_controller import LanguageController
 # Import utilities
 from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR, get_folder_for_range, get_folder_for_source, open_folder_in_explorer
-from utils.system_utils import get_current_desktop_wallpaper
+from utils.system_utils import get_current_desktop_wallpaper,fetch_shuffled_wallpaper,get_primary_screen_dimensions,is_connected_to_internet
 from utils.validators import validate_url_or_path, is_image_url_or_path, get_media_type
 from utils.file_utils import download_image, copy_to_collection, cleanup_temp_marker
 
@@ -1495,22 +1495,34 @@ class TapeciarniaApp(QMainWindow):
         
         # Update button states
         self._update_shuffle_button_states('animated')
-        
-        video_files = self._get_media_files(media_type="mp4")
-        logging.debug(f"Found {len(video_files)} animated wallpapers for shuffling")
-        
-        if not video_files:
-            logging.warning(f"No animated wallpapers found in {self._get_range_display_name()} collection")
-            QMessageBox.information(self, "No Videos", 
-                                f"No animated wallpapers found in {self._get_range_display_name()} collection.")
-            self.current_shuffle_type = None
-            self._update_shuffle_button_states(None)
-            return
-        
-        selected = random.choice(video_files)
-        logging.info(f"Selected animated wallpaper: {selected.name}")
-        self._apply_wallpaper_from_path(selected)
-        self._update_url_input(str(selected))
+
+        try:
+            # First this will try to connect the sever for image url by 'fetch_shuffled_wallpaper' that returns the url of the image
+            # if any error happens it will return none. See the function in system_utils for the agrs needed.
+            # after getting the url app will try to download the video with a progress window and set is as wallpaper without confirmation
+            # add the wallpaper to their collection
+            # if app failed to downlaod the wallpaper or any error happans we will just fallback to using local wallpaper
+            raise ZeroDivisionError("Zero division error")
+
+            pass
+        except Exception as e:
+            logging.error(e)
+
+            video_files = self._get_media_files(media_type="mp4")
+            logging.debug(f"Found {len(video_files)} animated wallpapers for shuffling")
+            
+            if not video_files:
+                logging.warning(f"No animated wallpapers found in {self._get_range_display_name()} collection")
+                QMessageBox.information(self, "No Videos", 
+                                    f"No animated wallpapers found in {self._get_range_display_name()} collection.")
+                self.current_shuffle_type = None
+                self._update_shuffle_button_states(None)
+                return
+            
+            selected = random.choice(video_files)
+            logging.info(f"Selected animated wallpaper: {selected.name}")
+            self._apply_wallpaper_from_path(selected)
+            self._update_url_input(str(selected))
 
     def on_shuffle_wallpaper(self):
         """Shuffle through static wallpapers ONLY"""
@@ -1520,22 +1532,34 @@ class TapeciarniaApp(QMainWindow):
         
         # Update button states
         self._update_shuffle_button_states('wallpaper')
+        try:
+            # First this will try to connect the sever for wallpaper url by 'fetch_shuffled_wallpaper' that returns the url of the image
+            # if any error happens it will return none. See the function in system_utils for the agrs needed.
+            # after getting the url app will try to download the video with a progress window and set is as wallpaper without confirmation
+            # add the wallpaper to their collection
+            # if app failed to downlaod the wallpaper or any error happans we will just fallback to using local wallpaper with a warning 
+            
+            raise ZeroDivisionError("Zero division error")
+            # pass
+
+        except Exception as e:
+            logging.error(e)
         
-        image_files = self._get_media_files(media_type="wallpaper")
-        logging.debug(f"Found {len(image_files)} static wallpapers for shuffling")
-        
-        if not image_files:
-            logging.warning(f"No static wallpapers found in {self._get_range_display_name()} collection")
-            QMessageBox.information(self, "No Images", 
-                                f"No wallpapers found in {self._get_range_display_name()} collection.")
-            self.current_shuffle_type = None
-            self._update_shuffle_button_states(None)
-            return
-        
-        selected = random.choice(image_files)
-        logging.info(f"Selected static wallpaper: {selected.name}")
-        self._apply_wallpaper_from_path(selected)
-        self._update_url_input(str(selected))
+            image_files = self._get_media_files(media_type="wallpaper")
+            logging.debug(f"Found {len(image_files)} static wallpapers for shuffling")
+            
+            if not image_files:
+                logging.warning(f"No static wallpapers found in {self._get_range_display_name()} collection")
+                QMessageBox.information(self, "No Images", 
+                                    f"No wallpapers found in {self._get_range_display_name()} collection.")
+                self.current_shuffle_type = None
+                self._update_shuffle_button_states(None)
+                return
+            
+            selected = random.choice(image_files)
+            logging.info(f"Selected static wallpaper: {selected.name}")
+            self._apply_wallpaper_from_path(selected)
+            self._update_url_input(str(selected))
 
     def _update_shuffle_button_states(self, active_type):
         """Update shuffle button states - only one can be active"""
@@ -2437,7 +2461,7 @@ class TapeciarniaApp(QMainWindow):
             logging.debug("Using fallback system tray icon")
         
         self.tray.setIcon(icon)
-        self.tray.setToolTip("Tapeciarnia - Desktop Wallpaper Manager")
+        self.tray.setToolTip("Tapeciarnia - Live Wallpaper Manager")
         
         # Create context menu
         tray_menu = QMenu()

@@ -17,7 +17,7 @@ class InitLogging:
         # Get the root logger instance
         logger = logging.getLogger()
         if isBundle():
-            logger.setLevel(logging.INFO)  # Set the base logging level
+            logger.setLevel(logging.DEBUG)  # Set the base logging level
             LOGGING_MODE = 'both'  # Options: 'file', 'console', 'both'
         else:
             logger.setLevel(logging.DEBUG)  # Set the base logging level

@@ -515,6 +515,7 @@ class Ui_MainWindow(object):
         self.added_wallpaper_btn = QPushButton(self.source_n_interval_frame)
         self.added_wallpaper_btn.setObjectName(u"added_wallpaper_btn")
         self.added_wallpaper_btn.setFont(font1)
+        self.added_wallpaper_btn.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         icon5 = QIcon()
         icon5.addFile(u":/icons/icons/circle_plus.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.added_wallpaper_btn.setIcon(icon5)
