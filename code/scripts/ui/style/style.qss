@@ -111,7 +111,7 @@ QSpinBox {
   color: white;
 }
 
-QLabel {
+QLabel[class="MainUILable"] {
   color: white;
 }
 

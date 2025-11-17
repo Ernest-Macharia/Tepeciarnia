@@ -108,7 +108,7 @@ class ShutdownProgressDialog(QDialog):
         # Title
         title_label = QLabel("Shutting Down Tapeciarnia")
         title_label.setAlignment(Qt.AlignCenter)
-        title_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #ffffff;")
+        title_label.setStyleSheet("font-size: 16px; font-weight: bold;")
         layout.addWidget(title_label)
         
         # Progress bar
@@ -121,8 +121,6 @@ class ShutdownProgressDialog(QDialog):
                 border: 2px solid #444;
                 border-radius: 5px;
                 text-align: center;
-                background-color: #2b2b2b;
-                color: white;
             }
             QProgressBar::chunk {
                 background-color: #4CAF50;
@@ -134,7 +132,7 @@ class ShutdownProgressDialog(QDialog):
         # Status label
         self.status_label = QLabel("Preparing shutdown...")
         self.status_label.setAlignment(Qt.AlignCenter)
-        self.status_label.setStyleSheet("color: #cccccc; font-size: 12px;")
+        self.status_label.setStyleSheet("font-size: 12px;")
         layout.addWidget(self.status_label)
         
         # Progress percentage label

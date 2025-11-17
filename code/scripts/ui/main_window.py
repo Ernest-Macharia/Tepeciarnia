@@ -92,11 +92,13 @@ class EnhancedDragDropWidget(QWidget):
         self.upload_text.setAlignment(Qt.AlignCenter)
         self.upload_text.setAcceptDrops(True)
         self.upload_text.setSizePolicy(self.upload_text.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
+        self.upload_text.setProperty('class',"MainUILable")
         
         # Supported formats label
         self.supported_label = QLabel(self.parent_app.lang["uploadSection"]["supportedFormatsHint"])
         self.supported_label.setAlignment(Qt.AlignCenter)
         self.supported_label.setSizePolicy(self.supported_label.sizePolicy().horizontalPolicy(), QSizePolicy.Fixed)
+        self.supported_label.setProperty('class',"MainUILable")
         
         # Action buttons (initially hidden)
         self.buttons_widget = QWidget()
@@ -857,28 +859,6 @@ class TapeciarniaApp(QMainWindow):
         success_dialog.setText(self.lang["dialog"]["reset_success_message"])
         success_dialog.setIcon(QMessageBox.Icon.Information)
         success_dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
-        
-        # Style the dialog to match your app
-        success_dialog.setStyleSheet("""
-            QMessageBox {
-                background-color: #2b2b2b;
-                color: white;
-            }
-            QMessageBox QLabel {
-                color: white;
-            }
-            QMessageBox QPushButton {
-                background-color: #4CAF50;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 4px;
-                min-width: 80px;
-            }
-            QMessageBox QPushButton:hover {
-                background-color: #45a049;
-            }
-        """)
         
         # Show the dialog
         success_dialog.exec()
@@ -2605,7 +2585,7 @@ class TapeciarniaApp(QMainWindow):
                     # This handles video URLs and triggers the video handler logic.
                     # e.g., self.controller.start_video_wallpaper(wallpaper_url)
                     
-                    self.ui.logInBnt.setText(wallpaper_url)
+                    self.ui.urlInput.setText(wallpaper_url)
                     reply = QMessageBox.question(
                         self,
                         "Confirm Wallpaper Change",

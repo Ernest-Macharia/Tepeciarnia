@@ -581,6 +581,9 @@ QCheckBox::indicator:disabled {
              <property name="text">
               <string>Add files</string>
              </property>
+             <property name="class" stdset="0">
+              <string>MainUILable</string>
+             </property>
             </widget>
            </item>
            <item>
@@ -697,6 +700,9 @@ QCheckBox::indicator:disabled {
                  <property name="alignment">
                   <set>Qt::AlignCenter</set>
                  </property>
+                 <property name="class" stdset="0">
+                  <string>MainUILable</string>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -718,6 +724,9 @@ QCheckBox::indicator:disabled {
                  </property>
                  <property name="margin">
                   <number>0</number>
+                 </property>
+                 <property name="class" stdset="0">
+                  <string>MainUILable</string>
                  </property>
                 </widget>
                </item>
@@ -803,6 +812,9 @@ QCheckBox::indicator:disabled {
               </property>
               <property name="text">
                <string>Images or Video URL</string>
+              </property>
+              <property name="class" stdset="0">
+               <string>MainUILable</string>
               </property>
              </widget>
             </item>
@@ -907,6 +919,9 @@ QCheckBox::indicator:disabled {
             <property name="text">
              <string>Paete a dirick link to a .jpg/.png or mp4</string>
             </property>
+            <property name="class" stdset="0">
+             <string>MainUILable</string>
+            </property>
            </widget>
           </item>
          </layout>
@@ -986,6 +1001,9 @@ QCheckBox::indicator:disabled {
               </property>
               <property name="text">
                <string>Automatic wallpaper change</string>
+              </property>
+              <property name="class" stdset="0">
+               <string>MainUILable</string>
               </property>
              </widget>
             </item>
@@ -1080,6 +1098,9 @@ QCheckBox::indicator:disabled {
               <property name="text">
                <string>Interval (minutes)</string>
               </property>
+              <property name="class" stdset="0">
+               <string>MainUILable</string>
+              </property>
              </widget>
             </item>
             <item>
@@ -1139,6 +1160,9 @@ QCheckBox::indicator:disabled {
               </property>
               <property name="text">
                <string>Wallpaper source</string>
+              </property>
+              <property name="class" stdset="0">
+               <string>MainUILable</string>
               </property>
              </widget>
             </item>
@@ -1301,6 +1325,9 @@ QCheckBox::indicator:disabled {
               </property>
               <property name="text">
                <string>Range</string>
+              </property>
+              <property name="class" stdset="0">
+               <string>MainUILable</string>
               </property>
              </widget>
             </item>

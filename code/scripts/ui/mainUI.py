@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QHBoxLayout, QLabel, QLayout, QLineEdit,
     QMainWindow, QPushButton, QSizePolicy, QSpacerItem,
     QSpinBox, QVBoxLayout, QWidget)
+import icons_resource_rc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -668,21 +669,29 @@ class Ui_MainWindow(object):
         self.browseButton.setProperty(u"icon_name", QCoreApplication.translate("MainWindow", u"images", None))
         self.add_files_icon.setText("")
         self.add_file_label.setText(QCoreApplication.translate("MainWindow", u"Add files", None))
+        self.add_file_label.setProperty(u"class", QCoreApplication.translate("MainWindow", u"MainUILable", None))
         self.uploadIcon.setText("")
         self.uploadText.setText(QCoreApplication.translate("MainWindow", u"Drag & drop a photo or video here, or click to choose a file", None))
+        self.uploadText.setProperty(u"class", QCoreApplication.translate("MainWindow", u"MainUILable", None))
         self.uploadSupported.setText(QCoreApplication.translate("MainWindow", u"Supported: JPG, PNG, MP4", None))
+        self.uploadSupported.setProperty(u"class", QCoreApplication.translate("MainWindow", u"MainUILable", None))
         self.icon_label.setText("")
         self.url_loader_text_label.setText(QCoreApplication.translate("MainWindow", u"Images or Video URL", None))
+        self.url_loader_text_label.setProperty(u"class", QCoreApplication.translate("MainWindow", u"MainUILable", None))
         self.urlInput.setPlaceholderText(QCoreApplication.translate("MainWindow", u"https://example.com/image.jpg or https://.../video.mp4", None))
         self.loadUrlButton.setText(QCoreApplication.translate("MainWindow", u"Load", None))
         self.loadUrlButton.setProperty(u"class", QCoreApplication.translate("MainWindow", u"primary", None))
         self.url_helper_text_label.setText(QCoreApplication.translate("MainWindow", u"Paete a dirick link to a .jpg/.png or mp4", None))
+        self.url_helper_text_label.setProperty(u"class", QCoreApplication.translate("MainWindow", u"MainUILable", None))
         self.auto_change_icon_lable.setText("")
         self.autoLabel.setText(QCoreApplication.translate("MainWindow", u"Automatic wallpaper change", None))
+        self.autoLabel.setProperty(u"class", QCoreApplication.translate("MainWindow", u"MainUILable", None))
         self.enabledCheck.setText(QCoreApplication.translate("MainWindow", u"Enabled", None))
         self.inverval_lable.setText(QCoreApplication.translate("MainWindow", u"Interval (minutes)", None))
+        self.inverval_lable.setProperty(u"class", QCoreApplication.translate("MainWindow", u"MainUILable", None))
         self.interval_spinBox.setSuffix(QCoreApplication.translate("MainWindow", u" min", None))
         self.wallpaper_source_lable.setText(QCoreApplication.translate("MainWindow", u"Wallpaper source", None))
+        self.wallpaper_source_lable.setProperty(u"class", QCoreApplication.translate("MainWindow", u"MainUILable", None))
         self.super_wallpaper_btn.setText(QCoreApplication.translate("MainWindow", u"  Super Wallpaper", None))
         self.super_wallpaper_btn.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
         self.super_wallpaper_btn.setProperty(u"icon_name", QCoreApplication.translate("MainWindow", u"sparkles", None))
@@ -693,6 +702,7 @@ class Ui_MainWindow(object):
         self.added_wallpaper_btn.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
         self.added_wallpaper_btn.setProperty(u"icon_name", QCoreApplication.translate("MainWindow", u"circle_plus", None))
         self.range_lable.setText(QCoreApplication.translate("MainWindow", u"Range", None))
+        self.range_lable.setProperty(u"class", QCoreApplication.translate("MainWindow", u"MainUILable", None))
         self.range_all_bnt.setText(QCoreApplication.translate("MainWindow", u"  All", None))
         self.range_all_bnt.setProperty(u"class", QCoreApplication.translate("MainWindow", u"ghost", None))
         self.range_all_bnt.setProperty(u"icon_name", QCoreApplication.translate("MainWindow", u"wallpaper", None))
