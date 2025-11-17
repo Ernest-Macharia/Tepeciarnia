@@ -1921,8 +1921,7 @@ class TapeciarniaApp(QMainWindow):
             return
             
         logging.info(f"Direct download successful: {file_path}")
-        self._apply_wallpaper_from_path(Path(file_path))
-        self._set_status(f"Video downloaded and set: {os.path.basename(file_path)}")
+        self._ask_download_destination(downloaded_file=Path(file_path))
 
     def _get_safe_filename(self, filename):
         """Remove invalid characters for both Windows and Linux"""
