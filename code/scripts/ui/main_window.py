@@ -43,7 +43,7 @@ from core.scheduler import WallpaperScheduler
 from  core.language_controller import LanguageController
 # Import utilities
 from utils.path_utils import COLLECTION_DIR, VIDEOS_DIR, IMAGES_DIR, FAVS_DIR, get_folder_for_range, get_folder_for_source, open_folder_in_explorer
-from utils.system_utils import get_current_desktop_wallpaper,resource_path
+from utils.system_utils import get_current_desktop_wallpaper, is_connected_to_internet, get_primary_screen_dimensions, fetch_shuffled_wallpaper, resource_path
 from utils.validators import validate_url_or_path, get_media_type
 from utils.file_utils import copy_to_collection, cleanup_temp_marker
 
@@ -725,56 +725,66 @@ class TapeciarniaApp(QMainWindow):
 
 
     def on_shuffle_animated(self):
-        """Shuffle through animated wallpapers ONLY - from ALL sources"""
-        logging.info("Shuffle animated triggered - searching ALL sources")
+        """Shuffle through animated wallpapers - try online first, fallback to local"""
+        logging.info("Shuffle animated triggered - trying online first")
         self.current_shuffle_type = 'animated'
-        self._set_status("Shuffling animated wallpapers from all sources...")
+        self._set_status("Fetching online animated wallpaper...")
         
         # Update button states
         self._update_shuffle_button_states('animated')
         
-        # Get videos from ALL sources (Collection + Favorites)
-        video_files = self._get_media_files(media_type="mp4")
-        logging.debug(f"Found {len(video_files)} animated wallpapers from ALL sources for shuffling")
-        
-        if not video_files:
-            logging.warning("No animated wallpapers found in any source")
-            QMessageBox.information(self, "No Videos", 
-                                "No animated wallpapers found in your collection or favorites.")
-            self.current_shuffle_type = None
-            self._update_shuffle_button_states(None)
+        # Check internet connection first
+        if not is_connected_to_internet():
+            logging.warning("No internet connection, using local shuffle")
+            self._set_status("No internet - using local animated wallpapers")
+            self._fallback_to_local_shuffle(True)
             return
         
-        selected = random.choice(video_files)
-        logging.info(f"Selected animated wallpaper from all sources: {selected.name}")
-        self._apply_wallpaper_from_path(selected)
-        self._update_url_input(str(selected))
+        try:
+            # Try to fetch online wallpaper
+            online_url = self.fetch_online_wallpaper(is_animated=True)
+            
+            if online_url:
+                # Download and set online wallpaper
+                self.download_and_set_online_wallpaper(online_url, is_animated=True)
+            else:
+                # Online fetch failed, use local
+                self._fallback_to_local_shuffle(True)
+                
+        except Exception as e:
+            logging.error(f"Online shuffle animated failed: {e}")
+            self._fallback_to_local_shuffle(True)
 
     def on_shuffle_wallpaper(self):
-        """Shuffle through static wallpapers ONLY - from ALL sources"""
-        logging.info("Shuffle wallpaper triggered - searching ALL sources")
+        """Shuffle through static wallpapers - try online first, fallback to local"""
+        logging.info("Shuffle wallpaper triggered - trying online first")
         self.current_shuffle_type = 'wallpaper'
-        self._set_status("Shuffling wallpapers from all sources...")
+        self._set_status("Fetching online wallpaper...")
         
         # Update button states
         self._update_shuffle_button_states('wallpaper')
         
-        # Get images from ALL sources (Collection + Favorites)
-        image_files = self._get_media_files(media_type="wallpaper")
-        logging.debug(f"Found {len(image_files)} static wallpapers from ALL sources for shuffling")
-        
-        if not image_files:
-            logging.warning("No static wallpapers found in any source")
-            QMessageBox.information(self, "No Images", 
-                                "No wallpapers found in your collection or favorites.")
-            self.current_shuffle_type = None
-            self._update_shuffle_button_states(None)
+        # Check internet connection first
+        if not is_connected_to_internet():
+            logging.warning("No internet connection, using local shuffle")
+            self._set_status("No internet - using local wallpapers")
+            self._fallback_to_local_shuffle(False)
             return
         
-        selected = random.choice(image_files)
-        logging.info(f"Selected static wallpaper from all sources: {selected.name}")
-        self._apply_wallpaper_from_path(selected)
-        self._update_url_input(str(selected))
+        try:
+            # Try to fetch online wallpaper
+            online_url = self.fetch_online_wallpaper(is_animated=False)
+            
+            if online_url:
+                # Download and set online wallpaper
+                self.download_and_set_online_wallpaper(online_url, is_animated=False)
+            else:
+                # Online fetch failed, use local
+                self._fallback_to_local_shuffle(False)
+                
+        except Exception as e:
+            logging.error(f"Online shuffle wallpaper failed: {e}")
+            self._fallback_to_local_shuffle(False)
 
     def _apply_wallpaper_from_path(self, file_path: Path):
         """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""
@@ -2391,6 +2401,209 @@ class TapeciarniaApp(QMainWindow):
         else:
             logging.info("User cancelled reset")
             self._set_status("Reset cancelled")
+    
+    def fetch_online_wallpaper(self, is_animated: bool) -> str | None:
+        """
+        Fetch online wallpaper URL from server with proper error handling
+        """
+        try:
+            logging.info(f"Fetching online {'animated' if is_animated else 'static'} wallpaper")
+            
+            # Get screen dimensions
+            width, height = get_primary_screen_dimensions()
+            
+            # Get current language
+            current_lang = self.language_controller.get_current_language() or "pl"
+            
+            # Fetch from server
+            download_url = fetch_shuffled_wallpaper(
+                width=width, 
+                height=height, 
+                is_animated=is_animated,
+                lang=current_lang
+            )
+            
+            if download_url:
+                logging.info(f"Successfully fetched online wallpaper URL: {download_url}")
+                return download_url
+            else:
+                logging.warning("Failed to fetch online wallpaper URL")
+                return None
+                
+        except Exception as e:
+            logging.error(f"Error fetching online wallpaper: {e}", exc_info=True)
+            return None
+
+    def download_and_set_online_wallpaper(self, url: str, is_animated: bool):
+        """
+        Download online wallpaper and set it with progress tracking
+        """
+        try:
+            logging.info(f"Downloading online wallpaper: {url}")
+            
+            # Create progress dialog
+            self.progress_dialog = DownloadProgressDialog(self)
+            self.progress_dialog.show()
+            self.progress_dialog.update_progress(0, "Starting download...")
+            
+            # Determine destination folder and filename
+            if is_animated:
+                dest_folder = VIDEOS_DIR
+                file_extension = ".mp4"
+            else:
+                dest_folder = IMAGES_DIR
+                file_extension = ".jpg"
+            
+            # Generate unique filename
+            timestamp = int(time.time())
+            filename = f"online_wallpaper_{timestamp}{file_extension}"
+            download_path = dest_folder / filename
+            
+            # Start download thread
+            if is_animated:
+                self.download_thread = DirectDownloadThread(url, str(download_path))
+            else:
+                self.download_thread = ImageDownloadThread(url, str(download_path))
+            
+            # Connect signals
+            self.download_thread.progress.connect(
+                lambda percent, status: (
+                    self.progress_dialog.update_progress(percent, status),
+                    self._set_status(status)
+                )
+            )
+            self.download_thread.error.connect(self._on_online_download_error)
+            self.download_thread.done.connect(
+                lambda path: self._on_online_download_done(path, is_animated)
+            )
+            
+            self.download_thread.start()
+            logging.info("Online wallpaper download started")
+            
+        except Exception as e:
+            logging.error(f"Online download setup failed: {e}", exc_info=True)
+            if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
+                self.progress_dialog.close()
+            self._fallback_to_local_shuffle(is_animated)
+
+    def _on_online_download_done(self, file_path: str, is_animated: bool):
+        """
+        Handle successful online wallpaper download
+        """
+        logging.info(f"Online download completed: {file_path}")
+        
+        # Close progress dialog
+        if hasattr(self, 'progress_dialog') and self.progress_dialog.isVisible():
+            self.progress_dialog.close()
+        
+        # Validate downloaded file
+        if not self._validate_downloaded_file(file_path):
+            logging.error("Online wallpaper download validation failed")
+            self._fallback_to_local_shuffle(is_animated)
+            return
+        
+        # Update URL input
+        if hasattr(self.ui, 'urlInput'):
+            self.ui.urlInput.setText(file_path)
+        
+        # Set as wallpaper immediately (no confirmation for online shuffle)
+        try:
+            logging.info(f"Setting online wallpaper: {file_path}")
+            self._apply_wallpaper_from_path(Path(file_path))
+            self._set_status(f"Online {'animated' if is_animated else 'static'} wallpaper set")
+            
+            # Show success message
+            QMessageBox.information(
+                self,
+                "Online Wallpaper Set",
+                f"Successfully set online {'animated' if is_animated else 'static'} wallpaper!",
+                QMessageBox.StandardButton.Ok
+            )
+            
+            logging.info("Online wallpaper set successfully")
+            
+        except Exception as e:
+            logging.error(f"Failed to set online wallpaper: {e}")
+            self._fallback_to_local_shuffle(is_animated)
+
+    def _on_online_download_error(self, error_msg: str):
+        """
+        Handle online download errors
+        """
+        logging.error(f"Online download error: {error_msg}")
+        
+        if hasattr(self, "progress_dialog") and self.progress_dialog.isVisible():
+            self.progress_dialog.close()
+        
+        # Extract is_animated from error context or use fallback
+        is_animated = "animated" in error_msg.lower() or "video" in error_msg.lower()
+        self._fallback_to_local_shuffle(is_animated)
+
+    def _fallback_to_local_shuffle(self, is_animated: bool):
+        """
+        Fallback to local shuffle when online fails
+        """
+        logging.warning(f"Falling back to local shuffle for {'animated' if is_animated else 'static'}")
+        
+        # Show warning message
+        QMessageBox.warning(
+            self,
+            "Online Unavailable",
+            "Could not fetch online wallpaper. Using local collection instead.",
+            QMessageBox.StandardButton.Ok
+        )
+        
+        # Use local shuffle
+        if is_animated:
+            self._perform_local_animated_shuffle()
+        else:
+            self._perform_local_static_shuffle()
+
+    def _perform_local_animated_shuffle(self):
+        """
+        Perform local animated shuffle (existing functionality)
+        """
+        logging.info("Performing local animated shuffle")
+        video_files = self._get_media_files(media_type="mp4")
+        
+        if not video_files:
+            logging.warning("No local animated wallpapers found")
+            QMessageBox.information(
+                self, 
+                "No Videos", 
+                "No animated wallpapers found in your local collection."
+            )
+            self.current_shuffle_type = None
+            self._update_shuffle_button_states(None)
+            return
+        
+        selected = random.choice(video_files)
+        logging.info(f"Selected local animated wallpaper: {selected.name}")
+        self._apply_wallpaper_from_path(selected)
+        self._update_url_input(str(selected))
+
+    def _perform_local_static_shuffle(self):
+        """
+        Perform local static shuffle (existing functionality)
+        """
+        logging.info("Performing local static shuffle")
+        image_files = self._get_media_files(media_type="wallpaper")
+        
+        if not image_files:
+            logging.warning("No local static wallpapers found")
+            QMessageBox.information(
+                self, 
+                "No Images", 
+                "No wallpapers found in your local collection."
+            )
+            self.current_shuffle_type = None
+            self._update_shuffle_button_states(None)
+            return
+        
+        selected = random.choice(image_files)
+        logging.info(f"Selected local static wallpaper: {selected.name}")
+        self._apply_wallpaper_from_path(selected)
+        self._update_url_input(str(selected))
 
     def _on_download_error(self, error_msg: str):
         """Handle download errors"""
@@ -2785,10 +2998,11 @@ class ImageDownloadThread(QThread):
     done = Signal(str)              # path to downloaded file
     error = Signal(str)
 
-    def __init__(self, url: str, parent=None):
+    def __init__(self, url: str, download_path: str = None, parent=None):
         logging.info(f"Initializing ImageDownloadThread for URL: {url}")
         super().__init__(parent)
         self.url = url
+        self.download_path = download_path
         self._cancelled = False
 
     def run(self):
@@ -2799,15 +3013,22 @@ class ImageDownloadThread(QThread):
             
             self.progress.emit(0, "Connecting to image source...")
             
-            # Get filename from URL
-            parsed_url = urlparse(self.url)
-            filename = os.path.basename(parsed_url.path)
-            if not filename or '.' not in filename:
-                filename = f"image_{int(time.time())}.jpg"
+            # Determine download path
+            if self.download_path:
+                download_path = Path(self.download_path)
+            else:
+                # Get filename from URL
+                parsed_url = urlparse(self.url)
+                filename = os.path.basename(parsed_url.path)
+                if not filename or '.' not in filename:
+                    filename = f"image_{int(time.time())}.jpg"
+                
+                # Sanitize filename
+                filename = self._get_safe_filename(filename)
+                download_path = IMAGES_DIR / filename
             
-            # Sanitize filename
-            filename = self._get_safe_filename(filename)
-            download_path = IMAGES_DIR / filename
+            # Ensure destination directory exists
+            download_path.parent.mkdir(parents=True, exist_ok=True)
             
             # Stream download with progress
             response = requests.get(self.url, stream=True, timeout=30)
