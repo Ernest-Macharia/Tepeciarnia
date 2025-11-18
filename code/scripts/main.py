@@ -2,10 +2,10 @@ import sys
 import os
 import logging
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication,QMessageBox
 from PySide6.QtCore import Signal, QLockFile, QDir,Qt
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
-
+from PySide6.QtGui import QIcon
 
 QApplication.setHighDpiScaleFactorRoundingPolicy(
     Qt.HighDpiScaleFactorRoundingPolicy.Floor
@@ -136,53 +136,64 @@ def main():
     InitLogging()
     logging.info("Starting Tapeciarnia...")
 
-    # Single instance wrapper
-    app = SingleApplication(sys.argv)
+    try:
+        # Single instance wrapper
+        app = SingleApplication(sys.argv)
+        app.setWindowIcon(QIcon(':/icons/icons/icon.ico'))
 
-    # If this is a secondary instance → exit now
-    if not app.is_primary_instance:
-        sys.exit(0)
+        # If this is a secondary instance → exit now
+        if not app.is_primary_instance:
+            sys.exit(0)
 
-    # ------- PRIMARY INSTANCE BEGINS --------
+        # ------- PRIMARY INSTANCE BEGINS --------
 
-    stylesheet_path = get_style_path(get_app_root())
-    load_stylesheet(app, stylesheet_path)
+        stylesheet_path = get_style_path(get_app_root())
+        load_stylesheet(app, stylesheet_path)
+        window = TapeciarniaApp()
 
-    window = TapeciarniaApp()
+        # Handle incoming URIs / messages
+        def dispatch_message(message):
+            uri = next(
+                (arg for arg in message.split() if arg.startswith("tapeciarnia:")),
+                None
+            )
 
-    # Handle incoming URIs / messages
-    def dispatch_message(message):
-        uri = next(
-            (arg for arg in message.split() if arg.startswith("tapeciarnia:")),
-            None
+            # Bring window to foreground
+            window.showNormal()
+            window.raise_()
+            window.activateWindow()
+
+            if uri:
+                logging.info(f"Handling URI: {uri}")
+                action, params = parse_uri_command(uri)
+                if action:
+                    window.handle_startup_uri(action, params)
+                else:
+                    logging.warning("Invalid URI received.")
+            else:
+                logging.info("No URI supplied by secondary instance.")
+
+        app.message_received.connect(dispatch_message)
+
+        # Initial launch with arguments
+        if len(sys.argv) > 1:
+            dispatch_message(" ".join(sys.argv[1:]))
+        else:
+            window.showNormal()
+
+        logging.info("Entering Qt event loop...")
+        sys.exit(app.exec())
+
+    except Exception as e:
+        QMessageBox.critical(
+            None,
+            "Unexpected Error",
+            str(e),
+            QMessageBox.StandardButton.Ok
         )
 
-        # Bring window to foreground
-        window.showNormal()
-        window.raise_()
-        window.activateWindow()
-
-        if uri:
-            logging.info(f"Handling URI: {uri}")
-            action, params = parse_uri_command(uri)
-            if action:
-                window.handle_startup_uri(action, params)
-            else:
-                logging.warning("Invalid URI received.")
-        else:
-            logging.info("No URI supplied by secondary instance.")
-
-    app.message_received.connect(dispatch_message)
-
-    # Initial launch with arguments
-    if len(sys.argv) > 1:
-        dispatch_message(" ".join(sys.argv[1:]))
-    else:
-        window.showNormal()
-
-    logging.info("Entering Qt event loop...")
-    sys.exit(app.exec())
-
+        logging.critical("Fatal startup error", exc_info=True)
+        raise
 
 if __name__ == "__main__":
     main()
