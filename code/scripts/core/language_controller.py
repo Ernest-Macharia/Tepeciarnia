@@ -89,6 +89,9 @@ class LanguageController(QObject):
             )
         
         return lang
+    
+    def get_current_language(self) -> str:
+        return self.config.get_language()
 
     
 
