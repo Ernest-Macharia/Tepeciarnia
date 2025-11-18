@@ -443,10 +443,15 @@ def fetch_shuffled_wallpaper(width: int, height: int, is_animated: bool = False,
         logging.critical(f"An unexpected error occurred during API call: {e}")
         return None
 
+def gen_name_from_url(url:str) -> str:
+    return url.split("/")[-1]
+
+
+
 # --- Example of How to Use ---
 if __name__ == '__main__':
     # Static Wallpaper Shuffle
-    static_url = fetch_shuffled_wallpaper(1920, 1080, is_animated=False)
+    static_url = gen_name_from_url(fetch_shuffled_wallpaper(1920, 1080, is_animated=False))
     print(f"Static Shuffle URL: {static_url}")
 
     # Animated Wallpaper Shuffle

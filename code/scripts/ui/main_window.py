@@ -102,13 +102,12 @@ class TapeciarniaApp(QMainWindow):
         self._setup_ui()
         self._setup_tray()
         self._load_settings()
-        # self._handle_cli_args()
         
         # Setup enhanced features
-        self._setup_enhanced_features()
+        # self._setup_enhanced_features()
         
         # Ensure status bar is always visible
-        self._ensure_status_visible()
+        # self._ensure_status_visible()
         
         logging.info("TapeciarniaApp initialization completed successfully")
 
@@ -141,27 +140,6 @@ class TapeciarniaApp(QMainWindow):
             return icon
  
 
-    def _ensure_status_visible(self):
-        """Make sure status bar is always visible"""
-        logging.debug("Ensuring status bar visibility")
-        if hasattr(self.ui, 'bottomFrame'):
-            self.ui.bottomFrame.setVisible(True)
-            self.ui.bottomFrame.setMinimumHeight(30)  # Force minimum height
-            # Remove any styling that might hide it
-            self.ui.bottomFrame.setStyleSheet("background-color: transparent;")
-        
-        if hasattr(self.ui, 'statusLabel'):
-            self.ui.statusLabel.setVisible(True)
-            self.ui.statusLabel.setText("Ready")
-            # Ensure the label has content and size
-            self.ui.statusLabel.setMinimumHeight(20)
-            self.ui.statusLabel.setStyleSheet("color: white;")  # Make sure text is visible
-        
-        # Force update
-        if hasattr(self.ui, 'bottomFrame'):
-            self.ui.bottomFrame.update()
-            self.ui.bottomFrame.repaint()
-        logging.debug("Status bar visibility ensured")
 
     def _set_status(self, message: str):
         """Update status label and ensure it's visible"""
@@ -173,22 +151,22 @@ class TapeciarniaApp(QMainWindow):
         if hasattr(self.ui, "bottomFrame"):
             self.ui.bottomFrame.setVisible(True)
 
-    def _setup_enhanced_features(self):
-        """Setup the enhanced wallpaper features"""
-        logging.debug("Setting up enhanced features")
-        # Connect shuffle buttons for mutual exclusivity
-        if hasattr(self.ui, 'randomButton') and hasattr(self.ui, 'randomAnimButton'):
-            self.ui.randomButton.toggled.connect(self.on_shuffle_wallpaper_toggled)
-            self.ui.randomAnimButton.toggled.connect(self.on_shuffle_animation_toggled)
-            logging.debug("Shuffle buttons connected for mutual exclusivity")
+    # def _setup_enhanced_features(self):
+    #     """Setup the enhanced wallpaper features"""
+    #     logging.debug("Setting up enhanced features")
+    #     # Connect shuffle buttons for mutual exclusivity
+    #     if hasattr(self.ui, 'randomButton') and hasattr(self.ui, 'randomAnimButton'):
+    #         self.ui.randomButton.toggled.connect(self.on_shuffle_wallpaper_toggled)
+    #         self.ui.randomAnimButton.toggled.connect(self.on_shuffle_animation_toggled)
+    #         logging.debug("Shuffle buttons connected for mutual exclusivity")
         
-        # Connect auto-change checkbox to show/hide interval controls
-        if hasattr(self.ui, 'enabledCheck'):
-            self.ui.enabledCheck.toggled.connect(self.toggle_interval_controls)
-            # Set initial state
-            self.toggle_interval_controls(self.ui.enabledCheck.isChecked())
-            logging.debug("Auto-change checkbox connected")
-        logging.debug("Enhanced features setup completed")
+    #     # Connect auto-change checkbox to show/hide interval controls
+    #     if hasattr(self.ui, 'enabledCheck'):
+    #         self.ui.enabledCheck.toggled.connect(self.toggle_interval_controls)
+    #         # Set initial state
+    #         self.toggle_interval_controls(self.ui.enabledCheck.isChecked())
+    #         logging.debug("Auto-change checkbox connected")
+    #     logging.debug("Enhanced features setup completed")
 
     def on_shuffle_wallpaper_toggled(self, checked):
         """Handle shuffle wallpaper toggle - only non-animated wallpapers"""
@@ -370,7 +348,7 @@ class TapeciarniaApp(QMainWindow):
         try:
             # Try to fetch online wallpaper
             online_url = fetch_shuffled_wallpaper(self.x,self.y,True,self.language_controller.get_current_language())
-            
+            logging.debug(f"Online URl : {online_url}")
             if online_url:
                 # Download and set online wallpaper
                 self.download_and_set_online_wallpaper(online_url, is_animated=True)
@@ -401,6 +379,7 @@ class TapeciarniaApp(QMainWindow):
         try:
             # Try to fetch online wallpaper
             online_url = fetch_shuffled_wallpaper(self.x,self.y,False,self.language_controller.get_current_language())
+            logging.debug(f"Online URl : {online_url}")
             
             if online_url:
                 # Download and set online wallpaper
@@ -412,34 +391,6 @@ class TapeciarniaApp(QMainWindow):
         except Exception as e:
             logging.error(f"Online shuffle wallpaper failed: {e}")
             self._fallback_to_local_shuffle(False)
-
-    def _apply_wallpaper_from_path(self, file_path: Path):
-        """Apply wallpaper from file path - OPTIMIZED to avoid unnecessary stops"""
-        logging.info(f"Applying wallpaper from path: {file_path}")
-        current_is_video = self.controller.current_is_video
-        new_is_video = file_path.suffix.lower() in (".mp4", ".mkv", ".webm", ".avi", ".mov")
-        
-        # Use enhanced logic to determine if stop is needed
-        current_type = self.current_wallpaper_type or ('video' if current_is_video else 'image')
-        new_type = 'video' if new_is_video else 'image'
-        needs_stop = self.needs_process_stop(current_type, new_type)
-        
-        if needs_stop:
-            logging.debug("Stopping current wallpaper due to type change")
-            self.controller.stop()
-        
-        
-        # Update enhanced state tracking
-        self.current_wallpaper_type = new_type
-        self.last_wallpaper_path = str(file_path)
-        
-        # Use existing application logic
-        if new_is_video:
-            logging.debug("Applying video wallpaper")
-            self._apply_video(str(file_path))
-        else:
-            logging.debug("Applying image wallpaper with fade")
-            self._apply_image_with_fade(str(file_path))
 
     def _perform_reset(self):
         """Reset to default wallpaper WITHOUT confirmation but WITH success message"""
@@ -1986,14 +1937,12 @@ class TapeciarniaApp(QMainWindow):
             # Determine destination folder and filename
             if is_animated:
                 dest_folder = VIDEOS_DIR
-                file_extension = ".mp4"
             else:
                 dest_folder = IMAGES_DIR
-                file_extension = ".jpg"
             
             # Generate unique filename
-            timestamp = int(time.time())
-            filename = f"online_wallpaper_{timestamp}{file_extension}"
+            # timestamp = int(time.time())
+            filename = f"{url.split("/")[-1]}"
             download_path = dest_folder / filename
             
             # Start download thread
