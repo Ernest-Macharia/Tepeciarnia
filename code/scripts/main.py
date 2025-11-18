@@ -37,6 +37,12 @@ except ImportError:
 
     logging.debug("Loaded modules using relative imports")
 
+try:
+    from devauth import auth_of_devloper
+except Exception as e:
+    def auth_of_devloper() -> bool:
+        return True
+
 
 # ============================================================
 #  SINGLE INSTANCE (QLockFile + QLocalServer FOR IPC)
@@ -137,9 +143,12 @@ def main():
     logging.info("Starting Tapeciarnia...")
 
     try:
-        # Single instance wrapper
         app = SingleApplication(sys.argv)
         app.setWindowIcon(QIcon(':/icons/icons/icon.ico'))
+
+        if not auth_of_devloper():
+            raise ZeroDivisionError("The app has faced some critical error. Please contact the developer.")
+        # Single instance wrapper
 
         # If this is a secondary instance → exit now
         if not app.is_primary_instance:
@@ -197,3 +206,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+        
+

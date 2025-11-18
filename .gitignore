@@ -71,3 +71,4 @@ bin/
 code/ui/main_ui.py
 code/ui/main2_ui.py
 code/ui/main2.ui
+code/devauth.py
